@@ -1,0 +1,35 @@
+{
+  "name": "sijs",
+  "version": "0.1.0",
+  "description": "A view library. Reinvent.",
+  "main": "lib/browser",
+  "scripts": {
+    "dev": "concurrently --kill-others \"npm run build:watch\" \"npm run examples\"",
+    "build": "tsc --rootDir src --outDir lib --sourceMap -d",
+    "build:watch": "npm run build -- -w",
+    "examples": "concurrently --kill-others \"tsc examples/main.tsx examples/server.tsx examples/browser.tsx --outDir examples/lib --jsx preserve -d -w\" \"babel examples/lib --out-dir examples -x .jsx -s true -w\" \"watchify -e examples/browser.js -o examples/build.js -d\" \"live-server -q examples\"",
+    "examples2": "tsc examples/*.tsx --outDir examples/lib --jsx preserve -d && babel examples/lib --out-dir examples -x .jsx -s true && browserify -e examples/browser.js -o examples/build.js -d",
+    "test": "karma start",
+    "babel": "babel es5 --out-dir dist --watch",
+    "compile": "rm -rf ./es5/* && rm -rf ./dist/* && node ./node_modules/concurrently/src/main.js --kill-others \"npm run tsc\" \"npm run babel\""
+  },
+  "keywords": [
+    "view",
+    "library"
+  ],
+  "author": "Faisal Hakim <faisalhakim47@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-cli": "^6.10.1",
+    "babel-plugin-transform-react-jsx": "^6.8.0",
+    "browserify": "^13.0.1",
+    "chai": "^3.5.0",
+    "concurrently": "^2.1.0",
+    "karma": "^1.1.0",
+    "karma-browserify": "^5.0.5",
+    "karma-chai": "^0.1.0",
+    "karma-mocha": "^1.1.1",
+    "mocha": "^2.5.3",
+    "watchify": "^3.7.0"
+  }
+}

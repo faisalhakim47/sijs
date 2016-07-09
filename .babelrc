@@ -1,0 +1,12 @@
+{
+  "plugins": [
+    ["transform-react-jsx", {
+      "pragma": "e"
+    }]
+  ],
+  "ignore": [
+    "typings",
+    "node_modules",
+    "src"
+  ]
+}
