@@ -20,16 +20,18 @@
   "author": "Faisal Hakim <faisalhakim47@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "babel-cli": "^6.10.1",
     "babel-plugin-transform-react-jsx": "^6.8.0",
+    "babelify": "^7.3.0",
     "browserify": "^13.0.1",
     "chai": "^3.5.0",
     "concurrently": "^2.1.0",
+    "gulp-babel": "^6.1.2",
     "karma": "^1.1.0",
     "karma-browserify": "^5.0.5",
     "karma-chai": "^0.1.0",
     "karma-mocha": "^1.1.1",
     "mocha": "^2.5.3",
+    "tsify": "^1.0.0",
     "watchify": "^3.7.0"
   }
 }

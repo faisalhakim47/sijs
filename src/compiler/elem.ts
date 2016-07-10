@@ -179,7 +179,7 @@ export function createElem(
         child = createElem('span', { bind: child }, (<ObsGetter>child).val())
       }
       if (child instanceof RouterView) {
-        child = (<RouterView>child).Elem()
+        child = (<RouterView>child).init()
       }
       if (isElem(child)) {
         if (!is.prerender) template += child.template

@@ -5,34 +5,30 @@ import { Router } from '../router/router'
 
 const paramRx = new RegExp('/:(.*)/', 'g')
 
-export interface IRouteView {
-  name: string
-  Component: IComponentClass
-}
-
 export class RouterView {
-  routes: IRouteView[] = []
+  routes: {}
 
-  register({ name }) {
-    return (constructor: IComponentClass) => {
-      this.routes.push({ name, Component: constructor })
-    }
+  contructor(obj) {
+    Object.keys(obj).forEach((key) => {
+      this.routes[key] = obj[key]
+    })
+  }
+
+  init(): IElem {
+    const helperElem = createElem('script', null)
+    const e = this.Elem()
+    e.glues.unshift(
+      new RouterViewGlue(helperElem.id, this, e.glues)
+    )
+    return e
   }
 
   Elem(): IElem {
-    const rvGlue = new RouterViewGlue('', this)
-    const helperE = createElem('script', null)
-    for (let i = 0, l = this.routes.length; i < l; i++) {
-      const route = this.routes[i]
-      if (route.name === Router.currentRouteName) {
-        const e = (new route.Component()).create()
-        helperE.template += e.template
-        helperE.glues.push(...e.glues)
-        break
-      }
+    const Component: IComponentClass = this.routes[Router.currentRouteName]
+    if (Component) {
+      return (new Component()).create()
+    } else {
+      return createElem('script', { dummy: true })
     }
-    rvGlue.id = helperE.id
-    helperE.glues.unshift(rvGlue)
-    return helperE
   }
 }

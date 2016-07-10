@@ -1,1 +1,8 @@
 node_modules
+lib
+typings
+karma.conf.js
+typings.json
+tsconfig.json
+jsconfig.json
+src

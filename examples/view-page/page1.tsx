@@ -1,9 +1,4 @@
-import { PageView } from './index'
 import { Component } from '../../lib/common'
-
-@PageView.register({
-  name: 'page1'
-})
 
 export class Page1 extends Component {
   constructor() {

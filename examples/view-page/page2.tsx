@@ -15,7 +15,7 @@ export class Page2 extends Component {
   }
   render(e, state) {
     return <div>
-      <input model={state.get('str')}/>
+      <input class="fa fa-facebook" model={state.get('str')}/>
       {state.get('str')}
     </div>
   }
