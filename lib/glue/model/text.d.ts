@@ -7,6 +7,8 @@ export declare class TextGlue extends Glue {
     constructor(id: string, model: ObsGetter);
     install(): void;
     destroy(): void;
+    viewWatcher: any;
     toView(val: any): void;
+    modelWatcher: any;
     toModel(): void;
 }

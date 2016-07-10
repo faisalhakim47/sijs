@@ -1,9 +1,15 @@
 import { Glue } from './glue'
+import { is } from '../instance/status'
 import { Emitter } from '../observer/emitter'
 
 export const eventBus = new Emitter()
 
-window['_EBE'] = eventBus.emit
+if (is.browser) {
+  window['_E'] = (code: string) => {
+    console.log('emit', code, eventBus.watchers[code])
+    eventBus.emit(code)
+  }
+}
 
 export function watchEvent(id: string, name: string, eventFn) {
   return eventBus.on(id + ':' + name, eventFn)

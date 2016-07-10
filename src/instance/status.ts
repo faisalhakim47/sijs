@@ -7,11 +7,11 @@ try {
 
 const browser = !!test['bowser']
 
-const server = test['server'] && !browser ? false : true
+const server = test['server'] && !browser
 
 const prerender = browser && window['_prerender']
 
-export default {
+export const is = {
   browser,
   server,
   prerender

@@ -1,6 +1,5 @@
-import is from './status'
+import { is } from './status'
 import { Emitter } from '../observer/emitter'
-import { Router } from '../router/router'
 
 export const GlobalEvent = new Emitter()
 
@@ -9,7 +8,6 @@ if (is.browser) {
     window.addEventListener(name, eventFn)
   }
   addEvent('popstate', (e) => {
-    Router.generateRoute(window.location.pathname + window.location.search)
     GlobalEvent.emit('browser:popstate', e)
   })
   addEvent('online', (e) => {

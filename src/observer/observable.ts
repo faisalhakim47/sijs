@@ -103,9 +103,14 @@ export class ObsGetter {
   }
 
   set(value) {
+    console.trace('set test', this)
     if (get(this.rawData, this.path) === value) return
+    console.log('set pass', get(this.rawData, this.path), value)
     if (set(this.rawData, this.path, value)) {
+      console.log('set ok', get(this.rawData, this.path), 'emit...')
       this.EE.emit(this.path, value)
+    } else {
+      console.log('cannot set', this.rawData, 'on path', this.path, 'with', value)
     }
   }
 

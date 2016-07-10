@@ -1,2 +1,2 @@
-import { IComponentClass } from '../compiler/component';
-export declare function Bootsrap(selector: string, Comp: IComponentClass): void;
+import { Router } from '../compiler/router';
+export declare function Bootsrap(selector: string, RouterInstance: Router): void;

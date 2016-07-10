@@ -1,2 +1,2 @@
-import { IComponentClass } from '../compiler/component';
-export declare function Generate(path: string, Comp: IComponentClass): string;
+import { Router } from '../compiler/router';
+export declare function Generate(path: string, RouterInstance: Router, linkToApp: string): string;

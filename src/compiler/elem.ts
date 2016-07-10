@@ -1,5 +1,5 @@
 import { IComponentClass, isComponentClass } from './component'
-import { RouterView } from './elem-routerview'
+import { RouterView } from './routerview'
 import { genId } from './uid'
 import { Glue } from '../glue/glue'
 import { AttrGlue } from '../glue/attr'
@@ -13,7 +13,7 @@ import { InputNumberGlue } from '../glue/model/input-number'
 import { InputCheckboxGlue } from '../glue/model/input-checkbox'
 import { InputRadioGlue } from '../glue/model/input-radio'
 import { SelectGlue } from '../glue/model/select'
-import is from '../instance/status'
+import { is } from '../instance/status'
 import { ObsGetter } from '../observer/observable'
 
 export interface IElem {
@@ -28,6 +28,10 @@ export function isElem(t): t is IElem {
 }
 
 const onRx = /^on/
+
+export const React = {
+  createElement: createElem
+}
 
 export function createElem(
   tag: string | IComponentClass,
@@ -106,6 +110,7 @@ export function createElem(
         if (tag === 'input' || tag === 'textarea') {
           switch (attrs.type) {
             case 'number':
+              template += `value="${model.val()}"`
               events.oninput = true
               glues.push(
                 new InputNumberGlue(id, model)
@@ -127,6 +132,7 @@ export function createElem(
               break
 
             default:
+              template += `value="${model.val()}"`
               events.oninput = true
               glues.push(
                 new TextGlue(id, model)
@@ -134,6 +140,7 @@ export function createElem(
               break
           }
         } else if (tag === 'select') {
+          template += `value="${model.val()}"`
           events.onchange = true
           glues.push(
             new SelectGlue(id, model)
@@ -141,6 +148,10 @@ export function createElem(
         }
         attrs.model = null
         attrs.type = null
+      }
+
+      if (attrs.bind) {
+
       }
 
       Object.keys(attrs).forEach((name) => {
@@ -168,28 +179,35 @@ export function createElem(
       })
 
       for (let eventName in events) {
-        template += `${eventName}="_EBE('${id}:${eventName}')"`
+        template += `${eventName}="_E('${id}:${eventName}')"`
       }
     }
 
     template += '>'
 
     children.forEach((child, i) => {
+      let elem: IElem = <IElem>child
       if (child instanceof ObsGetter) {
-        child = createElem('span', { bind: child }, (<ObsGetter>child).val())
+        elem = createElem('span', null, child.val())
+        elem.glues.push(
+          new BindGlue(elem.id, child)
+        )
       }
       if (child instanceof RouterView) {
-        child = (<RouterView>child).init()
+        elem = child.init()
       }
-      if (isElem(child)) {
-        if (!is.prerender) template += child.template
-        if (!is.server) glues.push(...child.glues)
+      if (isElem(elem)) {
+        if (!is.prerender) template += elem.template
+        if (!is.server) glues.push(...elem.glues)
+        console.log('is server', is.server)
       } else if (child && !is.prerender) {
         template += child.toString()
       }
     })
 
     template += '</' + tag + '>'
+
+    console.trace(2, glues)
 
     return {
       id,

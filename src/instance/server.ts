@@ -1,10 +1,16 @@
 import { IComponentClass } from '../compiler/component'
-import { Router } from '../router/router'
+import { Router } from '../compiler/router'
+// import { readFileSync } from 'fs'
 
-export function Generate(path: string, Comp: IComponentClass) {
-  Router.generateRoute(path)
-  const { template } = (new Comp()).create()
-  Router.path = '/'
-  template.replace('</head>', '<script>(function () { window._prerender = true })()</script></head>')
+export function Generate(path: string, RouterInstance: Router, linkToApp: string) {
+  let { template } = RouterInstance.generateElem(path)
+  template = `
+    <script>(function() {
+      window._prerender = true;
+      window._E = function _E() {};
+    })()</script>
+  ` + template + `
+    <script src="${linkToApp}"></script>
+  `
   return template
 }

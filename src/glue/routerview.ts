@@ -1,5 +1,5 @@
 import { Glue, getEl, removeElRef, installGlues, destroyGlues } from './glue'
-import { RouterView } from '../compiler/elem-routerview'
+import { RouterView } from '../compiler/routerview'
 import { GlobalEvent } from '../instance/global-event'
 
 export class RouterViewGlue extends Glue {

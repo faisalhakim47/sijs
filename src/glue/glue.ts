@@ -32,6 +32,7 @@ export function removeElRef(id: string): void {
 }
 
 export function installGlues(glues: Glue[]) {
+  console.log('install', glues)
   glues.forEach((glue) => glue.install())
 }
 

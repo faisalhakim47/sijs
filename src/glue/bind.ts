@@ -9,13 +9,10 @@ export class BindGlue extends Glue {
     super()
   }
 
-  bindWatcher(val) {
-    this.el.innerText = val
-  }
-
   install() {
     this.el = getEl(this.id)
     this.value.watch(this.bindWatcher)
+    window['test'] = this.value
     this.isInstalled = true
   }
 
@@ -27,5 +24,10 @@ export class BindGlue extends Glue {
     } else {
       // Warn
     }
+  }
+
+  bindWatcher = this.toViewBind.bind(this)
+  toViewBind(val) {
+    this.el.innerText = val
   }
 }

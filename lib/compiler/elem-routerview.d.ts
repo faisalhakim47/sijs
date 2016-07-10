@@ -1,7 +1,7 @@
 import { IElem } from './elem';
 export declare class RouterView {
     routes: {};
-    contructor(obj: any): void;
+    constructor(obj: any);
     init(): IElem;
     Elem(): IElem;
 }

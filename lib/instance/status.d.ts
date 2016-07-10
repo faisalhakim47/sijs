@@ -1,6 +1,5 @@
-declare var _default: {
+export declare const is: {
     browser: boolean;
     server: boolean;
     prerender: any;
 };
-export default _default;

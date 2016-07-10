@@ -1,11 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es2015",
+    "target": "es5",
     "sourceMap": true,
     "module": "commonjs",
-    "rootDir": "src",
-    "outDir": "lib",
-    "declaration": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "emitDecoratorMetadata": true,

@@ -26,14 +26,14 @@ export class InputNumberGlue extends Glue {
       )
     }
     this.model.watch(this.toView)
-    watchEvent(this.id, 'input', this.toModel)
+    watchEvent(this.id, 'oninput', this.toModel)
     this.isInstalled = true
   }
 
   destroy() {
     if (this.isInstalled) {
       this.model.unwatch(this.toView)
-      unwatchEvent(this.id, 'input', this.toModel)
+      unwatchEvent(this.id, 'oninput', this.toModel)
       this.el = null
       removeElRef(this.id)
     } else {

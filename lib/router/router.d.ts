@@ -1,3 +1,5 @@
+import { IComponentClass } from '../compiler/component';
+import { IElem } from '../compiler/elem';
 export interface IRoute {
     name: string;
     path: string;
@@ -5,11 +7,13 @@ export interface IRoute {
     rx: RegExp;
 }
 export declare class Router {
-    static path: any;
+    Component: IComponentClass;
     static currentRouteName: string;
     static currentParams: any;
-    static currentQuery: any;
-    static routes: IRoute[];
-    static map(routes: any): void;
-    static generateRoute(path: string): void;
+    static currentQuery: string;
+    static path: string;
+    routes: IRoute[];
+    constructor(Component: IComponentClass, routes: any);
+    generateRoute(path?: string): void;
+    generateElem(path?: string): IElem;
 }
