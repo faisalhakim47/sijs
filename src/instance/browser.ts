@@ -12,7 +12,7 @@ export function Bootsrap(selector: string, RouterInstance: Router) {
       installGlues(glues)
       installEvents(events)
       is.prerender = false
-      console.log(template, glues, events)
+      // console.log(template, glues, events)
     })
   } else {
     console.error('Cannot Bootsrap(), this is not browser.')
