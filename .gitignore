@@ -1,5 +1,6 @@
 node_modules
 lib
+examples
 typings
 karma.conf.js
 typings.json
