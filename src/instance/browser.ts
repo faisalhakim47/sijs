@@ -9,7 +9,6 @@ export function Bootsrap(selector: string, RouterInstance: Router) {
       const el: HTMLElement = <HTMLElement>document.querySelector(selector)
       const { template, glues } = RouterInstance.generateElem(window.location.pathname)
       if (!is.prerender) el.outerHTML = template
-      console.log(!is.prerender, template, glues)
       installGlues(glues)
       is.prerender = false
     })

@@ -12,13 +12,15 @@ export class ClassGlue extends Glue {
 
   install() {
     this.el = getEl(this.id)
-    this.cond.watch(this.classNameWatcher)
+    this.watchers.push(
+      this.cond.watch((val) => this.classNameSetter(val))
+    )
     this.isInstalled = true
   }
 
   destroy() {
     if (this.isInstalled) {
-      this.cond.unwatch(this.classNameWatcher)
+      this.unwatchAll()
       this.el = null
       removeElRef(this.id)
     } else {
@@ -26,7 +28,7 @@ export class ClassGlue extends Glue {
     }
   }
 
-    classNameWatcher(val) {
+  classNameSetter(val) {
     const isContain = this.el.classList.contains(this.className)
     if (val && !isContain) {
       this.el.classList.add(this.className)

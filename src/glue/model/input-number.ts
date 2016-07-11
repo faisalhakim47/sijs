@@ -25,15 +25,16 @@ export class InputNumberGlue extends Glue {
         'Input element #', this.id, 'has not inserted yet.', this
       )
     }
-    this.model.watch(this.toView)
-    watchEvent(this.id, 'oninput', this.toModel)
+    this.watchers.push(
+      this.model.watch((val) => this.toView(val)),
+      watchEvent(this.id, 'oninput', () => this.toModel())
+    )
     this.isInstalled = true
   }
 
   destroy() {
     if (this.isInstalled) {
-      this.model.unwatch(this.toView)
-      unwatchEvent(this.id, 'oninput', this.toModel)
+      this.unwatchAll()
       this.el = null
       removeElRef(this.id)
     } else {

@@ -17,15 +17,16 @@ export class TextGlue extends Glue {
         'Input element #', this.id, 'has not inserted yet.', this
       )
     }
-    this.model.watch(this.viewWatcher)
-    watchEvent(this.id, 'oninput', this.modelWatcher)
+    this.watchers.push(
+      this.model.watch(this.toView),
+      watchEvent(this.id, 'oninput', this.toModel)
+    )
     this.isInstalled = true
   }
 
   destroy() {
     if (this.isInstalled) {
-      this.model.unwatch(this.viewWatcher)
-      unwatchEvent(this.id, 'oninput', this.modelWatcher)
+      this.unwatchAll()
       this.el = null
       removeElRef(this.id)
     } else {
@@ -35,13 +36,13 @@ export class TextGlue extends Glue {
     }
   }
 
-  viewWatcher = this.toModel.bind(this)
-  toView(val) {
+  toView = (val) => {
+    if (val == this.el.value) return
     this.el.value = val
   }
 
-  modelWatcher = this.toModel.bind(this)
-  toModel() {
+  toModel = () => {
+    if (this.model.val() == this.el.value) return
     this.model.set(this.el.value)
   }
 }

@@ -10,23 +10,21 @@ export class AttrGlue extends Glue {
     super()
   }
 
-  attrWatcher(val) {
-    this.el.setAttribute(this.attrName, val)
-  }
-
   install() {
     if (!(this.el = <HTMLInputElement>getEl(this.id))) {
       return console.warn(
         'Input element #', this.id, 'has not inserted yet.', this
       )
     }
-    this.attrValue.watch(this.attrWatcher)
+    this.watchers.push(
+      this.attrValue.watch((val) => this.attrSetter(val))
+    )
     this.isInstalled = true
   }
 
   destroy() {
     if (this.isInstalled) {
-      this.attrValue.unwatch(this.attrWatcher)
+      this.unwatchAll()
       this.el = null
       removeElRef(this.id)
     } else {
@@ -34,5 +32,9 @@ export class AttrGlue extends Glue {
         'Glue InputText #', this.id, 'has not installed yet.', this
       )
     }
+  }
+
+  attrSetter(val) {
+    this.el.setAttribute(this.attrName, val)
   }
 }

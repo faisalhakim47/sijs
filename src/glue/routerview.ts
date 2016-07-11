@@ -17,11 +17,13 @@ export class RouterViewGlue extends Glue {
         'Input element #', this.id, 'has not inserted yet.', this
       )
     }
-    GlobalEvent.on('route:change', this.routeWatcher)
+    this.watchers.push(
+      GlobalEvent.on('route:change', () => this.routeWatcher())
+    )
   }
 
   destroy() {
-    GlobalEvent.off('route:change', this.routeWatcher)
+    this.unwatchAll()
     this.el = null
     removeElRef(this.id)
   }

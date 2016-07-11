@@ -18,14 +18,16 @@ export class InputCheckboxGlue extends Glue {
         'Input element #', this.id, 'has not inserted yet.', this
       )
     }
-    watchEvent(this.id, 'oninput', this.toModel)
+    this.watchers.push(
+      this.model.watch((val) => this.toView(val)),
+      watchEvent(this.id, 'onclick', () => this.toModel())
+    )
     this.isInstalled = true
   }
 
   destroy() {
     if (this.isInstalled) {
-      this.model.unwatch(this.toView)
-      unwatchEvent(this.id, 'oninput', this.toModel)
+      this.unwatchAll()
       this.el = null
       removeElRef(this.id)
     } else {

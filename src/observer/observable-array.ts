@@ -38,7 +38,7 @@ export class ObsArray {
   }
 
   val() { // alias
-    return this.obsItems
+    return this.getAll()
   }
 
   set(index: number, value) {
@@ -113,6 +113,11 @@ export class ObsArray {
       this.EE.on(p1, p2)
     } else {
       this.EE.on('change', p1)
+    }
+    return {
+      unwatch: () => {
+        this.unwatch(p1, p2)
+      }
     }
   }
 

@@ -1,5 +1,7 @@
 import { is } from './status'
 import { Emitter } from '../observer/emitter'
+import { resetObsId } from '../observer/observable'
+import { resetElemId } from '../compiler/uid'
 
 export const GlobalEvent = new Emitter()
 
@@ -17,3 +19,8 @@ if (is.browser) {
     GlobalEvent.emit('browser:offline', e)
   })
 }
+
+GlobalEvent.on('resetIds', () => {
+  resetObsId()
+  resetElemId()
+})

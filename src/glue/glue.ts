@@ -1,6 +1,15 @@
+import { IUnwatcher } from '../observer/emitter'
+
 export abstract class Glue {
   el: HTMLElement
   isInstalled: boolean = false
+  watchers: IUnwatcher[] = []
+  unwatchAll() {
+    this.watchers.forEach(
+      (watcher) => watcher.unwatch()
+    )
+    this.watchers = []
+  }
   abstract install(): void
   abstract destroy(): void
 }
@@ -16,7 +25,7 @@ export function getEl(id: string): HTMLElement {
   } else {
     elReference[id].refCount++
   }
-  return elReference[id]
+  return elReference[id].el
 }
 
 export function removeElRef(id: string): void {
@@ -27,12 +36,11 @@ export function removeElRef(id: string): void {
       elReference[id] = null
     }
   } else {
-    console.warn('removeRef error:', id)
+    console.warn('#', id, 'have not been referenced yet.')
   }
 }
 
 export function installGlues(glues: Glue[]) {
-  console.log('install', glues)
   glues.forEach((glue) => glue.install())
 }
 

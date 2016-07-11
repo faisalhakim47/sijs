@@ -8,13 +8,14 @@ export function dependsOn(deps: (ObsGetter | ObsArray)[], fn) {
 
   Emit()
 
+  const watchers = []
   deps.forEach((dep) => {
-    dep.watch(Emit)
+    watchers.push(dep.watch(Emit))
   })
 
-  return () => {
-    deps.forEach((dep) => {
-      dep.unwatch(Emit)
-    })
+  return {
+    unwatch() {
+      watchers.forEach(watcher => watcher.unwatch())
+    }
   }
 }
