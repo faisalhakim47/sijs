@@ -24,7 +24,9 @@ export class ClassGlue extends Glue {
       this.el = null
       removeElRef(this.id)
     } else {
-      // Warn
+      console.warn(
+        'Glue className #', this.id, 'has not installed yet.', this
+      )
     }
   }
 

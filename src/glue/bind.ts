@@ -24,7 +24,9 @@ export class BindGlue extends Glue {
       this.el = null
       removeElRef(this.id)
     } else {
-      // Warn
+      console.warn(
+        'Glue bind #', this.id, 'has not installed yet.', this
+      )
     }
   }
 
