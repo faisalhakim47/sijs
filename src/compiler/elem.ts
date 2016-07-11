@@ -21,6 +21,7 @@ export interface IElem {
   _isElm: boolean
   template: string
   glues: Glue[]
+  events: string[]
 }
 
 export function isElem(t): t is IElem {
@@ -49,6 +50,7 @@ export function createElem(
     const id = attrs.id || genId()
     let template = '<' + tag + ' id="' + id + '"'
     const glues: Glue[] = []
+    const events: string[] = []
 
     if (!attrs.empty) {
       if (attrs.if instanceof ObsGetter) {
@@ -60,14 +62,14 @@ export function createElem(
         template = '<script id="if' + id + '"></script>'
 
         if (attrs.if.val()) {
-          return { _isElm: true, id, template, glues: [ifGlue] }
+          return { _isElm: true, id, template, glues: [ifGlue], events: [] }
         } else {
           template += openTag
           glues.push(ifGlue)
         }
         attrs.if = null
       } else if (attrs.if !== undefined && !attrs.if) {
-        return { _isElm: true, id, template: '', glues: [] }
+        return { _isElm: true, id, template: '', glues: [], events: [] }
       }
 
       if (attrs.className !== undefined) {
@@ -103,29 +105,27 @@ export function createElem(
         template += '"'
       }
 
-      const events: any = {}
-
       if (attrs.model instanceof ObsGetter) {
         const model: ObsGetter = attrs.model
         if (tag === 'input' || tag === 'textarea') {
           switch (attrs.type) {
             case 'number':
               template += `value="${model.val()}"`
-              events.oninput = true
               glues.push(
                 new InputNumberGlue(id, model)
               )
+              events.push('oninput')
               break
 
             case 'checkbox':
-              events.onchange = true
               glues.push(
                 new InputCheckboxGlue(id, model)
               )
+              events.push('onchange')
               break
 
             case 'radio':
-              events.onchange = true
+              events.push('onchange')
               glues.push(
                 new InputRadioGlue(id, model)
               )
@@ -133,25 +133,21 @@ export function createElem(
 
             default:
               template += `value="${model.val()}"`
-              events.oninput = true
               glues.push(
                 new TextGlue(id, model)
               )
+              events.push('oninput')
               break
           }
         } else if (tag === 'select') {
           template += `value="${model.val()}"`
-          events.onchange = true
           glues.push(
             new SelectGlue(id, model)
           )
+          events.push('onchange')
         }
         attrs.model = null
         attrs.type = null
-      }
-
-      if (attrs.bind) {
-
       }
 
       Object.keys(attrs).forEach((name) => {
@@ -177,10 +173,6 @@ export function createElem(
           template += '"'
         }
       })
-
-      for (let eventName in events) {
-        template += `${eventName}="(function(){_E('${id}:${eventName}')})()"`
-      }
     }
 
     template += '>'
@@ -198,7 +190,10 @@ export function createElem(
       }
       if (isElem(elem)) {
         if (!is.prerender) template += elem.template
-        if (!is.server) glues.push(...elem.glues)
+        if (!is.server) {
+          glues.push(...elem.glues)
+          events.push(...elem.events)
+        }
       } else if (child && !is.prerender) {
         template += child.toString()
       }
@@ -210,7 +205,8 @@ export function createElem(
       id,
       template,
       glues,
-      _isElm: true,
+      events,
+      _isElm: true
     }
   }
 }

@@ -1,4 +1,5 @@
 import { IUnwatcher } from '../observer/emitter'
+import { GlobalEvent } from '../instance/global-event'
 
 export abstract class Glue {
   id: string
@@ -50,4 +51,31 @@ export function installGlues(glues: Glue[]) {
 
 export function destroyGlues(glues: Glue[]) {
   glues.forEach((glue) => glue.destroy())
+}
+
+let activeEvents = {}
+let isInstalled = false
+export function installEvents(events: string[]) {
+  if (!isInstalled) return
+  events.forEach((eventName) => {
+    activeEvents[eventName] = true
+  })
+  Object.keys(activeEvents).forEach((eventName) => {
+    activeEvents[eventName] = (e) => {
+      const target = e.target
+      if (target instanceof HTMLElement) {
+        GlobalEvent.emit(target.id + ':' + eventName, e)
+      }
+    }
+    window.addEventListener(eventName.slice(2), activeEvents[eventName])
+  })
+  isInstalled = true
+}
+
+export function removeCurrentEvents() {
+  Object.keys(activeEvents).forEach((eventName) => {
+    window.removeEventListener(eventName.slice(2), activeEvents[eventName])
+  })
+  activeEvents = {}
+  isInstalled = false
 }
