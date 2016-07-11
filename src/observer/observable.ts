@@ -58,7 +58,7 @@ export class Observable {
   watch(path: string, watcher) {
     this.EE.on(path, watcher)
     let i = 0
-    this.EE.watchers.forEach((watchers, listedPath) => {
+    Object.keys(this.EE.watchers).forEach((listedPath) => {
       if (listedPath.indexOf(path) === 0 && path !== listedPath) {
         const name = listedPath + path + i++
         this.childWatcher[name] = () => {
@@ -76,7 +76,7 @@ export class Observable {
   unwatch(path: string, watcher) {
     this.EE.off(path, watcher)
     let i = 0
-    this.EE.watchers.forEach((watchers, listedPath) => {
+    Object.keys(this.EE.watchers).forEach((listedPath) => {
       if (listedPath.indexOf(path) === 0 && path !== listedPath) {
         this.EE.off(path, this.childWatcher[listedPath + path + i++])
       }
