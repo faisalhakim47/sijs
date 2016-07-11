@@ -26,8 +26,6 @@ export class AttrGlue extends Glue {
   destroy() {
     if (this.isInstalled) {
       this.teardown()
-      this.el = null
-      removeElRef(this.id)
     } else {
       console.warn(
         'Glue InputText #', this.id, 'has not installed yet.', this

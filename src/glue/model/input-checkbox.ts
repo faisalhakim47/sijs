@@ -29,7 +29,6 @@ export class InputCheckboxGlue extends Glue {
   destroy() {
     if (this.isInstalled) {
       this.teardown()
-
     } else {
       console.warn(
         'Glue InputCheckbox #', this.id, 'has not installed yet.', this

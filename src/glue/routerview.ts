@@ -21,12 +21,17 @@ export class RouterViewGlue extends Glue {
     this.watchers.push(
       GlobalEvent.on('route:change', () => this.routeWatcher())
     )
+    this.isInstalled = true
   }
 
   destroy() {
-    this.teardown()
-    this.el = null
-    removeElRef(this.id)
+    if (this.isInstalled) {
+      this.teardown()
+    } else {
+      console.warn(
+        'Glue routerview #', this.id, 'has not been installed yet.', this
+      )
+    }
   }
 
   routeWatcher() {

@@ -22,8 +22,6 @@ export class BindGlue extends Glue {
   destroy() {
     if (this.isInstalled) {
       this.teardown()
-      this.el = null
-      removeElRef(this.id)
     } else {
       console.warn(
         'Glue bind #', this.id, 'has not installed yet.', this

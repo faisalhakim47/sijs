@@ -36,8 +36,6 @@ export class InputNumberGlue extends Glue {
   destroy() {
     if (this.isInstalled) {
       this.teardown()
-      this.el = null
-      removeElRef(this.id)
     } else {
       console.warn(
         'Glue InputNumber #', this.id, 'has not installed yet.', this

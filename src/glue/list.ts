@@ -55,7 +55,7 @@ export class ListGlue extends Glue {
   destroy() {
     const { skip, limit } = this.opts
     if (!this.isInstalled) return
-    this.unwatchAll()
+    this.teardown()
     this.helperEl = null
   }
 
