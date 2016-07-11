@@ -6,7 +6,7 @@ const urlParse = require('url').parse
 http.createServer((req, res) => {
   const start = (new Date()).getTime()
   const path = urlParse(req.url).path
-  const html = Generate(path, Routes, 'http://localhost:8080/dist/main.js')
+  const html = Generate(path, Routes, 'http://localhost:8080/examples/dist/main.js')
   console.log(path, (new Date()).getTime() - start, 'ms')
   res.end(html)
 }).listen(3000)

@@ -1,15 +1,14 @@
 import { Glue } from './glue'
+import { GlobalEvent } from '../instance/global-event'
 import { is } from '../instance/status'
 import { IUnwatcher, Emitter } from '../observer/emitter'
 
-export const eventBus = new Emitter()
-
 export function watchEvent(id: string, name: string, eventFn) {
-  return eventBus.on(id + ':' + name, eventFn)
+  return GlobalEvent.on(id + ':' + name, eventFn)
 }
 
 export function unwatchEvent(id: string, name: string, eventFn) {
-  return eventBus.off(id + ':' + name, eventFn)
+  return GlobalEvent.off(id + ':' + name, eventFn)
 }
 
 export class EventGlue extends Glue {

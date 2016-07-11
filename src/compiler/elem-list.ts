@@ -32,6 +32,7 @@ export function eList(
 
   const id = genId()
   const glues: Glue[] = []
+  const events: string[] = []
   const listGlue = new ListGlue(id, items, listFn, opts)
   let template = '<script id="' + id + '"></script>'
 
@@ -56,9 +57,10 @@ export function eList(
     const e = listFn(currentItem.item, () => currentItem.index)
     template += e.template.replace('>', ' ' + id + '>')
     glues.push(...currentItem['glues'] = e.glues)
+    events.push(...e.events)
   }
 
   glues.unshift(listGlue)
 
-  return { id, template, glues, _isElm: true }
+  return { id, template, glues, _isElm: true, events: [] }
 }

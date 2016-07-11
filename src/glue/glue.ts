@@ -56,14 +56,14 @@ export function destroyGlues(glues: Glue[]) {
 let activeEvents = {}
 let isInstalled = false
 export function installEvents(events: string[]) {
-  if (!isInstalled) return
+  if (isInstalled) return
   events.forEach((eventName) => {
     activeEvents[eventName] = true
   })
   Object.keys(activeEvents).forEach((eventName) => {
     activeEvents[eventName] = (e) => {
       const target = e.target
-      if (target instanceof HTMLElement) {
+      if (target.id) {
         GlobalEvent.emit(target.id + ':' + eventName, e)
       }
     }
