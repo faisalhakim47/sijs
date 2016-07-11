@@ -6,11 +6,12 @@ export class IfGlue extends Glue {
   helperEl: HTMLElement
   activeGlues: Glue[]
   constructor(
-    private id: string,
+    id: string,
     private cond: ObsGetter | boolean,
     private elem: () => IElem
   ) {
     super()
+    this.id = id
   }
 
   install() {
@@ -28,7 +29,7 @@ export class IfGlue extends Glue {
     if (!this.isInstalled) return
     const cond = this.cond
     if (cond instanceof ObsGetter) {
-      this.unwatchAll()
+      this.teardown()
     }
     this.helperEl = null
   }

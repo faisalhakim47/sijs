@@ -5,10 +5,11 @@ import { ObsGetter } from '../../observer/observable'
 export class TextGlue extends Glue {
   el: HTMLInputElement | HTMLTextAreaElement
   constructor(
-    private id: string,
+    id: string,
     private model: ObsGetter
   ) {
     super()
+    this.id = id
   }
 
   install() {
@@ -18,15 +19,15 @@ export class TextGlue extends Glue {
       )
     }
     this.watchers.push(
-      this.model.watch(this.toView),
-      watchEvent(this.id, 'oninput', this.toModel)
+      this.model.watch((val) => this.toView(val)),
+      watchEvent(this.id, 'oninput', () => this.toModel())
     )
     this.isInstalled = true
   }
 
   destroy() {
     if (this.isInstalled) {
-      this.unwatchAll()
+      this.teardown()
       this.el = null
       removeElRef(this.id)
     } else {
@@ -36,12 +37,12 @@ export class TextGlue extends Glue {
     }
   }
 
-  toView = (val) => {
+  toView(val) {
     if (val == this.el.value) return
     this.el.value = val
   }
 
-  toModel = () => {
+  toModel() {
     if (this.model.val() == this.el.value) return
     this.model.set(this.el.value)
   }

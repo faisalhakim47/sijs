@@ -18,6 +18,7 @@ export class ListGlue extends Glue {
     }
   ) {
     super()
+    this.id = helperId
     const { skip, limit } = opts
     if (skip instanceof ObsGetter) {
       this.skip = skip.val()

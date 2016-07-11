@@ -6,10 +6,11 @@ export class InputCheckboxGlue extends Glue {
   el: HTMLInputElement
   value: string
   constructor(
-    private id: string,
+    id: string,
     private model: ObsGetter
   ) {
     super()
+    this.id = id
   }
 
   install() {
@@ -27,9 +28,8 @@ export class InputCheckboxGlue extends Glue {
 
   destroy() {
     if (this.isInstalled) {
-      this.unwatchAll()
-      this.el = null
-      removeElRef(this.id)
+      this.teardown()
+
     } else {
       console.warn(
         'Glue InputCheckbox #', this.id, 'has not installed yet.', this

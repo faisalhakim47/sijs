@@ -5,18 +5,11 @@ import { ObsGetter } from '../../observer/observable'
 export class SelectGlue extends Glue {
   el: HTMLSelectElement
   constructor(
-    private id: string,
+    id: string,
     private model: ObsGetter
   ) {
     super()
-  }
-
-  toView(val) {
-    this.el.value = val
-  }
-
-  toModel() {
-    this.model.set(this.el.value)
+    this.id = id
   }
 
   install() {
@@ -35,7 +28,7 @@ export class SelectGlue extends Glue {
 
   destroy() {
     if (this.isInstalled) {
-      this.unwatchAll()
+      this.teardown()
       this.el = null
       removeElRef(this.id)
     } else {
@@ -43,5 +36,13 @@ export class SelectGlue extends Glue {
         'Glue select #', this.id, 'has not installed yet.', this
       )
     }
+  }
+
+  toView(val) {
+    this.el.value = val
+  }
+
+  toModel() {
+    this.model.set(this.el.value)
   }
 }

@@ -1,14 +1,18 @@
 import { IUnwatcher } from '../observer/emitter'
 
 export abstract class Glue {
+  id: string
   el: HTMLElement
   isInstalled: boolean = false
   watchers: IUnwatcher[] = []
-  unwatchAll() {
+  teardown() {
     this.watchers.forEach(
       (watcher) => watcher.unwatch()
     )
     this.watchers = []
+    this.el = null
+    removeElRef(this.id)
+    this.isInstalled = false
   }
   abstract install(): void
   abstract destroy(): void

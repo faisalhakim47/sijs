@@ -5,10 +5,11 @@ import { ObsGetter } from '../../observer/observable'
 export class InputNumberGlue extends Glue {
   el: HTMLInputElement
   constructor(
-    private id: string,
+    id: string,
     private model: ObsGetter
   ) {
     super()
+    this.id = id
   }
 
   toView(val) {
@@ -34,7 +35,7 @@ export class InputNumberGlue extends Glue {
 
   destroy() {
     if (this.isInstalled) {
-      this.unwatchAll()
+      this.teardown()
       this.el = null
       removeElRef(this.id)
     } else {

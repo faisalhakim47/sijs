@@ -7,10 +7,11 @@ export class InputRadioGlue extends Glue {
   radioName: string
   value: string
   constructor(
-    private id: string,
+    id: string,
     private model: ObsGetter
   ) {
     super()
+    this.id = id
   }
 
   install() {
@@ -30,7 +31,7 @@ export class InputRadioGlue extends Glue {
 
   destroy() {
     if (this.isInstalled) {
-      this.unwatchAll()
+      this.teardown()
       this.el = null
       removeElRef(this.id)
     } else {

@@ -3,11 +3,12 @@ import { ObsGetter } from '../observer/observable'
 
 export class AttrGlue extends Glue {
   constructor(
-    private id: string,
+    id: string,
     private attrName: string,
     private attrValue: ObsGetter
   ) {
     super()
+    this.id = id
   }
 
   install() {
@@ -24,7 +25,7 @@ export class AttrGlue extends Glue {
 
   destroy() {
     if (this.isInstalled) {
-      this.unwatchAll()
+      this.teardown()
       this.el = null
       removeElRef(this.id)
     } else {

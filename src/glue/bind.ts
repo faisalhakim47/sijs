@@ -3,16 +3,17 @@ import { ObsGetter } from '../observer/observable'
 
 export class BindGlue extends Glue {
   constructor(
-    private id: string,
+    id: string,
     private value: ObsGetter
   ) {
     super()
+    this.id = id
   }
 
   install() {
     this.el = getEl(this.id)
     this.watchers.push(
-      this.value.watch(this.bindSetter)
+      this.value.watch((val) => this.bindSetter(val))
     )
     window['test'] = this.value
     this.isInstalled = true
@@ -20,7 +21,7 @@ export class BindGlue extends Glue {
 
   destroy() {
     if (this.isInstalled) {
-      this.unwatchAll()
+      this.teardown()
       this.el = null
       removeElRef(this.id)
     } else {
@@ -30,7 +31,7 @@ export class BindGlue extends Glue {
     }
   }
 
-  bindSetter = (val) => {
+  bindSetter(val) {
     if (this.el.innerText == val) return
     this.el.innerText = val
   }

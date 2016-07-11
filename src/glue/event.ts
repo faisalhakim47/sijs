@@ -22,11 +22,12 @@ export function unwatchEvent(id: string, name: string, eventFn) {
 export class EventGlue extends Glue {
   static context: any = null
   constructor(
-    private id: string,
+    id: string,
     private name: string,
     private eventFn: () => void
   ) {
     super()
+    this.id = id
   }
   install() {
     watchEvent(this.id, this.name, this.eventFn)

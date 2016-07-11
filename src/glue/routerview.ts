@@ -4,11 +4,12 @@ import { GlobalEvent } from '../instance/global-event'
 
 export class RouterViewGlue extends Glue {
   constructor(
-    private id: string,
+    id: string,
     private rv: RouterView,
     private activeGlues: Glue[]
   ) {
     super()
+    this.id = id
   }
 
   install() {
@@ -23,7 +24,7 @@ export class RouterViewGlue extends Glue {
   }
 
   destroy() {
-    this.unwatchAll()
+    this.teardown()
     this.el = null
     removeElRef(this.id)
   }
