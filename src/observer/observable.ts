@@ -1,4 +1,5 @@
-import { IWatcher, Emitter } from './emitter'
+import { Emitter } from './emitter'
+import { GlobalEvent } from '../instance/global-event'
 import { get, set } from '../tools/object'
 
 export class Observable {
@@ -10,7 +11,7 @@ export class Observable {
   constructor(
     private baseData: any = { _dummy: null },
     private basePath: string = '_dummy',
-    private id?: string
+    public id?: string
   ) {
     this.rawData = get(baseData, basePath)
     if (this.rawData.undefined) {
@@ -21,15 +22,15 @@ export class Observable {
     }
     this.EE = new Emitter()
   }
+  raw(path: string) {
+    return get(this.rawData, path)
+  }
   get(path: string) {
     path = path
     return new ObsGetter(
       this.id,
-      this.rawData,
       path,
-      this.EE,
-      this.get,
-      this.childWatcher
+      this
     )
   }
   set(path: string, value) {
@@ -47,32 +48,37 @@ export class Observable {
     const obs = this.get(path)
     const val = obs.val
     if (filterFn instanceof String) {
-      obs.val = () => Filters[filterFn](val())
+      obs.val = () => Filters.get(filterFn)(val())
       return obs
     } else if (filterFn instanceof Function) {
       obs.val = () => filterFn(val())
       return obs
     }
   }
-  watch(watcher: IWatcher) {
-    this.EE.on(null, watcher)
+  watch(path: string, watcher) {
+    this.EE.on(path, watcher)
     let i = 0
-    Object.keys(this.EE.watchers).forEach((listedPath) => {
-      if (listedPath.indexOf(null) === 0 && null !== listedPath) {
-        const name = listedPath + null + i++
+    this.EE.watchers.forEach((watchers, listedPath) => {
+      if (listedPath.indexOf(path) === 0 && path !== listedPath) {
+        const name = listedPath + path + i++
         this.childWatcher[name] = () => {
           this.EE.emit(listedPath, get(this.rawData, listedPath))
         }
         this.EE.on(null, this.childWatcher[name])
       }
     })
+    return {
+      unwatch: () => {
+        this.unwatch(path, watcher)
+      }
+    }
   }
-  unwatch(watcher) {
-    this.EE.off(null, watcher)
+  unwatch(path: string, watcher) {
+    this.EE.off(path, watcher)
     let i = 0
-    Object.keys(this.EE.watchers).forEach((listedPath) => {
-      if (listedPath.indexOf(null) === 0 && 'null' !== listedPath) {
-        this.EE.off(null, this.childWatcher[listedPath + null + i++])
+    this.EE.watchers.forEach((watchers, listedPath) => {
+      if (listedPath.indexOf(path) === 0 && path !== listedPath) {
+        this.EE.off(path, this.childWatcher[listedPath + path + i++])
       }
     })
   }
@@ -81,21 +87,16 @@ export class Observable {
 export class ObsGetter {
   constructor(
     public id: string,
-    private rawData,
     public path: string,
-    private EE: Emitter,
-    private getter: (path: string) => ObsGetter,
-    private childWatcher
+    private parent: Observable
   ) { }
 
   get(childPath: string) {
-    return this.getter(this.path + childPath)
+    return this.parent.get(this.path + '.' + childPath)
   }
 
   raw() {
-    let ret = get(this.rawData, this.path)
-    if (ret.undefined) ret = undefined
-    return ret
+    return this.parent.raw(this.path)
   }
 
   val() {
@@ -103,39 +104,15 @@ export class ObsGetter {
   }
 
   set(value) {
-    console.trace('set test', this)
-    if (get(this.rawData, this.path) === value) return
-    console.log('set pass', get(this.rawData, this.path), value)
-    if (set(this.rawData, this.path, value)) {
-      console.log('set ok', get(this.rawData, this.path), 'emit...')
-      this.EE.emit(this.path, value)
-    } else {
-      console.log('cannot set', this.rawData, 'on path', this.path, 'with', value)
-    }
+    return this.parent.set(this.path, value)
   }
 
-  watch(watcher: IWatcher) {
-    this.EE.on(this.path, watcher)
-    let i = 0
-    Object.keys(this.EE.watchers).forEach((listedPath) => {
-      if (listedPath.indexOf(this.path) === 0 && this.path !== listedPath) {
-        const name = listedPath + this.path + i++
-        this.childWatcher[name] = () => {
-          this.EE.emit(listedPath, get(this.rawData, listedPath))
-        }
-        this.EE.on(this.path, this.childWatcher[name])
-      }
-    })
+  watch(watcher) {
+    return this.parent.watch(this.path, watcher)
   }
 
   unwatch(watcher) {
-    this.EE.off(this.path, watcher)
-    let i = 0
-    Object.keys(this.EE.watchers).forEach((listedPath) => {
-      if (listedPath.indexOf(this.path) === 0 && this.path !== listedPath) {
-        this.EE.off(this.path, this.childWatcher[listedPath + this.path + i++])
-      }
-    })
+    return this.parent.unwatch(this.path, watcher)
   }
 }
 
@@ -144,13 +121,18 @@ export interface IFilter {
   filterFn: (val) => any
 }
 
-export const Filters: any = {}
+export const Filters: Map<string, (val) => any> = new Map()
 
 export function registerFilter(name: string, filterFn: (val) => any) {
-  Filters[name] = filterFn
+  Filters.set(name, filterFn)
 }
 
 let idCound = 0
+
 function genId() {
   return 'Obs_' + idCound++
+}
+
+export function resetObsId() {
+  idCound = 0
 }

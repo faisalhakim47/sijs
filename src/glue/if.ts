@@ -13,6 +13,26 @@ export class IfGlue extends Glue {
     super()
   }
 
+  install() {
+    const cond = this.cond
+    this.helperEl = document.getElementById('if' + this.id)
+    if (cond instanceof ObsGetter) {
+      this.watchers.push(
+        cond.watch((val) => this.ifWatcher(val))
+      )
+    }
+    this.isInstalled = true
+  }
+
+  destroy() {
+    if (!this.isInstalled) return
+    const cond = this.cond
+    if (cond instanceof ObsGetter) {
+      this.unwatchAll()
+    }
+    this.helperEl = null
+  }
+
   ifWatcher(cond) {
     if (cond && !this.isExist()) {
       const e = this.elem()
@@ -30,23 +50,5 @@ export class IfGlue extends Glue {
 
   isExist() {
     return this.helperEl.nextElementSibling.id === this.id
-  }
-
-  install() {
-    const cond = this.cond
-    this.helperEl = document.getElementById('if' + this.id)
-    if (cond instanceof ObsGetter) {
-      cond.watch(this.ifWatcher)
-    }
-    this.isInstalled = true
-  }
-
-  destroy() {
-    if (!this.isInstalled) return
-    const cond = this.cond
-    if (cond instanceof ObsGetter) {
-      cond.unwatch(this.ifWatcher)
-    }
-    this.helperEl = null
   }
 }

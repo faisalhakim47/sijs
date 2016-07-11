@@ -1,3 +1,5 @@
+import { GlobalEvent } from '../instance/global-event'
+
 let uid = 0
 
 export function getId() {
@@ -6,4 +8,8 @@ export function getId() {
 
 export function genId() {
   return '_' + uid++
+}
+
+export function resetElemId() {
+  uid = 0
 }

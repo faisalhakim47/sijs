@@ -179,7 +179,7 @@ export function createElem(
       })
 
       for (let eventName in events) {
-        template += `${eventName}="_E('${id}:${eventName}')"`
+        template += `${eventName}="(function(){_E('${id}:${eventName}')})()"`
       }
     }
 
@@ -199,15 +199,12 @@ export function createElem(
       if (isElem(elem)) {
         if (!is.prerender) template += elem.template
         if (!is.server) glues.push(...elem.glues)
-        console.log('is server', is.server)
       } else if (child && !is.prerender) {
         template += child.toString()
       }
     })
 
     template += '</' + tag + '>'
-
-    console.trace(2, glues)
 
     return {
       id,

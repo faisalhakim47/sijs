@@ -21,11 +21,15 @@ export class ListGlue extends Glue {
     const { skip, limit } = opts
     if (skip instanceof ObsGetter) {
       this.skip = skip.val()
-      skip.watch(this.skipWatcher)
+      this.watchers.push(
+        skip.watch((val) => this.skipWatcher(val))
+      )
     }
     if (limit instanceof ObsGetter) {
       this.limit = limit.val()
-      limit.watch(this.limitWatcher)
+      this.watchers.push(
+        limit.watch((val) => this.limitWatcher(val))
+      )
     }
   }
 
@@ -41,20 +45,16 @@ export class ListGlue extends Glue {
       return oldItem
     })
 
-    this.items.watch(this.listGenerator)
+    this.watchers.push(
+      this.items.watch(() => this.listGenerator())
+    )
     this.isInstalled = true
   }
 
   destroy() {
     const { skip, limit } = this.opts
-    if (skip instanceof ObsGetter) {
-      skip.unwatch(this.skipWatcher)
-    }
-    if (limit instanceof ObsGetter) {
-      limit.unwatch(this.limitWatcher)
-    }
     if (!this.isInstalled) return
-    this.items.unwatch(this.listGenerator)
+    this.unwatchAll()
     this.helperEl = null
   }
 

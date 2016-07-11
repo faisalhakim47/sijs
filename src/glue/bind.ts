@@ -11,14 +11,16 @@ export class BindGlue extends Glue {
 
   install() {
     this.el = getEl(this.id)
-    this.value.watch(this.bindWatcher)
+    this.watchers.push(
+      this.value.watch(this.bindSetter)
+    )
     window['test'] = this.value
     this.isInstalled = true
   }
 
   destroy() {
     if (this.isInstalled) {
-      this.value.unwatch(this.bindWatcher)
+      this.unwatchAll()
       this.el = null
       removeElRef(this.id)
     } else {
@@ -26,8 +28,8 @@ export class BindGlue extends Glue {
     }
   }
 
-  bindWatcher = this.toViewBind.bind(this)
-  toViewBind(val) {
+  bindSetter = (val) => {
+    if (this.el.innerText == val) return
     this.el.innerText = val
   }
 }

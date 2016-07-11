@@ -21,14 +21,16 @@ export class InputRadioGlue extends Glue {
     }
     this.radioName = this.model.path + this.model.val()
     this.el.name = this.radioName
-    watchEvent(this.id, 'onclick', this.toModel)
+    this.watchers.push(
+      this.model.watch((val) => this.toView(val)),
+      watchEvent(this.id, 'onclick', () => this.toModel())
+    )
     this.isInstalled = true
   }
 
   destroy() {
     if (this.isInstalled) {
-      this.model.unwatch(this.toView)
-      unwatchEvent(this.id, 'onclick', this.toModel)
+      this.unwatchAll()
       this.el = null
       removeElRef(this.id)
     } else {

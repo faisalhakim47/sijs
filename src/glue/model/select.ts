@@ -26,15 +26,16 @@ export class SelectGlue extends Glue {
       )
     }
     this.el.value = this.model.val()
-    this.model.watch(this.toView)
-    watchEvent(this.id, 'onchange', this.toModel)
+    this.watchers.push(
+      this.model.watch((val) => this.toView(val)),
+      watchEvent(this.id, 'onchange', () => this.toModel())
+    )
     this.isInstalled = true
   }
 
   destroy() {
     if (this.isInstalled) {
-      this.model.unwatch(this.toView)
-      unwatchEvent(this.id, 'onchange', this.toModel)
+      this.unwatchAll()
       this.el = null
       removeElRef(this.id)
     } else {

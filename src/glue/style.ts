@@ -16,13 +16,15 @@ export class StyleGlue extends Glue {
         'Input element #', this.id, 'has not been inserted yet.', this
       )
     }
-    this.value.watch(this.styleWatcher)
+    this.watchers.push(
+      this.value.watch((val) => this.styleWatcher(val))
+    )
     this.isInstalled = true
   }
 
   destroy() {
     if (this.isInstalled) {
-      this.value.unwatch(this.styleWatcher)
+      this.unwatchAll()
       this.el = null
       removeElRef(this.id)
     } else {
