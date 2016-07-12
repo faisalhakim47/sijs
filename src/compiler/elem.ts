@@ -192,7 +192,11 @@ export function createElem(
         )
       }
       if (child instanceof RouterView) {
-        elem = child.init()
+        elem = child.init(
+          (<any>createElem).router
+            ? (<any>createElem).router.currentRouteName
+            : null
+        )
       }
       if (isElem(elem)) {
         if (!is.prerender) template += elem.template
