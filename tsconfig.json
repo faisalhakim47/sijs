@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
+    "rootDir": "src",
     "target": "es2015",
     "sourceMap": true,
-    "module": "commonjs",
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "emitDecoratorMetadata": true,

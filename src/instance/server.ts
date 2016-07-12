@@ -1,5 +1,5 @@
+import { Router } from './router'
 import { IComponentClass } from '../compiler/component'
-import { Router } from '../compiler/router'
 
 export function Generate(path: string, RouterInstance: Router, linkToApp: string) {
   let { template } = RouterInstance.generateElem(path)

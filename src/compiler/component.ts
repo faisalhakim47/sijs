@@ -1,8 +1,7 @@
 import { createElem, IElem } from './elem'
 import { Glue } from '../glue/glue'
-import { eventBus } from '../glue/event'
 import { Observable } from '../observer/observable'
-import { Router } from './router'
+import { Router } from '../instance/router'
 
 export interface IComponentClass {
   new (attrs?, children?, params?): Component

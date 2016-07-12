@@ -19,3 +19,5 @@ export const is = {
   server,
   prerender
 }
+
+export default is
