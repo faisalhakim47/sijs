@@ -13,6 +13,7 @@ import { InputNumberGlue } from '../glue/model/input-number'
 import { InputCheckboxGlue } from '../glue/model/input-checkbox'
 import { InputRadioGlue } from '../glue/model/input-radio'
 import { SelectGlue } from '../glue/model/select'
+import { Router } from '../instance/router'
 import { is } from '../instance/status'
 import { ObsGetter } from '../observer/observable'
 
@@ -30,8 +31,13 @@ export function isElem(t): t is IElem {
 
 const onRx = /^on/
 
-export const React = {
-  createElement: createElem
+export interface createElem {
+  (
+    tag: string | IComponentClass,
+    attrs: any,
+    ...children: (string | ObsGetter | IElem | RouterView)[]
+  ): IElem
+  router: Router
 }
 
 export function createElem(
@@ -42,7 +48,7 @@ export function createElem(
   if (attrs === null) attrs = { empty: true }
 
   if (isComponentClass(tag)) {
-    const c = new tag(attrs, children)
+    const c = new tag(attrs, children, (<any>createElem).router)
     return c.create()
   }
 

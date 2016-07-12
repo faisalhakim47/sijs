@@ -22,15 +22,18 @@ export abstract class Component {
 
   constructor(
     private attrs?,
-    private children?
+    private children?: any[],
+    private router?: Router
   ) {
     this.state = new Observable(this, 'rawState')
   }
 
   create(): IElem {
-    this.params = Router.currentParams
-    this.query = Router.currentQuery
+    this.params = this.router.currentParams
+    this.query = this.router.currentQuery
+    ;(<any>createElem).router = this.router
     const e = this.render(createElem, this.state)
+    ;(<any>createElem).router = null
     if (this.created) this.created()
     return e
   }
