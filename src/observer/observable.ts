@@ -1,6 +1,7 @@
 import { Emitter } from './emitter'
 import { GlobalEvent } from '../instance/global-event'
 import { get, set } from '../tools/object'
+import { isString } from '../tools/typecheck'
 
 export class Observable {
   private rawData
@@ -47,8 +48,8 @@ export class Observable {
   filter(path, filterFn: ((val) => any) | string) {
     const obs = this.get(path)
     const val = obs.val
-    if (filterFn instanceof String) {
-      obs.val = () => Filters.get(filterFn)(val())
+    if (isString(filterFn)) {
+      obs.val = () => Filters[filterFn](val())
       return obs
     } else if (filterFn instanceof Function) {
       obs.val = () => filterFn(val())
@@ -121,10 +122,12 @@ export interface IFilter {
   filterFn: (val) => any
 }
 
-export const Filters: Map<string, (val) => any> = new Map()
+export const Filters: {
+  [name: string]: (val) => void
+} = {}
 
 export function registerFilter(name: string, filterFn: (val) => any) {
-  Filters.set(name, filterFn)
+  Filters[name] = filterFn
 }
 
 let idCound = 0

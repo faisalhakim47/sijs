@@ -1,6 +1,6 @@
 import { Router } from './router'
 import { is } from './status'
-import { IElem } from '../compiler/elem'
+import { Elem } from '../compiler/elem'
 import { installGlues, installEvents } from '../glue/glue'
 
 export function Bootsrap(selector: string, RouterInstance: Router) {

@@ -1,12 +1,14 @@
 import { IComponentClass, isComponentClass } from './component'
 import { RouterView } from './routerview'
 import { genId } from './uid'
-import { Glue } from '../glue/glue'
+import { IGlobalAttribute, IAllAttribute } from './elem-interfaces'
 import { AttrGlue } from '../glue/attr'
 import { BindGlue } from '../glue/bind'
 import { ClassGlue } from '../glue/class'
 import { EventGlue } from '../glue/event'
+import { Glue } from '../glue/glue'
 import { IfGlue } from '../glue/if'
+import { LinkGlue } from '../glue/link'
 import { StyleGlue } from '../glue/style'
 import { TextGlue } from '../glue/model/text'
 import { InputNumberGlue } from '../glue/model/input-number'
@@ -16,212 +18,209 @@ import { SelectGlue } from '../glue/model/select'
 import { Router } from '../instance/router'
 import { is } from '../instance/status'
 import { ObsGetter } from '../observer/observable'
+import { isBoolean, isString } from '../tools/typecheck'
 
-export interface IElem {
-  id: string
-  _isElm: boolean
-  template: string
-  glues: Glue[]
-  events: string[]
+export class Elem {
+  constructor(
+    public id: string,
+    public template: string = '',
+    public glues: Glue[] = [],
+    public events: string[] = []
+  ) { }
 }
 
-export function isElem(t): t is IElem {
-  return t && t._isElm
-}
-
+export type TChild = (string | ObsGetter | Elem | RouterView)
 const onRx = /^on/
+export function h(
+  tag: string,
+  attrs: IAllAttribute = {},
+  children: TChild[] = []
+): Elem {
+  if (!attrs) attrs = { empty: true }
 
-export interface createElem {
-  (
-    tag: string | IComponentClass,
-    attrs: any,
-    ...children: (string | ObsGetter | IElem | RouterView)[]
-  ): IElem
-  router: Router
-}
-
-export function createElem(
-  tag: string | IComponentClass,
-  attrs: any,
-  ...children: (string | ObsGetter | IElem | RouterView)[]
-): IElem {
-  if (attrs === null) attrs = { empty: true }
-
-  if (isComponentClass(tag)) {
-    const c = new tag(attrs, children, (<any>createElem).router)
-    return c.create()
+  const attrId = attrs.id
+  let id: string
+  if (!attrId) {
+    id = genId()
+  } else if (isString(attrId)) {
+    id = attrId
+  } else if (attrId instanceof ObsGetter) {
+    id = attrId.val()
   }
+  let template = `<${tag} id="${id}" `
+  const glues: Glue[] = []
+  const events: string[] = []
 
-  if (typeof tag === 'string') {
-    const id = attrs.id || genId()
-    let template = '<' + tag + ' id="' + id + '"'
-    const glues: Glue[] = []
-    const events: string[] = []
+  if (!attrs.empty) {
+    if (attrs.if instanceof ObsGetter) {
+      const ifGlue = new IfGlue(id, attrs.if, () => {
+        return h(tag, attrs, children)
+      })
 
-    if (!attrs.empty) {
-      if (attrs.if instanceof ObsGetter) {
-        const ifGlue = new IfGlue(id, attrs.if, () => {
-          return createElem(tag, attrs, ...children)
-        })
+      const openTag = template
+      template = '<script id="if' + id + '"></script>'
 
-        const openTag = template
-        template = '<script id="if' + id + '"></script>'
-
-        if (attrs.if.val()) {
-          return { _isElm: true, id, template, glues: [ifGlue], events: [] }
-        } else {
-          template += openTag
-          glues.push(ifGlue)
-        }
-        attrs.if = null
-      } else if (attrs.if !== undefined && !attrs.if) {
-        return { _isElm: true, id, template: '', glues: [], events: [] }
+      if (attrs.if.val()) {
+        return new Elem(id, template, glues, events)
+      } else {
+        template += openTag
+        glues.push(ifGlue)
       }
+      attrs.if = null
+    } else if (attrs.if !== undefined && !attrs.if) {
+      return new Elem(id, template, glues, events)
+    }
 
-      if (attrs.className !== undefined) {
-        template += 'class="'
-        if (attrs.class) {
-          attrs.class instanceof ObsGetter
-            ? template += attrs.class.val() + ' '
-            : template += attrs.class + ' '
-          attrs.class = null
-        }
-        Object.keys(attrs.className).forEach((name) => {
+    if (attrs.className !== undefined) {
+      template += 'class="'
+      if (attrs.class) {
+        const attrClass = attrs.class
+        attrClass instanceof ObsGetter
+          ? template += `${attrClass.val()} `
+          : template += `${attrClass} `
+        attrs.class = null
+      }
+      Object.keys(attrs.className).forEach((className) => {
+        const cond = attrs.className[name]
+        if (cond instanceof ObsGetter) {
+          if (cond.val()) template = `${className} `
           glues.push(
             new ClassGlue(id, name, attrs.className[name])
           )
-        })
-
-        attrs.className = null
-        template += '"'
-      }
-
-      if (attrs.style !== undefined) {
-        template += 'style="'
-        Object.keys(attrs.style).forEach((styleName) => {
-          let value = attrs.style[styleName]
-          if (value instanceof ObsGetter) {
-            glues.push(
-              new StyleGlue(id, styleName, value)
-            )
-            value = value.val()
-          }
-          template += `${camelToSnake(styleName)}:${value};`
-        })
-        template += '"'
-      }
-
-      if (attrs.model instanceof ObsGetter) {
-        const model: ObsGetter = attrs.model
-        if (tag === 'input' || tag === 'textarea') {
-          switch (attrs.type) {
-            case 'number':
-              template += `value="${model.val()}"`
-              glues.push(
-                new InputNumberGlue(id, model)
-              )
-              events.push('oninput')
-              break
-
-            case 'checkbox':
-              glues.push(
-                new InputCheckboxGlue(id, model)
-              )
-              events.push('onchange')
-              break
-
-            case 'radio':
-              events.push('onchange')
-              glues.push(
-                new InputRadioGlue(id, model)
-              )
-              break
-
-            default:
-              template += `value="${model.val()}"`
-              glues.push(
-                new TextGlue(id, model)
-              )
-              events.push('oninput')
-              break
-          }
-        } else if (tag === 'select') {
-          template += `value="${model.val()}"`
-          glues.push(
-            new SelectGlue(id, model)
-          )
-          events.push('onchange')
-        }
-        attrs.model = null
-        attrs.type = null
-      }
-
-      Object.keys(attrs).forEach((name) => {
-        const val = attrs[name]
-
-        if (val === null) return
-
-        if (onRx.test(name)) {
-          glues.push(
-            new EventGlue(id, name, val)
-          )
-          events.push(name)
-        } else {
-          template += name + '="'
-          if (attrs[name] instanceof ObsGetter) {
-            template += val.val()
-            glues.push(
-              new AttrGlue(id, name, val)
-            )
-          } else if (typeof val === 'string') {
-            template += val
-          }
-          template += '"'
+        } else if (isBoolean(cond) && !!cond) {
+          template = `${className} `
         }
       })
+      attrs.className = null
+      template += '"'
     }
 
-    template += '>'
-
-    children.forEach((child, i) => {
-      let elem: IElem = <IElem>child
-      if (child instanceof ObsGetter) {
-        elem = createElem('span', null, child.val())
-        elem.glues.push(
-          new BindGlue(elem.id, child)
-        )
-      }
-      if (child instanceof RouterView) {
-        elem = child.init(
-          (<any>createElem).router
-            ? (<any>createElem).router.currentRouteName
-            : null
-        )
-      }
-      if (isElem(elem)) {
-        if (!is.prerender) template += elem.template
-        if (!is.server) {
-          glues.push(...elem.glues)
-          events.push(...elem.events)
+    if (attrs.style !== undefined) {
+      template += 'style="'
+      Object.keys(attrs.style).forEach((styleName) => {
+        let value = attrs.style[styleName]
+        if (value instanceof ObsGetter) {
+          value = value.val()
+          glues.push(
+            new StyleGlue(id, styleName, value)
+          )
         }
-      } else if (child && !is.prerender) {
-        template += child.toString()
+        template += `${camelToSnake(styleName)}:${value};`
+      })
+      template += '"'
+    }
+
+    if (attrs.link) {
+      glues.push(
+        new LinkGlue(id, attrs.link, (<any>h).router)
+      )
+      attrs.link = null
+    }
+
+    if (attrs.model instanceof ObsGetter) {
+      const model: ObsGetter = attrs.model
+      if (tag === 'input' || tag === 'textarea') {
+        switch (attrs.type) {
+          case 'number':
+            template += `value="${model.val()}"`
+            glues.push(
+              new InputNumberGlue(id, model)
+            )
+            events.push('oninput')
+            break
+
+          case 'checkbox':
+            glues.push(
+              new InputCheckboxGlue(id, model)
+            )
+            events.push('onchange')
+            break
+
+          case 'radio':
+            events.push('onchange')
+            glues.push(
+              new InputRadioGlue(id, model)
+            )
+            break
+
+          default:
+            template += `value="${model.val()}"`
+            glues.push(
+              new TextGlue(id, model)
+            )
+            events.push('oninput')
+            break
+        }
+      } else if (tag === 'select') {
+        template += `value="${model.val()}"`
+        glues.push(
+          new SelectGlue(id, model)
+        )
+        events.push('onchange')
+      }
+      attrs.model = null
+      attrs.type = null
+    }
+
+    Object.keys(attrs).forEach((name) => {
+      const val = attrs[name]
+
+      if (val === null) return
+
+      if (onRx.test(name)) {
+        glues.push(
+          new EventGlue(id, name, val)
+        )
+        events.push(name)
+      } else {
+        template += name + '="'
+        if (attrs[name] instanceof ObsGetter) {
+          template += val.val()
+          glues.push(
+            new AttrGlue(id, name, val)
+          )
+        } else if (isString(val)) {
+          template += val
+        }
+        template += '"'
       }
     })
-
-    template += '</' + tag + '>'
-
-    return {
-      id,
-      template,
-      glues,
-      events,
-      _isElm: true
-    }
   }
+
+  template += '>'
+
+  children.forEach((child, i) => {
+    let elem: Elem = <Elem>child
+    if (child instanceof ObsGetter) {
+      elem = h('span', null, child.val())
+      elem.glues.push(
+        new BindGlue(elem.id, child)
+      )
+    }
+    if (child instanceof RouterView) {
+      elem = child.init(
+        (<any>h).router
+          ? (<any>h).router.currentRouteName
+          : null
+      )
+    }
+    if (elem instanceof Elem) {
+      if (!is.prerender) template += elem.template
+      if (!is.server) {
+        glues.push(...elem.glues)
+        events.push(...elem.events)
+      }
+    } else if (child && !is.prerender) {
+      template += child.toString()
+    }
+  })
+
+  template += '</' + tag + '>'
+
+  return new Elem(id, template, glues, events)
 }
 
-function camelToSnake(str) {
+function camelToSnake(str: string): string {
   return str.replace(/\.?[A-Z]+/g, (x, y) => {
     return "-" + y.toLowerCase()
   }).replace(/^-/, '')

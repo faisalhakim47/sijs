@@ -1,4 +1,4 @@
-import { createElem, IElem } from './elem'
+import { h, Elem } from './elem'
 import { Glue } from '../glue/glue'
 import { Observable } from '../observer/observable'
 import { Router } from '../instance/router'
@@ -28,20 +28,17 @@ export abstract class Component {
     this.state = new Observable(this, 'rawState')
   }
 
-  create(): IElem {
+  create(): Elem {
     this.params = this.router.currentParams
     this.query = this.router.currentQuery
-    ;(<any>createElem).router = this.router
-    const e = this.render(createElem, this.state)
-    ;(<any>createElem).router = null
+    ;(<any>h).router = this.router
+    const e = this.render()
+    ;(<any>h).router = null
     if (this.created) this.created()
     return e
   }
 
-  abstract render(
-    e: (tag, attrs, ...children) => IElem,
-    state: Observable
-  ): IElem
+  abstract render(): Elem
 }
 
 export interface Component {

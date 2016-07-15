@@ -1,4 +1,4 @@
-import { IElem } from './elem'
+import { Elem } from './elem'
 import { genId } from './uid'
 import { Glue } from '../glue/glue'
 import { ListGlue } from '../glue/list'
@@ -6,7 +6,7 @@ import { ObsGetter } from '../observer/observable'
 import { ObsArray } from '../observer/observable-array'
 
 export interface IListFn {
-  (item, index: () => number): IElem
+  (item, index: () => number): Elem
 }
 
 function isListFn(t): t is IListFn {
@@ -21,7 +21,7 @@ export function eList(
     skip?: number | ObsGetter,
     key?: string
   }
-): IElem {
+): Elem {
   if (!opts) opts = { limit: 0, skip: 0 }
   let skip = opts.skip instanceof ObsGetter
     ? (<ObsGetter>opts.skip).val()
@@ -62,5 +62,5 @@ export function eList(
 
   glues.unshift(listGlue)
 
-  return { id, template, glues, _isElm: true, events: [] }
+  return new Elem(id, template, glues, events)
 }

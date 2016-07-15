@@ -1,5 +1,5 @@
 import { Glue, getEl, removeElRef, installGlues, destroyGlues } from './glue'
-import { IElem } from '../compiler/elem'
+import { Elem } from '../compiler/elem'
 import { ObsGetter } from '../observer/observable'
 
 export class IfGlue extends Glue {
@@ -8,7 +8,7 @@ export class IfGlue extends Glue {
   constructor(
     id: string,
     private cond: ObsGetter | boolean,
-    private elem: () => IElem
+    private elem: () => Elem
   ) {
     super()
     this.id = id

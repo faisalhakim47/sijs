@@ -1,5 +1,5 @@
 import { Glue, installGlues, destroyGlues } from './glue'
-import { IElem } from '../compiler/elem'
+import { Elem } from '../compiler/elem'
 import { ObsGetter } from '../observer/observable'
 import { ObsArray } from '../observer/observable-array'
 
@@ -11,7 +11,7 @@ export class ListGlue extends Glue {
   constructor(
     private helperId: string,
     private items: ObsArray,
-    private listFn: (item, index: () => number) => IElem,
+    private listFn: (item, index: () => number) => Elem,
     private opts: {
       skip?: ObsGetter | number,
       limit?: ObsGetter | number

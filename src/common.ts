@@ -1,6 +1,6 @@
 /// <reference path="../typings/index.d.ts" />
 export { Component } from './compiler/component'
-export { createElem } from './compiler/elem'
+export { h } from './compiler/elem'
 export { eList } from './compiler/elem-list'
 export { RouterView } from './compiler/routerview'
 export { installGlues, destroyGlues, installEvents, removeCurrentEvents } from './glue/glue'
