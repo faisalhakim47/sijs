@@ -54,13 +54,16 @@ export function destroyGlues(glues: Glue[]) {
 }
 
 let activeEvents = {}
-let isInstalled = false
-export function installEvents(events: string[]) {
-  if (isInstalled) return
+export function addEvents(events: string[]) {
   events.forEach((eventName) => {
-    activeEvents[eventName] = true
+    if (!(activeEvents[eventName] instanceof Function)) {
+      activeEvents[eventName] = true
+    }
   })
   Object.keys(activeEvents).forEach((eventName) => {
+    if (activeEvents[eventName] instanceof Function) {
+      return
+    }
     activeEvents[eventName] = (e) => {
       const target = e.target
       if (target.id) {
@@ -69,7 +72,6 @@ export function installEvents(events: string[]) {
     }
     window.addEventListener(eventName.slice(2), activeEvents[eventName])
   })
-  isInstalled = true
 }
 
 export function removeCurrentEvents() {
@@ -77,5 +79,4 @@ export function removeCurrentEvents() {
     window.removeEventListener(eventName.slice(2), activeEvents[eventName])
   })
   activeEvents = {}
-  isInstalled = false
 }

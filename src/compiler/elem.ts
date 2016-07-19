@@ -1,7 +1,7 @@
-import { IComponentClass, isComponentClass } from './component'
-import { RouterView } from './routerview'
+import { Component } from './component'
 import { genId } from './uid'
-import { IGlobalAttribute, IAllAttribute } from './elem-interfaces'
+import { IGlobalAttribute, IAllAttribute } from './interfaces'
+import { RouterView } from './routerview'
 import { AttrGlue } from '../glue/attr'
 import { BindGlue } from '../glue/bind'
 import { ClassGlue } from '../glue/class'
@@ -15,7 +15,6 @@ import { InputNumberGlue } from '../glue/model/input-number'
 import { InputCheckboxGlue } from '../glue/model/input-checkbox'
 import { InputRadioGlue } from '../glue/model/input-radio'
 import { SelectGlue } from '../glue/model/select'
-import { Router } from '../instance/router'
 import { is } from '../instance/status'
 import { ObsGetter } from '../observer/observable'
 import { isBoolean, isString } from '../tools/typecheck'
@@ -25,11 +24,13 @@ export class Elem {
     public id: string,
     public template: string = '',
     public glues: Glue[] = [],
-    public events: string[] = []
+    public events: string[] = [],
+    public readyFns: Function[],
+    public routers: RouterView[]
   ) { }
 }
 
-export type TChild = (string | ObsGetter | Elem | RouterView)
+export type TChild = (string | ObsGetter | Elem | Component)
 const onRx = /^on/
 export function h(
   tag: string,
@@ -50,6 +51,8 @@ export function h(
   let template = `<${tag} id="${id}" `
   const glues: Glue[] = []
   const events: string[] = []
+  const readyFns: Function[] = []
+  const routers: RouterView[] = []
 
   if (!attrs.empty) {
     if (attrs.if instanceof ObsGetter) {
@@ -61,14 +64,18 @@ export function h(
       template = '<script id="if' + id + '"></script>'
 
       if (attrs.if.val()) {
-        return new Elem(id, template, glues, events)
+        return new Elem(
+          id, template, glues, events, readyFns, routers
+        )
       } else {
         template += openTag
         glues.push(ifGlue)
       }
       attrs.if = null
     } else if (attrs.if !== undefined && !attrs.if) {
-      return new Elem(id, template, glues, events)
+      return new Elem(
+        id, template, glues, events, readyFns, routers
+      )
     }
 
     if (attrs.className !== undefined) {
@@ -112,7 +119,7 @@ export function h(
 
     if (attrs.link) {
       glues.push(
-        new LinkGlue(id, attrs.link, (<any>h).router)
+        new LinkGlue(id, attrs.link)
       )
       attrs.link = null
     }
@@ -197,18 +204,18 @@ export function h(
         new BindGlue(elem.id, child)
       )
     }
-    if (child instanceof RouterView) {
-      elem = child.init(
-        (<any>h).router
-          ? (<any>h).router.currentRouteName
-          : null
-      )
+
+    if (child instanceof Component) {
+      elem = child.create()
+      readyFns.push(child.ready)
     }
+
     if (elem instanceof Elem) {
       if (!is.prerender) template += elem.template
       if (!is.server) {
         glues.push(...elem.glues)
         events.push(...elem.events)
+        routers.push(...elem.routers)
       }
     } else if (child && !is.prerender) {
       template += child.toString()
@@ -217,7 +224,9 @@ export function h(
 
   template += '</' + tag + '>'
 
-  return new Elem(id, template, glues, events)
+  return new Elem(
+    id, template, glues, events, readyFns, routers
+  )
 }
 
 function camelToSnake(str: string): string {

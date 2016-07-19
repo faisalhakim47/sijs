@@ -1,5 +1,6 @@
 import { Elem } from './elem'
 import { genId } from './uid'
+import { RouterView } from './routerview'
 import { Glue } from '../glue/glue'
 import { ListGlue } from '../glue/list'
 import { ObsGetter } from '../observer/observable'
@@ -33,6 +34,8 @@ export function eList(
   const id = genId()
   const glues: Glue[] = []
   const events: string[] = []
+  const readyFns: Function[] = []
+  const routers: RouterView[] = []
   const listGlue = new ListGlue(id, items, listFn, opts)
   let template = '<script id="' + id + '"></script>'
 
@@ -62,5 +65,5 @@ export function eList(
 
   glues.unshift(listGlue)
 
-  return new Elem(id, template, glues, events)
+  return new Elem(id, template, glues, events, readyFns, routers)
 }

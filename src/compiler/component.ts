@@ -1,10 +1,10 @@
 import { h, Elem } from './elem'
 import { Glue } from '../glue/glue'
 import { Observable } from '../observer/observable'
-import { Router } from '../instance/router'
+import { RouterView } from './routerview'
 
 export interface IComponentClass {
-  new (attrs?, children?, params?): Component
+  new (attrs?, children?): Component
 }
 
 export function isComponentClass(t): t is IComponentClass {
@@ -22,18 +22,15 @@ export abstract class Component {
 
   constructor(
     private attrs?,
-    private children?: any[],
-    private router?: Router
+    private children?: any[]
   ) {
     this.state = new Observable(this, 'rawState')
   }
 
   create(): Elem {
-    this.params = this.router.currentParams
-    this.query = this.router.currentQuery
-    ;(<any>h).router = this.router
+    this.params = RouterView.ROUTER.state.params
+    this.query = RouterView.ROUTER.state.query
     const e = this.render()
-    ;(<any>h).router = null
     if (this.created) this.created()
     return e
   }
