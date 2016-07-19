@@ -1,0 +1,562 @@
+import { Glue } from '../glue/glue'
+import { ObsGetter } from '../observer/observable'
+
+export interface IElem {
+  _isElem: boolean
+  id: string
+  template: string
+  glues: Glue[]
+  events: string[]
+}
+
+export interface IGlobalAttribute {
+  // custom
+  empty?: boolean
+  if?: ObsGetter
+  model?: ObsGetter
+  link?: string
+  className?: IStyles
+
+  // https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes
+  accesskey?: string | ObsGetter
+  class?: string | ObsGetter
+  dir?: string | ObsGetter
+  draggable?: string | ObsGetter
+  dropzone?: string | ObsGetter
+  hidden?: string | ObsGetter
+  id?: string | ObsGetter
+  itemprop?: string | ObsGetter
+  lang?: string | ObsGetter
+  spellcheck?: string | ObsGetter
+  style?: string | ObsGetter
+  tabindex?: string | ObsGetter
+  title?: string | ObsGetter
+
+  // Events
+  onabort?: string | ObsGetter
+  onautocomplete?: string | ObsGetter
+  onautocompleteerror?: string | ObsGetter
+  onblur?: string | ObsGetter
+  oncancel?: string | ObsGetter
+  oncanplay?: string | ObsGetter
+  oncanplaythrough?: string | ObsGetter
+  onchange?: string | ObsGetter
+  onclick?: string | ObsGetter
+  onclose?: string | ObsGetter
+  oncontextmenu?: string | ObsGetter
+  oncuechange?: string | ObsGetter
+  ondblclick?: string | ObsGetter
+  ondrag?: string | ObsGetter
+  ondragend?: string | ObsGetter
+  ondragenter?: string | ObsGetter
+  ondragexit?: string | ObsGetter
+  ondragleave?: string | ObsGetter
+  ondragover?: string | ObsGetter
+  ondragstart?: string | ObsGetter
+  ondrop?: string | ObsGetter
+  ondurationchange?: string | ObsGetter
+  onemptied?: string | ObsGetter
+  onended?: string | ObsGetter
+  onerror?: string | ObsGetter
+  onfocus?: string | ObsGetter
+  oninput?: string | ObsGetter
+  oninvalid?: string | ObsGetter
+  onkeydown?: string | ObsGetter
+  onkeypress?: string | ObsGetter
+  onkeyup?: string | ObsGetter
+  onload?: string | ObsGetter
+  onloadeddata?: string | ObsGetter
+  onloadedmetadata?: string | ObsGetter
+  onloadstart?: string | ObsGetter
+  onmousedown?: string | ObsGetter
+  onmouseenter?: string | ObsGetter
+  onmouseleave?: string | ObsGetter
+  onmousemove?: string | ObsGetter
+  onmouseout?: string | ObsGetter
+  onmouseover?: string | ObsGetter
+  onmouseup?: string | ObsGetter
+  onmousewheel?: string | ObsGetter
+  onpause?: string | ObsGetter
+  onplay?: string | ObsGetter
+  onplaying?: string | ObsGetter
+  onprogress?: string | ObsGetter
+  onratechange?: string | ObsGetter
+  onreset?: string | ObsGetter
+  onresize?: string | ObsGetter
+  onscroll?: string | ObsGetter
+  onseeked?: string | ObsGetter
+  onseeking?: string | ObsGetter
+  onselect?: string | ObsGetter
+  onshow?: string | ObsGetter
+  onsort?: string | ObsGetter
+  onstalled?: string | ObsGetter
+  onsubmit?: string | ObsGetter
+  onsuspend?: string | ObsGetter
+  ontimeupdate?: string | ObsGetter
+  ontoggle?: string | ObsGetter
+  onvolumechange?: string | ObsGetter
+  onwaiting?: string | ObsGetter
+}
+
+export interface IAllAttribute extends IGlobalAttribute {
+  // https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes
+  accept?: string | ObsGetter
+  'accept-charset'?: string | ObsGetter
+  accesskey?: string | ObsGetter
+  action?: string | ObsGetter
+  align?: string | ObsGetter
+  alt?: string | ObsGetter
+  autocomplete?: string | ObsGetter
+  autofocus?: string | ObsGetter
+  autoplay?: string | ObsGetter
+  autosave?: string | ObsGetter
+  bgcolor?: string | ObsGetter
+  border?: string | ObsGetter
+  buffered?: string | ObsGetter
+  challenge?: string | ObsGetter
+  charset?: string | ObsGetter
+  checked?: string | ObsGetter
+  cite?: string | ObsGetter
+  class?: string | ObsGetter
+  code?: string | ObsGetter
+  codebase?: string | ObsGetter
+  color?: string | ObsGetter
+  cols?: string | ObsGetter
+  colspan?: string | ObsGetter
+  content?: string | ObsGetter
+  contenteditable?: string | ObsGetter
+  contextmenu?: string | ObsGetter
+  controls?: string | ObsGetter
+  coords?: string | ObsGetter
+  data?: string | ObsGetter
+  datetime?: string | ObsGetter
+  default?: string | ObsGetter
+  defer?: string | ObsGetter
+  dir?: string | ObsGetter
+  dirname?: string | ObsGetter
+  disabled?: string | ObsGetter
+  download?: string | ObsGetter
+  draggable?: string | ObsGetter
+  dropzone?: string | ObsGetter
+  enctype?: string | ObsGetter
+  for?: string | ObsGetter
+  form?: string | ObsGetter
+  formaction?: string | ObsGetter
+  headers?: string | ObsGetter
+  height?: string | ObsGetter
+  hidden?: string | ObsGetter
+  high?: string | ObsGetter
+  href?: string | ObsGetter
+  hreflang?: string | ObsGetter
+  'http-equiv'?: string | ObsGetter
+  icon?: string | ObsGetter
+  id?: string | ObsGetter
+  ismap?: string | ObsGetter
+  itemprop?: string | ObsGetter
+  keytype?: string | ObsGetter
+  kind?: string | ObsGetter
+  label?: string | ObsGetter
+  lang?: string | ObsGetter
+  language?: string | ObsGetter
+  list?: string | ObsGetter
+  loop?: string | ObsGetter
+  low?: string | ObsGetter
+  manifest?: string | ObsGetter
+  max?: string | ObsGetter
+  maxlength?: string | ObsGetter
+  media?: string | ObsGetter
+  method?: string | ObsGetter
+  min?: string | ObsGetter
+  multiple?: string | ObsGetter
+  muted?: string | ObsGetter
+  name?: string | ObsGetter
+  novalidate?: string | ObsGetter
+  open?: string | ObsGetter
+  optimum?: string | ObsGetter
+  pattern?: string | ObsGetter
+  ping?: string | ObsGetter
+  placeholder?: string | ObsGetter
+  poster?: string | ObsGetter
+  preload?: string | ObsGetter
+  radiogroup?: string | ObsGetter
+  readonly?: string | ObsGetter
+  rel?: string | ObsGetter
+  required?: string | ObsGetter
+  reversed?: string | ObsGetter
+  rows?: string | ObsGetter
+  rowspan?: string | ObsGetter
+  scope?: string | ObsGetter
+  scoped?: string | ObsGetter
+  seamless?: string | ObsGetter
+  selected?: string | ObsGetter
+  shape?: string | ObsGetter
+  size?: string | ObsGetter
+  sizes?: string | ObsGetter
+  span?: string | ObsGetter
+  spellcheck?: string | ObsGetter
+  src?: string | ObsGetter
+  srcdoc?: string | ObsGetter
+  srclang?: string | ObsGetter
+  srcset?: string | ObsGetter
+  start?: string | ObsGetter
+  step?: string | ObsGetter
+  style?: string | ObsGetter
+  summary?: string | ObsGetter
+  tabindex?: string | ObsGetter
+  target?: string | ObsGetter
+  title?: string | ObsGetter
+  type?: string | ObsGetter
+  usemap?: string | ObsGetter
+  value?: string | ObsGetter
+  width?: string | ObsGetter
+  wrap?: string | ObsGetter
+}
+
+export interface IStyles {
+  [index: number]: string | ObsGetter
+  alignContent?: string | ObsGetter
+  alignItems?: string | ObsGetter
+  alignSelf?: string | ObsGetter
+  alignmentBaseline?: string | ObsGetter
+  animation?: string | ObsGetter
+  animationDelay?: string | ObsGetter
+  animationDirection?: string | ObsGetter
+  animationDuration?: string | ObsGetter
+  animationFillMode?: string | ObsGetter
+  animationIterationCount?: string | ObsGetter
+  animationName?: string | ObsGetter
+  animationPlayState?: string | ObsGetter
+  animationTimingFunction?: string | ObsGetter
+  backfaceVisibility?: string | ObsGetter
+  background?: string | ObsGetter
+  backgroundAttachment?: string | ObsGetter
+  backgroundClip?: string | ObsGetter
+  backgroundColor?: string | ObsGetter
+  backgroundImage?: string | ObsGetter
+  backgroundOrigin?: string | ObsGetter
+  backgroundPosition?: string | ObsGetter
+  backgroundPositionX?: string | ObsGetter
+  backgroundPositionY?: string | ObsGetter
+  backgroundRepeat?: string | ObsGetter
+  backgroundSize?: string | ObsGetter
+  baselineShift?: string | ObsGetter
+  border?: string | ObsGetter
+  borderBottom?: string | ObsGetter
+  borderBottomColor?: string | ObsGetter
+  borderBottomLeftRadius?: string | ObsGetter
+  borderBottomRightRadius?: string | ObsGetter
+  borderBottomStyle?: string | ObsGetter
+  borderBottomWidth?: string | ObsGetter
+  borderCollapse?: string | ObsGetter
+  borderColor?: string | ObsGetter
+  borderImage?: string | ObsGetter
+  borderImageOutset?: string | ObsGetter
+  borderImageRepeat?: string | ObsGetter
+  borderImageSlice?: string | ObsGetter
+  borderImageSource?: string | ObsGetter
+  borderImageWidth?: string | ObsGetter
+  borderLeft?: string | ObsGetter
+  borderLeftColor?: string | ObsGetter
+  borderLeftStyle?: string | ObsGetter
+  borderLeftWidth?: string | ObsGetter
+  borderRadius?: string | ObsGetter
+  borderRight?: string | ObsGetter
+  borderRightColor?: string | ObsGetter
+  borderRightStyle?: string | ObsGetter
+  borderRightWidth?: string | ObsGetter
+  borderSpacing?: string | ObsGetter
+  borderStyle?: string | ObsGetter
+  borderTop?: string | ObsGetter
+  borderTopColor?: string | ObsGetter
+  borderTopLeftRadius?: string | ObsGetter
+  borderTopRightRadius?: string | ObsGetter
+  borderTopStyle?: string | ObsGetter
+  borderTopWidth?: string | ObsGetter
+  borderWidth?: string | ObsGetter
+  bottom?: string | ObsGetter
+  boxShadow?: string | ObsGetter
+  boxSizing?: string | ObsGetter
+  breakAfter?: string | ObsGetter
+  breakBefore?: string | ObsGetter
+  breakInside?: string | ObsGetter
+  captionSide?: string | ObsGetter
+  clear?: string | ObsGetter
+  clip?: string | ObsGetter
+  clipPath?: string | ObsGetter
+  clipRule?: string | ObsGetter
+  color?: string | ObsGetter
+  colorInterpolationFilters?: string | ObsGetter
+  columnCount?: any;
+  columnFill?: string | ObsGetter
+  columnGap?: any;
+  columnRule?: string | ObsGetter
+  columnRuleColor?: any;
+  columnRuleStyle?: string | ObsGetter
+  columnRuleWidth?: any;
+  columnSpan?: string | ObsGetter
+  columnWidth?: any;
+  columns?: string | ObsGetter
+  content?: string | ObsGetter
+  counterIncrement?: string | ObsGetter
+  counterReset?: string | ObsGetter
+  cssFloat?: string | ObsGetter
+  cssText?: string | ObsGetter
+  cursor?: string | ObsGetter
+  direction?: string | ObsGetter
+  display?: string | ObsGetter
+  dominantBaseline?: string | ObsGetter
+  emptyCells?: string | ObsGetter
+  enableBackground?: string | ObsGetter
+  fill?: string | ObsGetter
+  fillOpacity?: string | ObsGetter
+  fillRule?: string | ObsGetter
+  filter?: string | ObsGetter
+  flex?: string | ObsGetter
+  flexBasis?: string | ObsGetter
+  flexDirection?: string | ObsGetter
+  flexFlow?: string | ObsGetter
+  flexGrow?: string | ObsGetter
+  flexShrink?: string | ObsGetter
+  flexWrap?: string | ObsGetter
+  floodColor?: string | ObsGetter
+  floodOpacity?: string | ObsGetter
+  font?: string | ObsGetter
+  fontFamily?: string | ObsGetter
+  fontFeatureSettings?: string | ObsGetter
+  fontSize?: string | ObsGetter
+  fontSizeAdjust?: string | ObsGetter
+  fontStretch?: string | ObsGetter
+  fontStyle?: string | ObsGetter
+  fontVariant?: string | ObsGetter
+  fontWeight?: string | ObsGetter
+  glyphOrientationHorizontal?: string | ObsGetter
+  glyphOrientationVertical?: string | ObsGetter
+  height?: string | ObsGetter
+  imeMode?: string | ObsGetter
+  justifyContent?: string | ObsGetter
+  kerning?: string | ObsGetter
+  left?: string | ObsGetter
+  length: number;
+  letterSpacing?: string | ObsGetter
+  lightingColor?: string | ObsGetter
+  lineHeight?: string | ObsGetter
+  listStyle?: string | ObsGetter
+  listStyleImage?: string | ObsGetter
+  listStylePosition?: string | ObsGetter
+  listStyleType?: string | ObsGetter
+  margin?: string | ObsGetter
+  marginBottom?: string | ObsGetter
+  marginLeft?: string | ObsGetter
+  marginRight?: string | ObsGetter
+  marginTop?: string | ObsGetter
+  marker?: string | ObsGetter
+  markerEnd?: string | ObsGetter
+  markerMid?: string | ObsGetter
+  markerStart?: string | ObsGetter
+  mask?: string | ObsGetter
+  maxHeight?: string | ObsGetter
+  maxWidth?: string | ObsGetter
+  minHeight?: string | ObsGetter
+  minWidth?: string | ObsGetter
+  msContentZoomChaining?: string | ObsGetter
+  msContentZoomLimit?: string | ObsGetter
+  msContentZoomLimitMax?: any;
+  msContentZoomLimitMin?: any;
+  msContentZoomSnap?: string | ObsGetter
+  msContentZoomSnapPoints?: string | ObsGetter
+  msContentZoomSnapType?: string | ObsGetter
+  msContentZooming?: string | ObsGetter
+  msFlowFrom?: string | ObsGetter
+  msFlowInto?: string | ObsGetter
+  msFontFeatureSettings?: string | ObsGetter
+  msGridColumn?: any;
+  msGridColumnAlign?: string | ObsGetter
+  msGridColumnSpan?: any;
+  msGridColumns?: string | ObsGetter
+  msGridRow?: any;
+  msGridRowAlign?: string | ObsGetter
+  msGridRowSpan?: any;
+  msGridRows?: string | ObsGetter
+  msHighContrastAdjust?: string | ObsGetter
+  msHyphenateLimitChars?: string | ObsGetter
+  msHyphenateLimitLines?: any;
+  msHyphenateLimitZone?: any;
+  msHyphens?: string | ObsGetter
+  msImeAlign?: string | ObsGetter
+  msOverflowStyle?: string | ObsGetter
+  msScrollChaining?: string | ObsGetter
+  msScrollLimit?: string | ObsGetter
+  msScrollLimitXMax?: any;
+  msScrollLimitXMin?: any;
+  msScrollLimitYMax?: any;
+  msScrollLimitYMin?: any;
+  msScrollRails?: string | ObsGetter
+  msScrollSnapPointsX?: string | ObsGetter
+  msScrollSnapPointsY?: string | ObsGetter
+  msScrollSnapType?: string | ObsGetter
+  msScrollSnapX?: string | ObsGetter
+  msScrollSnapY?: string | ObsGetter
+  msScrollTranslation?: string | ObsGetter
+  msTextCombineHorizontal?: string | ObsGetter
+  msTextSizeAdjust?: any;
+  msTouchAction?: string | ObsGetter
+  msTouchSelect?: string | ObsGetter
+  msUserSelect?: string | ObsGetter
+  msWrapFlow?: string | ObsGetter
+  msWrapMargin?: any;
+  msWrapThrough?: string | ObsGetter
+  opacity?: string | ObsGetter
+  order?: string | ObsGetter
+  orphans?: string | ObsGetter
+  outline?: string | ObsGetter
+  outlineColor?: string | ObsGetter
+  outlineStyle?: string | ObsGetter
+  outlineWidth?: string | ObsGetter
+  overflow?: string | ObsGetter
+  overflowX?: string | ObsGetter
+  overflowY?: string | ObsGetter
+  padding?: string | ObsGetter
+  paddingBottom?: string | ObsGetter
+  paddingLeft?: string | ObsGetter
+  paddingRight?: string | ObsGetter
+  paddingTop?: string | ObsGetter
+  pageBreakAfter?: string | ObsGetter
+  pageBreakBefore?: string | ObsGetter
+  pageBreakInside?: string | ObsGetter
+  parentRule: CSSRule;
+  perspective?: string | ObsGetter
+  perspectiveOrigin?: string | ObsGetter
+  pointerEvents?: string | ObsGetter
+  position?: string | ObsGetter
+  quotes?: string | ObsGetter
+  right?: string | ObsGetter
+  rubyAlign?: string | ObsGetter
+  rubyOverhang?: string | ObsGetter
+  rubyPosition?: string | ObsGetter
+  stopColor?: string | ObsGetter
+  stopOpacity?: string | ObsGetter
+  stroke?: string | ObsGetter
+  strokeDasharray?: string | ObsGetter
+  strokeDashoffset?: string | ObsGetter
+  strokeLinecap?: string | ObsGetter
+  strokeLinejoin?: string | ObsGetter
+  strokeMiterlimit?: string | ObsGetter
+  strokeOpacity?: string | ObsGetter
+  strokeWidth?: string | ObsGetter
+  tableLayout?: string | ObsGetter
+  textAlign?: string | ObsGetter
+  textAlignLast?: string | ObsGetter
+  textAnchor?: string | ObsGetter
+  textDecoration?: string | ObsGetter
+  textFillColor?: string | ObsGetter
+  textIndent?: string | ObsGetter
+  textJustify?: string | ObsGetter
+  textKashida?: string | ObsGetter
+  textKashidaSpace?: string | ObsGetter
+  textOverflow?: string | ObsGetter
+  textShadow?: string | ObsGetter
+  textTransform?: string | ObsGetter
+  textUnderlinePosition?: string | ObsGetter
+  top?: string | ObsGetter
+  touchAction?: string | ObsGetter
+  transform?: string | ObsGetter
+  transformOrigin?: string | ObsGetter
+  transformStyle?: string | ObsGetter
+  transition?: string | ObsGetter
+  transitionDelay?: string | ObsGetter
+  transitionDuration?: string | ObsGetter
+  transitionProperty?: string | ObsGetter
+  transitionTimingFunction?: string | ObsGetter
+  unicodeBidi?: string | ObsGetter
+  verticalAlign?: string | ObsGetter
+  visibility?: string | ObsGetter
+  webkitAlignContent?: string | ObsGetter
+  webkitAlignItems?: string | ObsGetter
+  webkitAlignSelf?: string | ObsGetter
+  webkitAnimation?: string | ObsGetter
+  webkitAnimationDelay?: string | ObsGetter
+  webkitAnimationDirection?: string | ObsGetter
+  webkitAnimationDuration?: string | ObsGetter
+  webkitAnimationFillMode?: string | ObsGetter
+  webkitAnimationIterationCount?: string | ObsGetter
+  webkitAnimationName?: string | ObsGetter
+  webkitAnimationPlayState?: string | ObsGetter
+  webkitAnimationTimingFunction?: string | ObsGetter
+  webkitAppearance?: string | ObsGetter
+  webkitBackfaceVisibility?: string | ObsGetter
+  webkitBackground?: string | ObsGetter
+  webkitBackgroundAttachment?: string | ObsGetter
+  webkitBackgroundClip?: string | ObsGetter
+  webkitBackgroundColor?: string | ObsGetter
+  webkitBackgroundImage?: string | ObsGetter
+  webkitBackgroundOrigin?: string | ObsGetter
+  webkitBackgroundPosition?: string | ObsGetter
+  webkitBackgroundPositionX?: string | ObsGetter
+  webkitBackgroundPositionY?: string | ObsGetter
+  webkitBackgroundRepeat?: string | ObsGetter
+  webkitBackgroundSize?: string | ObsGetter
+  webkitBorderBottomLeftRadius?: string | ObsGetter
+  webkitBorderBottomRightRadius?: string | ObsGetter
+  webkitBorderImage?: string | ObsGetter
+  webkitBorderImageOutset?: string | ObsGetter
+  webkitBorderImageRepeat?: string | ObsGetter
+  webkitBorderImageSlice?: string | ObsGetter
+  webkitBorderImageSource?: string | ObsGetter
+  webkitBorderImageWidth?: string | ObsGetter
+  webkitBorderRadius?: string | ObsGetter
+  webkitBorderTopLeftRadius?: string | ObsGetter
+  webkitBorderTopRightRadius?: string | ObsGetter
+  webkitBoxAlign?: string | ObsGetter
+  webkitBoxDirection?: string | ObsGetter
+  webkitBoxFlex?: string | ObsGetter
+  webkitBoxOrdinalGroup?: string | ObsGetter
+  webkitBoxOrient?: string | ObsGetter
+  webkitBoxPack?: string | ObsGetter
+  webkitBoxSizing?: string | ObsGetter
+  webkitColumnBreakAfter?: string | ObsGetter
+  webkitColumnBreakBefore?: string | ObsGetter
+  webkitColumnBreakInside?: string | ObsGetter
+  webkitColumnCount?: any;
+  webkitColumnGap?: any;
+  webkitColumnRule?: string | ObsGetter
+  webkitColumnRuleColor?: any;
+  webkitColumnRuleStyle?: string | ObsGetter
+  webkitColumnRuleWidth?: any;
+  webkitColumnSpan?: string | ObsGetter
+  webkitColumnWidth?: any;
+  webkitColumns?: string | ObsGetter
+  webkitFilter?: string | ObsGetter
+  webkitFlex?: string | ObsGetter
+  webkitFlexBasis?: string | ObsGetter
+  webkitFlexDirection?: string | ObsGetter
+  webkitFlexFlow?: string | ObsGetter
+  webkitFlexGrow?: string | ObsGetter
+  webkitFlexShrink?: string | ObsGetter
+  webkitFlexWrap?: string | ObsGetter
+  webkitJustifyContent?: string | ObsGetter
+  webkitOrder?: string | ObsGetter
+  webkitPerspective?: string | ObsGetter
+  webkitPerspectiveOrigin?: string | ObsGetter
+  webkitTapHighlightColor?: string | ObsGetter
+  webkitTextFillColor?: string | ObsGetter
+  webkitTextSizeAdjust?: any;
+  webkitTransform?: string | ObsGetter
+  webkitTransformOrigin?: string | ObsGetter
+  webkitTransformStyle?: string | ObsGetter
+  webkitTransition?: string | ObsGetter
+  webkitTransitionDelay?: string | ObsGetter
+  webkitTransitionDuration?: string | ObsGetter
+  webkitTransitionProperty?: string | ObsGetter
+  webkitTransitionTimingFunction?: string | ObsGetter
+  webkitUserSelect?: string | ObsGetter
+  webkitWritingMode?: string | ObsGetter
+  whiteSpace?: string | ObsGetter
+  widows?: string | ObsGetter
+  width?: string | ObsGetter
+  wordBreak?: string | ObsGetter
+  wordSpacing?: string | ObsGetter
+  wordWrap?: string | ObsGetter
+  writingMode?: string | ObsGetter
+  zIndex?: string | ObsGetter
+  zoom?: string | ObsGetter
+}
