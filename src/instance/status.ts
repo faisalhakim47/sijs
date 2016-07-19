@@ -5,7 +5,7 @@ try {
 } catch (e) { }
 
 try {
-  test['server'] = !!global
+  test['server'] = !!(global as any)
 } catch (e) { }
 
 const browser = !!test['bowser']

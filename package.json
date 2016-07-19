@@ -1,7 +1,11 @@
 {
   "name": "sijs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A view library. Reinvent.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/faisalhakim47/sijs.git"
+  },
   "main": "lib/common",
   "scripts": {
     "dev": "concurrently --kill-others \"npm run build:watch\"",

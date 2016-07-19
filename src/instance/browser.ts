@@ -3,29 +3,28 @@ import { Component } from '../compiler/component'
 import { Elem } from '../compiler/elem'
 import { installGlues, addEvents } from '../glue/glue'
 
-export function Bootsrap(selector: string, Component: Component) {
+export function Bootstrap(Component: Component) {
   if (is.browser) {
-    document.addEventListener('DOMContentLoaded', () => {
-      // generate template and glues
-      const { template, glues, events, readyFns } = Component.create()
+    // generate template and glues
+    const { template, glues, events, readyFns } = Component.create()
 
-      // insert template
-      if (!is.prerender) {
-        (<HTMLElement>document.querySelector(selector)).outerHTML = template
-      }
+    // insert template
 
-      // install glues
-      installGlues(glues)
-      addEvents(events)
+    if (!is.prerender) {
+      document.write(template)
+    }
 
-      // execute all ready components function
-      readyFns.forEach((fn) => {
-        if (fn) fn()
-      })
+    // install glues
+    installGlues(glues)
+    addEvents(events)
 
-      // ensure prerender false
-      is.prerender = false
+    // execute all ready components function
+    readyFns.forEach((fn) => {
+      if (fn) fn()
     })
+
+    // ensure prerender false
+    is.prerender = false
   } else {
     console.error('Cannot Bootsrap(), this is not browser.')
   }

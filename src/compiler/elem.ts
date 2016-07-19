@@ -129,7 +129,7 @@ export function h(
       if (tag === 'input' || tag === 'textarea') {
         switch (attrs.type) {
           case 'number':
-            template += `value="${model.val()}"`
+            template += `value="${model.val() || ''}"`
             glues.push(
               new InputNumberGlue(id, model)
             )
@@ -151,7 +151,7 @@ export function h(
             break
 
           default:
-            template += `value="${model.val()}"`
+            template += `value="${model.val() || ''}"`
             glues.push(
               new TextGlue(id, model)
             )
@@ -159,7 +159,7 @@ export function h(
             break
         }
       } else if (tag === 'select') {
-        template += `value="${model.val()}"`
+        template += `value="${model.val() || ''}"`
         glues.push(
           new SelectGlue(id, model)
         )
@@ -199,7 +199,7 @@ export function h(
   children.forEach((child, i) => {
     let elem: Elem = <Elem>child
     if (child instanceof ObsGetter) {
-      elem = h('span', null, child.val())
+      elem = h('span', null, [child.val() || ''])
       elem.glues.push(
         new BindGlue(elem.id, child)
       )

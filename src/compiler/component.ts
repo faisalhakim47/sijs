@@ -28,8 +28,10 @@ export abstract class Component {
   }
 
   create(): Elem {
-    this.params = RouterView.ROUTER.state.params
-    this.query = RouterView.ROUTER.state.query
+    if (RouterView.ROUTER) {
+      this.params = RouterView.ROUTER.state.params
+      this.query = RouterView.ROUTER.state.query
+    }
     const e = this.render()
     if (this.created) this.created()
     return e
