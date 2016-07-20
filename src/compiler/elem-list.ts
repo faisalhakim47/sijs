@@ -3,7 +3,7 @@ import { genId } from './uid'
 import { RouterView } from './routerview'
 import { Glue } from '../glue/glue'
 import { ListGlue } from '../glue/list'
-import { ObsGetter } from '../observer/observable'
+import { ObsObject } from '../observer/observable'
 import { ObsArray } from '../observer/observable-array'
 
 export interface IListFn {
@@ -18,23 +18,23 @@ export function eList(
   items: ObsArray,
   listFn: IListFn,
   opts?: {
-    limit?: number | ObsGetter,
-    skip?: number | ObsGetter,
+    limit?: number | ObsObject,
+    skip?: number | ObsObject,
     key?: string
   }
 ): Elem {
   if (!opts) opts = { limit: 0, skip: 0 }
-  let skip = opts.skip instanceof ObsGetter
-    ? (<ObsGetter>opts.skip).val()
+  let skip = opts.skip instanceof ObsObject
+    ? (<ObsObject>opts.skip).val()
     : (opts.skip || 0)
-  let limit = opts.limit instanceof ObsGetter
-    ? (<ObsGetter>opts.limit).val()
+  let limit = opts.limit instanceof ObsObject
+    ? (<ObsObject>opts.limit).val()
     : (opts.limit || 0)
 
   const id = genId()
   const glues: Glue[] = []
   const events: string[] = []
-  const readyFns: Function[] = []
+  const afterInstallFns: Function[] = []
   const routers: RouterView[] = []
   const listGlue = new ListGlue(id, items, listFn, opts)
   let template = '<script id="' + id + '"></script>'
@@ -65,5 +65,5 @@ export function eList(
 
   glues.unshift(listGlue)
 
-  return new Elem(id, template, glues, events, readyFns, routers)
+  return new Elem(id, template, glues, events, afterInstallFns, routers)
 }

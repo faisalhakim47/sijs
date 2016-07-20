@@ -1,5 +1,5 @@
 import { Emitter } from './emitter'
-import { Observable, Filters, ObsGetter } from './observable'
+import { Observable, Filters, ObsObject } from './observable'
 import { compute } from './compute'
 import { get, set } from '../tools/object'
 
@@ -98,7 +98,7 @@ export class ObsArray {
   }
 
   filter(
-    deps: (ObsGetter | ObsArray)[],
+    deps: (ObsObject | ObsArray)[],
     filterFn: (item, index: number, ...val) => boolean
   ) {
     deps.push(this)

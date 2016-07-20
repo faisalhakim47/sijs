@@ -1,7 +1,17 @@
-import { ObsGetter } from './observable'
+import { ObsObject } from './observable'
 import { ObsArray } from './observable-array'
 
-export function dependsOn(deps: (ObsGetter | ObsArray)[], fn) {
+export type TObs = ObsObject | ObsArray
+
+export function subscribeTo(dep: (TObs[] | TObs), fn) {
+  let deps: TObs[]
+
+  if (Array.isArray(dep)) {
+    deps = dep
+  } else {
+    deps = [dep]
+  }
+
   const Emit = () => {
     fn(...deps.map(dep => dep.val()))
   }

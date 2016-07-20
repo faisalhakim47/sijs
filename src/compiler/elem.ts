@@ -16,7 +16,7 @@ import { InputCheckboxGlue } from '../glue/model/input-checkbox'
 import { InputRadioGlue } from '../glue/model/input-radio'
 import { SelectGlue } from '../glue/model/select'
 import { is } from '../instance/status'
-import { ObsGetter } from '../observer/observable'
+import { ObsObject } from '../observer/observable'
 import { isBoolean, isString } from '../tools/typecheck'
 
 export class Elem {
@@ -25,19 +25,19 @@ export class Elem {
     public template: string = '',
     public glues: Glue[] = [],
     public events: string[] = [],
-    public readyFns: Function[],
+    public afterInstallFns: Function[],
     public routers: RouterView[]
   ) { }
 }
 
-export type TChild = (string | ObsGetter | Elem | Component)
+export type TChild = (string | ObsObject | Elem | Component)
 const onRx = /^on/
 export function h(
   tag: string,
   attrs: IAllAttribute = {},
   children: TChild[] = []
 ): Elem {
-  if (!attrs) attrs = { empty: true }
+  if (!Object.keys(attrs || {}).length) attrs = { empty: true }
 
   const attrId = attrs.id
   let id: string
@@ -45,17 +45,17 @@ export function h(
     id = genId()
   } else if (isString(attrId)) {
     id = attrId
-  } else if (attrId instanceof ObsGetter) {
+  } else if (attrId instanceof ObsObject) {
     id = attrId.val()
   }
   let template = `<${tag} id="${id}" `
   const glues: Glue[] = []
   const events: string[] = []
-  const readyFns: Function[] = []
+  const afterInstallFns: Function[] = []
   const routers: RouterView[] = []
 
   if (!attrs.empty) {
-    if (attrs.if instanceof ObsGetter) {
+    if (attrs.if instanceof ObsObject) {
       const ifGlue = new IfGlue(id, attrs.if, () => {
         return h(tag, attrs, children)
       })
@@ -65,7 +65,7 @@ export function h(
 
       if (attrs.if.val()) {
         return new Elem(
-          id, template, glues, events, readyFns, routers
+          id, template, glues, events, afterInstallFns, routers
         )
       } else {
         template += openTag
@@ -74,7 +74,7 @@ export function h(
       attrs.if = null
     } else if (attrs.if !== undefined && !attrs.if) {
       return new Elem(
-        id, template, glues, events, readyFns, routers
+        id, template, glues, events, afterInstallFns, routers
       )
     }
 
@@ -82,14 +82,14 @@ export function h(
       template += 'class="'
       if (attrs.class) {
         const attrClass = attrs.class
-        attrClass instanceof ObsGetter
+        attrClass instanceof ObsObject
           ? template += `${attrClass.val()} `
           : template += `${attrClass} `
         attrs.class = null
       }
       Object.keys(attrs.className).forEach((className) => {
         const cond = attrs.className[name]
-        if (cond instanceof ObsGetter) {
+        if (cond instanceof ObsObject) {
           if (cond.val()) template = `${className} `
           glues.push(
             new ClassGlue(id, name, attrs.className[name])
@@ -106,7 +106,7 @@ export function h(
       template += 'style="'
       Object.keys(attrs.style).forEach((styleName) => {
         let value = attrs.style[styleName]
-        if (value instanceof ObsGetter) {
+        if (value instanceof ObsObject) {
           value = value.val()
           glues.push(
             new StyleGlue(id, styleName, value)
@@ -124,8 +124,8 @@ export function h(
       attrs.link = null
     }
 
-    if (attrs.model instanceof ObsGetter) {
-      const model: ObsGetter = attrs.model
+    if (attrs.model instanceof ObsObject) {
+      const model: ObsObject = attrs.model
       if (tag === 'input' || tag === 'textarea') {
         switch (attrs.type) {
           case 'number':
@@ -181,7 +181,7 @@ export function h(
         events.push(name)
       } else {
         template += name + '="'
-        if (attrs[name] instanceof ObsGetter) {
+        if (attrs[name] instanceof ObsObject) {
           template += val.val()
           glues.push(
             new AttrGlue(id, name, val)
@@ -198,7 +198,7 @@ export function h(
 
   children.forEach((child, i) => {
     let elem: Elem = <Elem>child
-    if (child instanceof ObsGetter) {
+    if (child instanceof ObsObject) {
       elem = h('span', null, [child.val() || ''])
       elem.glues.push(
         new BindGlue(elem.id, child)
@@ -207,7 +207,10 @@ export function h(
 
     if (child instanceof Component) {
       elem = child.create()
-      readyFns.push(child.ready)
+      console.log('C', child)
+      if ((<any>child).afterInstall instanceof Function) {
+        afterInstallFns.push(() => (<any>child).afterInstall())
+      }
     }
 
     if (elem instanceof Elem) {
@@ -225,7 +228,7 @@ export function h(
   template += '</' + tag + '>'
 
   return new Elem(
-    id, template, glues, events, readyFns, routers
+    id, template, glues, events, afterInstallFns, routers
   )
 }
 

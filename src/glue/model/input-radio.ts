@@ -1,6 +1,6 @@
 import { Glue, getEl, removeElRef } from '../glue'
 import { watchEvent, unwatchEvent } from '../event'
-import { ObsGetter } from '../../observer/observable'
+import { ObsObject } from '../../observer/observable'
 
 export class InputRadioGlue extends Glue {
   el: HTMLInputElement
@@ -8,7 +8,7 @@ export class InputRadioGlue extends Glue {
   value: string
   constructor(
     id: string,
-    private model: ObsGetter
+    private model: ObsObject
   ) {
     super()
     this.id = id

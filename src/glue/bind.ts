@@ -1,10 +1,10 @@
 import { Glue, getEl, removeElRef } from './glue'
-import { ObsGetter } from '../observer/observable'
+import { ObsObject } from '../observer/observable'
 
 export class BindGlue extends Glue {
   constructor(
     id: string,
-    private value: ObsGetter
+    private value: ObsObject
   ) {
     super()
     this.id = id

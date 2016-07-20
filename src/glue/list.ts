@@ -1,6 +1,6 @@
-import { Glue, installGlues, destroyGlues } from './glue'
+import { Glue, addEvents, installGlues, destroyGlues } from './glue'
 import { Elem } from '../compiler/elem'
-import { ObsGetter } from '../observer/observable'
+import { ObsObject } from '../observer/observable'
 import { ObsArray } from '../observer/observable-array'
 
 export class ListGlue extends Glue {
@@ -13,20 +13,20 @@ export class ListGlue extends Glue {
     private items: ObsArray,
     private listFn: (item, index: () => number) => Elem,
     private opts: {
-      skip?: ObsGetter | number,
-      limit?: ObsGetter | number
+      skip?: ObsObject | number,
+      limit?: ObsObject | number
     }
   ) {
     super()
     this.id = helperId
     const { skip, limit } = opts
-    if (skip instanceof ObsGetter) {
+    if (skip instanceof ObsObject) {
       this.skip = skip.val()
       this.watchers.push(
         skip.watch((val) => this.skipWatcher(val))
       )
     }
-    if (limit instanceof ObsGetter) {
+    if (limit instanceof ObsObject) {
       this.limit = limit.val()
       this.watchers.push(
         limit.watch((val) => this.limitWatcher(val))
@@ -109,10 +109,14 @@ export class ListGlue extends Glue {
       } else {
         const itemParam = { item, index }
         const e = listFn(itemParam.item, () => itemParam.index)
+
         helperEl.insertAdjacentHTML(
           'afterend', e.template.replace('>', ' ' + helperId + '>')
         )
         installGlues(itemParam['glues'] = e.glues)
+        e.afterInstallFns.forEach((fn) => fn())
+        addEvents(e.events)
+
         itemParam['el'] = helperEl.nextSibling
         newItems.push(itemParam)
       }

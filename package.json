@@ -6,7 +6,7 @@
     "type": "git",
     "url": "https://github.com/faisalhakim47/sijs.git"
   },
-  "main": "lib/common",
+  "main": "index.js",
   "scripts": {
     "dev": "concurrently --kill-others \"npm run build:watch\"",
     "build": "concurrently --kill-others \"npm run build-common\" \"npm run build-amd\"",

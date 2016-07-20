@@ -1,13 +1,13 @@
-import { Glue, getEl, removeElRef, installGlues, destroyGlues } from './glue'
+import { Glue, getEl, removeElRef, addEvents, installGlues, destroyGlues } from './glue'
 import { Elem } from '../compiler/elem'
-import { ObsGetter } from '../observer/observable'
+import { ObsObject } from '../observer/observable'
 
 export class IfGlue extends Glue {
   helperEl: HTMLElement
   activeGlues: Glue[]
   constructor(
     id: string,
-    private cond: ObsGetter | boolean,
+    private cond: ObsObject | boolean,
     private elem: () => Elem
   ) {
     super()
@@ -17,7 +17,7 @@ export class IfGlue extends Glue {
   install() {
     const cond = this.cond
     this.helperEl = document.getElementById('if' + this.id)
-    if (cond instanceof ObsGetter) {
+    if (cond instanceof ObsObject) {
       this.watchers.push(
         cond.watch((val) => this.ifWatcher(val))
       )
@@ -28,7 +28,7 @@ export class IfGlue extends Glue {
   destroy() {
     if (!this.isInstalled) return
     const cond = this.cond
-    if (cond instanceof ObsGetter) {
+    if (cond instanceof ObsObject) {
       this.teardown()
     }
     this.helperEl = null
@@ -39,6 +39,8 @@ export class IfGlue extends Glue {
       const e = this.elem()
       this.helperEl.insertAdjacentHTML('afterend', e.template)
       installGlues(e.glues)
+      addEvents(e.events)
+      e.afterInstallFns.forEach((fn) => fn())
       this.activeGlues = e.glues
     } else if (!cond && this.isExist()) {
       this.helperEl.parentElement.removeChild(

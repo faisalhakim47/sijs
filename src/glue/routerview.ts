@@ -5,8 +5,7 @@ import { GlobalEvent } from '../instance/global-event'
 export class RouterViewGlue extends Glue {
   constructor(
     id: string,
-    private router: RouterView,
-    private activeGlues: Glue[]
+    private router: RouterView
   ) {
     super()
     this.id = id
@@ -38,24 +37,43 @@ export class RouterViewGlue extends Glue {
 
   updateRouter(router: RouterView, path: string) {
     if (this.shouldUpdate(router, path)) {
-      destroyGlues(this.activeGlues)
-      if (this.el.nextElementSibling.hasAttribute(this.id)) {
-        this.el.parentElement.removeChild(
-          this.el.nextElementSibling
-        )
-      }
+      RouterView.PATH = path
+      destroyGlues(this.router.glues)
+      this.destroyChild(this.el, this.el.id)
+
       const e = this.router.Elem()
+
       this.el.insertAdjacentHTML('afterend',
         e.template.replace('>', ` ${this.id}>`)
       )
       installGlues(e.glues)
+      e.afterInstallFns.forEach((fn) => fn())
       addEvents(e.events)
-
-      this.activeGlues = e.glues
     } else {
+      const parentPath = RouterView.PATH
+      const parentRouter = RouterView.ROUTER
+      RouterView.PATH = path.replace(this.router.state.route.rx, '')
+      RouterView.ROUTER = this.router
+  
       router.childRoutes.forEach((childRouter) => {
         this.updateRouter(childRouter, path)
       })
+
+      RouterView.PATH = parentPath
+      RouterView.ROUTER = parentRouter
+    }
+  }
+
+  destroyChild(el: Element, id: string) {
+    const nextElement = el.nextElementSibling
+    if (nextElement.hasAttribute(id)) {
+      if (
+        nextElement.tagName === 'script' &&
+        nextElement.id.slice(0, 1) === '_'
+      ) {
+        this.destroyChild(nextElement, nextElement.id)
+      }
+      this.el.parentElement.removeChild(nextElement)
     }
   }
 
@@ -64,7 +82,7 @@ export class RouterViewGlue extends Glue {
     if (!route.rx.test(path)) {
       return true
     }
-  
+
     if (route.params.length) {
       const matches = path.match(route.rx)
       matches.shift()

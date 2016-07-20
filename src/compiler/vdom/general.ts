@@ -3,7 +3,7 @@ import { TChild, h, Elem } from './../elem'
 import { RouterView } from './../routerview'
 import { genId } from './../uid'
 import { IGlobalAttribute, IAllAttribute } from './../interfaces'
-import { ObsGetter } from '../../observer/observable'
+import { ObsObject } from '../../observer/observable'
 import { isString } from '../../tools/typecheck'
 
 export const vdom = {
@@ -126,7 +126,10 @@ export const vdom = {
 }
 
 function createElemFn(tag: string) {
-  return (attrs?: IAllAttribute, children?: TChild[]): Elem => {
-    return h(tag, attrs, children)
+  return (attrs?: IAllAttribute, children?: (TChild[] | TChild)): Elem => {
+    if (!Array.isArray(children)) {
+      children = [<TChild>children]
+    }
+    return h(tag, attrs, <TChild[]>children)
   }
 }

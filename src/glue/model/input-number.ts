@@ -1,12 +1,12 @@
 import { Glue, getEl, removeElRef } from '../glue'
 import { watchEvent, unwatchEvent } from '../event'
-import { ObsGetter } from '../../observer/observable'
+import { ObsObject } from '../../observer/observable'
 
 export class InputNumberGlue extends Glue {
   el: HTMLInputElement
   constructor(
     id: string,
-    private model: ObsGetter
+    private model: ObsObject
   ) {
     super()
     this.id = id

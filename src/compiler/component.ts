@@ -32,15 +32,15 @@ export abstract class Component {
       this.params = RouterView.ROUTER.state.params
       this.query = RouterView.ROUTER.state.query
     }
-    const e = this.render()
-    if (this.created) this.created()
+
+    const e = this.render(this.state)
+
+    if ((<any>this).beforeInstall instanceof Function) {
+      (<any>this).beforeInstall()
+    }
+
     return e
   }
 
-  abstract render(): Elem
-}
-
-export interface Component {
-  created?: () => void
-  ready?: () => void
+  abstract render(state: Observable): Elem
 }

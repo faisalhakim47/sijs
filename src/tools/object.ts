@@ -1,10 +1,10 @@
 export function get(obj, path) {
-  if (!path) return
+  if (!path || !obj) return obj
   const parsedPath = pathParse(path)
   let l = parsedPath.length - 1
   for (let i = 0; i < l; i++) {
     obj = obj[parsedPath[i]]
-    if (!obj) {
+    if (obj === undefined) {
       console.warn('can\'t get object', obj, 'on path', path)
       return { undefined: true }
     }
@@ -13,7 +13,7 @@ export function get(obj, path) {
 }
 
 export function set(obj, path: string, value) {
-  if (!path) return
+  if (!path) return false
   const parsedPath = pathParse(path)
   let l = parsedPath.length - 1
   for (let i = 0; i < l; i++) {
