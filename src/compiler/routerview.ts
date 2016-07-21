@@ -2,8 +2,8 @@ import { IComponentClass } from './component'
 import { TChild, Elem, h } from './elem'
 import { IAllAttribute } from './interfaces'
 import { GlobalEvent } from '../instance/global-event'
-import { RouterViewGlue } from '../glue/routerview'
 import { Glue } from '../glue/glue'
+import { RouterViewGlue } from '../glue/routerview'
 
 const paramRx = new RegExp('/:(.*)/', 'g')
 
@@ -76,8 +76,6 @@ export class RouterView {
         )
       }
 
-      console.log('router', path, rx)
-
       this.routes.push(
         defaults
           ? (this.defaultRoute = { path, component, params, rx })
@@ -87,58 +85,32 @@ export class RouterView {
   }
 
   Elem(): Elem {
-    const helperElem = h('script')
-
-    // set its id
+    const helperElem = h('script', { routerview: true })
     this.id = helperElem.id
 
-    // find the route on specified path
-    let route: IRoute = null
-    let matches: string[] = []
-    for (let i = 0, l = this.routes.length; i < l; i++) {
-      route = this.routes[i]
-      const matches = RouterView.PATH.match(route.rx)
-      if (matches) break
-    }
-
-    if (!route && this.defaultRoute) {
-      route = this.defaultRoute
-    }
+    let { route, matches } = this.findTheRoute()
 
     if (route) {
       // set this router as parent to child under it render
       const parentPath = RouterView.PATH
       const parentRouter = RouterView.ROUTER
+      const isRootRouter = !!RouterView.ROUTER
       RouterView.PATH = RouterView.PATH.replace(route.rx, '')
       RouterView.ROUTER = this
 
       // update the state
-      matches.shift()
-      const state = this.generateState(
+      this.state = this.generateState(
         RouterView.PATH, matches, route
       )
 
-      // generate the route component
-      const Component = route.component
-      if (Component instanceof RouterView) {
-        var e = Component.Elem()
-        helperElem.routers.push(Component)
-      } else {
-        var e = new Component().create()
-      }
-
-      // retrieve child routes
-      this.childRoutes.push(...e.routers)
+      const e = this.generateElem(route.component)
 
       // if root Router
-      if (RouterView.ROUTER === null) {
+      if (isRootRouter) {
         e.glues.push(
           new RouterViewGlue(helperElem.id, this)
         )
       }
-
-      // save component glues
-      this.glues.push(...e.glues)
 
       // add the route component to helperElem
       helperElem.template += e.template.replace('>', ` ${helperElem.id}>`)
@@ -159,6 +131,43 @@ export class RouterView {
     return helperElem
   }
 
+  findTheRoute() {
+    // find the route on specified path
+    let route: IRoute = null
+    let matches: string[] = []
+    for (let i = 0, l = this.routes.length; i < l; i++) {
+      route = this.routes[i]
+      const matches = RouterView.PATH.match(route.rx)
+      if (matches) break
+      else route = null
+    }
+
+    if (!route && this.defaultRoute) {
+      route = this.defaultRoute
+    }
+
+    matches.shift()
+    return { route, matches }
+  }
+
+  generateElem(Component: IComponentClass | RouterView) {
+    // generate the route component
+    if (Component instanceof RouterView) {
+      var e = Component.Elem()
+    } else {
+      var e = new Component().create()
+    }
+
+    // retrieve child routes
+    this.childRoutes.push(...e.routers)
+
+    // save component glues
+    this.glues = []
+    this.glues.push(...e.glues)
+
+    return e
+  }
+
   generateState(
     path: string,
     matches: string[],
@@ -170,6 +179,7 @@ export class RouterView {
       path,
       query: '',
     }
+
     // update params
     matches.forEach((value) => {
       route.params.forEach((name) => {

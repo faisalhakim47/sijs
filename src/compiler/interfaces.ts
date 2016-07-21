@@ -11,6 +11,7 @@ export interface IElem {
 
 export interface IGlobalAttribute {
   // custom
+  [name: string]: any
   empty?: boolean
   if?: ObsObject
   model?: ObsObject

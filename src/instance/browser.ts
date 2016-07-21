@@ -26,6 +26,8 @@ export function Bootstrap(Component: Component) {
 
     // ensure prerender false
     is.prerender = false
+
+    console.log(glues, events)
   } else {
     console.error('Cannot Bootsrap(), this is not browser.')
   }

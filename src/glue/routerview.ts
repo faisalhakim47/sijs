@@ -38,13 +38,17 @@ export class RouterViewGlue extends Glue {
   updateRouter(router: RouterView, path: string) {
     if (this.shouldUpdate(router, path)) {
       RouterView.PATH = path
-      destroyGlues(this.router.glues)
+      destroyGlues(router.glues)
       this.destroyChild(this.el, this.el.id)
 
-      const e = this.router.Elem()
+      const { matches, route } = router.findTheRoute()
+      router.state = router.generateState(
+        path, matches, route
+      )
+      const e = router.generateElem(route.component)
 
       this.el.insertAdjacentHTML('afterend',
-        e.template.replace('>', ` ${this.id}>`)
+        e.template.replace('>', ` ${router.id}>`)
       )
       installGlues(e.glues)
       e.afterInstallFns.forEach((fn) => fn())
@@ -52,11 +56,11 @@ export class RouterViewGlue extends Glue {
     } else {
       const parentPath = RouterView.PATH
       const parentRouter = RouterView.ROUTER
-      RouterView.PATH = path.replace(this.router.state.route.rx, '')
-      RouterView.ROUTER = this.router
+      RouterView.PATH = path.replace(router.state.route.rx, '')
+      RouterView.ROUTER = router
   
       router.childRoutes.forEach((childRouter) => {
-        this.updateRouter(childRouter, path)
+        this.updateRouter(childRouter, RouterView.PATH)
       })
 
       RouterView.PATH = parentPath

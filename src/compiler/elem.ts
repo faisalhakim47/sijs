@@ -121,6 +121,10 @@ export function h(
       glues.push(
         new LinkGlue(id, attrs.link)
       )
+      events.push('onclick')
+
+      if (tag === 'a') attrs.href = attrs.link
+
       attrs.link = null
     }
 

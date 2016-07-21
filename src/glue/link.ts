@@ -20,8 +20,10 @@ export class LinkGlue extends Glue {
       )
     }
     this.watchers.push(
-      watchEvent(this.id, 'onclick', () => {
+      watchEvent(this.id, 'onclick', (e) => {
+        e.preventDefault()
         RouterView.PATH = this.path
+        window.history.pushState({}, null, this.path)
         GlobalEvent.emit('route:change', this.path)
       })
     )
