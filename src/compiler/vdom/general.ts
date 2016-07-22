@@ -1,9 +1,9 @@
 import { Component } from './../component'
-import { TChild, h, Elem } from './../elem'
+import { TChild, createElem, Elem } from './../elem'
 import { RouterView } from './../routerview'
 import { genId } from './../uid'
 import { IGlobalAttribute, IAllAttribute } from './../interfaces'
-import { ObsObject } from '../../observer/observable'
+import { ObsObject } from '../../observer/observable-object'
 import { isString } from '../../tools/typecheck'
 
 export const vdom = {
@@ -130,6 +130,6 @@ function createElemFn(tag: string) {
     if (!Array.isArray(children)) {
       children = [<TChild>children]
     }
-    return h(tag, attrs, <TChild[]>children)
+    return createElem(tag, attrs, <TChild[]>children)
   }
 }

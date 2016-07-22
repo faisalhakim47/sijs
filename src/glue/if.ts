@@ -1,10 +1,10 @@
-import { Glue, getEl, removeElRef, addEvents, installGlues, destroyGlues } from './glue'
+import { Glue, getEl, removeElRef, addEvents, installElem, destroyElem } from './glue'
 import { Elem } from '../compiler/elem'
-import { ObsObject } from '../observer/observable'
+import { ObsObject } from '../observer/observable-object'
 
 export class IfGlue extends Glue {
   helperEl: HTMLElement
-  activeGlues: Glue[]
+  activeElem: Elem
   constructor(
     id: string,
     private cond: ObsObject | boolean,
@@ -37,17 +37,18 @@ export class IfGlue extends Glue {
   ifWatcher(cond) {
     if (cond && !this.isExist()) {
       const e = this.elem()
-      this.helperEl.insertAdjacentHTML('afterend', e.template)
-      installGlues(e.glues)
+      installElem(e, (template) => {
+        this.helperEl.insertAdjacentHTML('afterend', template)
+      })
       addEvents(e.events)
-      e.afterInstallFns.forEach((fn) => fn())
-      this.activeGlues = e.glues
-    } else if (!cond && this.isExist()) {
-      this.helperEl.parentElement.removeChild(
-        this.helperEl.nextElementSibling
-      )
-      destroyGlues(this.activeGlues)
-      this.activeGlues = []
+      this.activeElem = e
+    } else if (!cond && this.isExist()) {      
+      destroyElem(this.activeElem, () => {
+        this.helperEl.parentElement.removeChild(
+          this.helperEl.nextElementSibling
+        )
+      })
+      this.activeElem = null
     }
   }
 

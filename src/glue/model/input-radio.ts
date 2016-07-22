@@ -1,6 +1,6 @@
 import { Glue, getEl, removeElRef } from '../glue'
 import { watchEvent, unwatchEvent } from '../event'
-import { ObsObject } from '../../observer/observable'
+import { ObsObject } from '../../observer/observable-object'
 
 export class InputRadioGlue extends Glue {
   el: HTMLInputElement

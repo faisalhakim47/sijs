@@ -27,7 +27,7 @@ export class RouterView {
   static ROUTER: RouterView = null
 
   id: string = null
-  glues: Glue[] = []
+  elem: Elem
   routes: IRoute[] = []
   defaultRoute: IRoute = null
   childRoutes: RouterView[] = []
@@ -105,9 +105,9 @@ export class RouterView {
 
       const e = this.generateElem(route.component)
 
-      // if root Router
+      // add root router to glue
       if (isRootRouter) {
-        e.glues.push(
+        e.glues.unshift(
           new RouterViewGlue(helperElem.id, this)
         )
       }
@@ -117,6 +117,10 @@ export class RouterView {
       helperElem.glues.push(...e.glues)
       helperElem.events.push(...e.events)
       helperElem.routers.push(this)
+      helperElem.hooks.beforeInstall.push(...e.hooks.beforeInstall)
+      helperElem.hooks.afterInstall.push(...e.hooks.afterInstall)
+      helperElem.hooks.beforeDestroy.push(...e.hooks.beforeDestroy)
+      helperElem.hooks.afterDestroy.push(...e.hooks.afterDestroy)
 
       // set back to its parent router
       RouterView.PATH = parentPath
@@ -158,14 +162,13 @@ export class RouterView {
       var e = new Component().create()
     }
 
+    // Used for recycle
+
     // retrieve child routes
     this.childRoutes.push(...e.routers)
 
-    // save component glues
-    this.glues = []
-    this.glues.push(...e.glues)
-
-    return e
+    // save component Elem and return it
+    return this.elem = e
   }
 
   generateState(

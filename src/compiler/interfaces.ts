@@ -1,5 +1,5 @@
 import { Glue } from '../glue/glue'
-import { ObsObject } from '../observer/observable'
+import { ObsObject } from '../observer/observable-object'
 
 export interface IElem {
   _isElem: boolean

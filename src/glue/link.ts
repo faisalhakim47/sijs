@@ -2,7 +2,7 @@ import { Glue, getEl, removeElRef } from './glue'
 import { watchEvent } from './event'
 import { RouterView } from '../compiler/routerview'
 import { GlobalEvent } from '../instance/global-event'
-import { ObsObject } from '../observer/observable'
+import { ObsObject } from '../observer/observable-object'
 
 export class LinkGlue extends Glue {
   constructor(

@@ -9,7 +9,9 @@ export class Emitter {
     const watchers = this.watchers[name]
       ? this.watchers[name]
       : (this.watchers[name] = [])
+
     watcher.wi = watchers.push(watcher) - 1
+
     return {
       unwatch: () => this.off(name, watcher)
     }
@@ -17,7 +19,9 @@ export class Emitter {
 
   off(name: string, watcher) {
     const watchers = this.watchers[name]
+
     if (!Array.isArray(watchers)) return
+
     if (typeof watcher.wi === 'number') {
       watchers.splice(watcher.wi, 1)
     } else {
@@ -27,7 +31,9 @@ export class Emitter {
 
   emit(name: string, ...data) {
     const watchers = this.watchers[name]
+
     if (!watchers) return
+
     let l = watchers.length
     while (l--) {
       watchers[l](...data)

@@ -1,6 +1,17 @@
+/**
+ * Get object value of given path. example:
+ * 
+ * ```javascript
+ * const obj = { a: { b: 'true' } }
+ * const b = get(obj, 'a.b')
+ * console.log(obj.a.b === b) // true
+ * ```
+ */
 export function get(obj, path) {
   if (!path || !obj) return obj
+
   const parsedPath = pathParse(path)
+
   let l = parsedPath.length - 1
   for (let i = 0; i < l; i++) {
     obj = obj[parsedPath[i]]
@@ -9,12 +20,24 @@ export function get(obj, path) {
       return { undefined: true }
     }
   }
+
   return obj[parsedPath[l]]
 }
 
+/**
+ * Set object value of given path. example:
+ * 
+ * ```javascript
+ * const obj = { a: { b: 'true' } }
+ * const b = set(obj, 'a.b', 'false')
+ * console.log(obj.a.b === 'false') // true
+ * ```
+ */
 export function set(obj, path: string, value) {
   if (!path) return false
+
   const parsedPath = pathParse(path)
+
   let l = parsedPath.length - 1
   for (let i = 0; i < l; i++) {
     obj = obj[parsedPath[i]]
@@ -23,48 +46,13 @@ export function set(obj, path: string, value) {
       return false
     }
   }
-  obj[parsedPath[l]] = value
-  return true
+
+  return obj[parsedPath[l]] = value
 }
 
 const pathRx = /\[|\]\./g
 export function pathParse(path: string) {
   return path.replace(pathRx, '.').split('.')
-}
-
-/**
- * Object.defineProperty syntatic sugar
- *
- * @param {*} Obj
- * @param {string} propName
- * @param {{ get: function, set: function }|*} value
- * @param {boolean} isEnum
- * @param {boolean} isConf
- */
-export function def(
-  obj,
-  propName,
-  value,
-  isEnum,
-  isConf
-) {
-  if (
-    typeof value.get === 'function' ||
-    typeof value.set === 'function'
-  ) {
-    Object.defineProperty(obj, propName, {
-      get: value.get,
-      set: value.set,
-      enumerable: isEnum,
-      configurable: isConf
-    })
-  } else {
-    Object.defineProperty(obj, propName, {
-      value,
-      enumerable: isEnum,
-      configurable: isConf
-    })
-  }
 }
 
 /*

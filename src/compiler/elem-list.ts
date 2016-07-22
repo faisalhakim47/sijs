@@ -1,10 +1,10 @@
-import { Elem } from './elem'
+import { IHooks, Elem } from './elem'
 import { genId } from './uid'
 import { RouterView } from './routerview'
 import { Glue } from '../glue/glue'
 import { ListGlue } from '../glue/list'
-import { ObsObject } from '../observer/observable'
 import { ObsArray } from '../observer/observable-array'
+import { ObsObject } from '../observer/observable-object'
 
 export interface IListFn {
   (item, index: () => number): Elem
@@ -34,7 +34,12 @@ export function eList(
   const id = genId()
   const glues: Glue[] = []
   const events: string[] = []
-  const afterInstallFns: Function[] = []
+  const hooks: IHooks = {
+    beforeInstall: [],
+    afterInstall: [],
+    beforeDestroy: [],
+    afterDestroy: []
+  }
   const routers: RouterView[] = []
   const listGlue = new ListGlue(id, items, listFn, opts)
   let template = '<script id="' + id + '"></script>'
@@ -54,16 +59,23 @@ export function eList(
 
   for (let index = 0; index < i; index++) {
     const currentItem = listGlue.currentItems[index] = {
+      el: null,
+      elem: null,
       index,
       item: items.get(skip + index)
     }
     const e = listFn(currentItem.item, () => currentItem.index)
     template += e.template.replace('>', ' ' + id + '>')
-    glues.push(...currentItem['glues'] = e.glues)
+    glues.push(...e.glues)
     events.push(...e.events)
+    hooks.beforeInstall.push(...e.hooks.beforeInstall)
+    hooks.afterInstall.push(...e.hooks.afterInstall)
+    hooks.beforeDestroy.push(...e.hooks.beforeDestroy)
+    hooks.afterDestroy.push(...e.hooks.afterDestroy)
+    currentItem.elem = e
   }
 
   glues.unshift(listGlue)
 
-  return new Elem(id, template, glues, events, afterInstallFns, routers)
+  return new Elem(id, template, glues, events, hooks, routers)
 }

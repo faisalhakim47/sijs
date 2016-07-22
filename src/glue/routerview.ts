@@ -1,4 +1,4 @@
-import { Glue, getEl, removeElRef, addEvents, installGlues, destroyGlues } from './glue'
+import { Glue, getEl, removeElRef, addEvents, installElem, destroyElem } from './glue'
 import { RouterView } from '../compiler/routerview'
 import { GlobalEvent } from '../instance/global-event'
 
@@ -38,8 +38,9 @@ export class RouterViewGlue extends Glue {
   updateRouter(router: RouterView, path: string) {
     if (this.shouldUpdate(router, path)) {
       RouterView.PATH = path
-      destroyGlues(router.glues)
-      this.destroyChild(this.el, this.el.id)
+      destroyElem(router.elem, () => {
+        this.destroyChild(this.el, this.el.id)
+      })
 
       const { matches, route } = router.findTheRoute()
       router.state = router.generateState(
@@ -47,12 +48,11 @@ export class RouterViewGlue extends Glue {
       )
       const e = router.generateElem(route.component)
 
-      this.el.insertAdjacentHTML('afterend',
-        e.template.replace('>', ` ${router.id}>`)
-      )
-      installGlues(e.glues)
-      e.afterInstallFns.forEach((fn) => fn())
-      addEvents(e.events)
+      installElem(e, (template) => {
+        this.el.insertAdjacentHTML('afterend',
+          template.replace('>', ` ${router.id}>`)
+        )
+      })
     } else {
       const parentPath = RouterView.PATH
       const parentRouter = RouterView.ROUTER

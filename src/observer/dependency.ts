@@ -1,4 +1,4 @@
-import { ObsObject } from './observable'
+import { ObsObject } from './observable-object'
 import { ObsArray } from './observable-array'
 
 export type TObs = ObsObject | ObsArray
@@ -6,12 +6,14 @@ export type TObs = ObsObject | ObsArray
 export function subscribeTo(dep: (TObs[] | TObs), fn) {
   let deps: TObs[]
 
+  // Syntatic sugar
   if (Array.isArray(dep)) {
     deps = dep
   } else {
     deps = [dep]
   }
 
+  // Emit function
   const Emit = () => {
     fn(...deps.map(dep => dep.val()))
   }
@@ -25,7 +27,7 @@ export function subscribeTo(dep: (TObs[] | TObs), fn) {
 
   return {
     unwatch() {
-      watchers.forEach(watcher => watcher.unwatch())
+      watchers.forEach((watcher) => watcher.unwatch())
     }
   }
 }

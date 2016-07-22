@@ -1,28 +1,30 @@
-import { Emitter } from './emitter'
-import { Observable, Filters, ObsObject } from './observable'
+import { IUnwatcher, Emitter } from './emitter'
+import { Observable } from './observable'
+import { ObsObject } from './observable-object'
 import { compute } from './compute'
 import { get, set } from '../tools/object'
 
 export class ObsArray {
-  private rawItems: any[]
-  private obsItems: Observable[]
-  private EE: Emitter
+  private rawItems: any[] = []
+  private obsItems: Observable[] = []
+  private EE: Emitter = new Emitter()
 
   constructor(
     private baseData = { _dummy: [] },
     private basePath = '_dummy'
   ) {
     const rawItems = get(baseData, basePath)
-    if (rawItems.undefined) {
+
+    if (rawItems && rawItems.undefined) {
       throw new Error('cannot create on undefined path')
     } else if (!Array.isArray(this.obsItems)) {
       throw new Error('cannot create on non-Array path')
     }
+
     this.rawItems = rawItems
     this.obsItems = this.rawItems.map((item, i) => {
       return new Observable(rawItems, i.toString())
     })
-    this.EE = new Emitter()
   }
 
   length() {
@@ -97,35 +99,19 @@ export class ObsArray {
     return d
   }
 
-  filter(
-    deps: (ObsObject | ObsArray)[],
-    filterFn: (item, index: number, ...val) => boolean
-  ) {
-    deps.push(this)
-    const obs = compute(deps, (...data) => {
-      return this.obsItems.filter((item, i) => filterFn(item, i, ...data))
-    })
-    return obs
-  }
-
-  watch(p1: (() => any) | string, p2?: (...dat) => any) {
+  watch(p1: Function | string, p2?: Function) {
     if (typeof p1 === 'string') {
-      this.EE.on(p1, p2)
+      return this.EE.on(p1, p2)
     } else {
-      this.EE.on('change', p1)
-    }
-    return {
-      unwatch: () => {
-        this.unwatch(p1, p2)
-      }
+      return this.EE.on('change', p1)
     }
   }
 
-  unwatch(p1: (() => any) | string, p2?: (...dat) => any) {
+  unwatch(p1: Function | string, p2?: Function) {
     if (typeof p1 === 'string') {
-      this.EE.off(p1, p2)
+      return this.EE.off(p1, p2)
     } else {
-      this.EE.off('change', p1)
+      return this.EE.off('change', p1)
     }
   }
 }

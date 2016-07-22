@@ -1,5 +1,5 @@
 import { Glue, getEl, removeElRef } from './glue'
-import { ObsObject } from '../observer/observable'
+import { ObsObject } from '../observer/observable-object'
 
 export class StyleGlue extends Glue {
   constructor(

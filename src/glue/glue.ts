@@ -1,3 +1,4 @@
+import { Elem } from '../compiler/elem'
 import { IUnwatcher } from '../observer/emitter'
 import { GlobalEvent } from '../instance/global-event'
 
@@ -45,12 +46,31 @@ export function removeElRef(id: string): void {
   }
 }
 
-export function installGlues(glues: Glue[]) {
-  glues.forEach((glue) => glue.install())
+export function installElem(e: Elem, installDOM: (template: string) => void) {
+  e.hooks.beforeInstall.forEach((fn) => fn())
+  e.hooks.beforeInstall = []
+
+  installDOM(e.template)
+  e.template = ''
+
+  e.glues.forEach((glue) => glue.install())
+  addEvents(e.events)
+
+  e.hooks.afterInstall.forEach((fn) => fn())
+  e.hooks.afterInstall = []
 }
 
-export function destroyGlues(glues: Glue[]) {
-  glues.forEach((glue) => glue.destroy())
+export function destroyElem(e: Elem, removeDOM: Function) {
+  e.hooks.beforeDestroy.forEach((fn) => fn())
+  e.hooks.beforeDestroy = []
+
+  removeDOM()
+
+  e.glues.forEach((glue) => glue.destroy())
+  e.glues = []
+
+  e.hooks.afterDestroy.forEach((fn) => fn())
+  e.hooks.afterDestroy = []
 }
 
 let activeEvents = {}

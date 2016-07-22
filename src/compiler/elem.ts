@@ -16,8 +16,15 @@ import { InputCheckboxGlue } from '../glue/model/input-checkbox'
 import { InputRadioGlue } from '../glue/model/input-radio'
 import { SelectGlue } from '../glue/model/select'
 import { is } from '../instance/status'
-import { ObsObject } from '../observer/observable'
+import { ObsObject } from '../observer/observable-object'
 import { isBoolean, isString } from '../tools/typecheck'
+
+export interface IHooks {
+  beforeInstall?: Function[]
+  afterInstall?: Function[]
+  beforeDestroy?: Function[]
+  afterDestroy?: Function[]
+}
 
 export class Elem {
   constructor(
@@ -25,22 +32,36 @@ export class Elem {
     public template: string = '',
     public glues: Glue[] = [],
     public events: string[] = [],
-    public afterInstallFns: Function[],
+    public hooks: IHooks,
     public routers: RouterView[]
-  ) { }
+  ) {
+    if (!this.hooks.beforeInstall) {
+      this.hooks.beforeInstall = []
+    }
+    if (!this.hooks.afterInstall) {
+      this.hooks.afterInstall = []
+    }
+    if (!this.hooks.beforeDestroy) {
+      this.hooks.beforeDestroy = []
+    }
+    if (!this.hooks.afterDestroy) {
+      this.hooks.afterDestroy = []
+    }
+  }
 }
 
 export type TChild = (string | ObsObject | Elem | Component)
 const onRx = /^on/
-export function h(
+
+export function createElem(
   tag: string,
   attrs: IAllAttribute = {},
   children: TChild[] = []
-): Elem {
+) {
   if (!Object.keys(attrs || {}).length) attrs = { empty: true }
 
-  const attrId = attrs.id
   let id: string
+  const attrId = attrs.id
   if (!attrId) {
     id = genId()
   } else if (isString(attrId)) {
@@ -51,21 +72,26 @@ export function h(
   let template = `<${tag} id="${id}" `
   const glues: Glue[] = []
   const events: string[] = []
-  const afterInstallFns: Function[] = []
+  const hooks: IHooks = {
+    beforeInstall: [],
+    afterInstall: [],
+    beforeDestroy: [],
+    afterDestroy: []
+  }
   const routers: RouterView[] = []
 
   if (!attrs.empty) {
     if (attrs.if instanceof ObsObject) {
       const ifGlue = new IfGlue(id, attrs.if, () => {
-        return h(tag, attrs, children)
+        return createElem(tag, attrs, children)
       })
 
       const openTag = template
       template = '<script id="if' + id + '"></script>'
 
-      if (attrs.if.val()) {
+      if (!attrs.if.val()) {
         return new Elem(
-          id, template, glues, events, afterInstallFns, routers
+          id, template, glues, events, {}, routers
         )
       } else {
         template += openTag
@@ -74,7 +100,7 @@ export function h(
       attrs.if = null
     } else if (attrs.if !== undefined && !attrs.if) {
       return new Elem(
-        id, template, glues, events, afterInstallFns, routers
+        id, template, glues, events, {}, routers
       )
     }
 
@@ -94,7 +120,7 @@ export function h(
           glues.push(
             new ClassGlue(id, name, attrs.className[name])
           )
-        } else if (isBoolean(cond) && !!cond) {
+        } else if (!!cond) {
           template = `${className} `
         }
       })
@@ -107,12 +133,11 @@ export function h(
       Object.keys(attrs.style).forEach((styleName) => {
         let value = attrs.style[styleName]
         if (value instanceof ObsObject) {
-          value = value.val()
           glues.push(
             new StyleGlue(id, styleName, value)
           )
         }
-        template += `${camelToSnake(styleName)}:${value};`
+        template += `${camelToSnake(styleName)}:${value.val()};`
       })
       template += '"'
     }
@@ -203,7 +228,7 @@ export function h(
   children.forEach((child, i) => {
     let elem: Elem = <Elem>child
     if (child instanceof ObsObject) {
-      elem = h('span', null, [child.val() || ''])
+      elem = createElem('span', null, [child.val() || ''])
       elem.glues.push(
         new BindGlue(elem.id, child)
       )
@@ -211,9 +236,17 @@ export function h(
 
     if (child instanceof Component) {
       elem = child.create()
-      console.log('C', child)
+      if ((<any>child).beforeInstall instanceof Function) {
+        hooks.beforeInstall.push(() => (<any>child).beforeInstall())
+      }
       if ((<any>child).afterInstall instanceof Function) {
-        afterInstallFns.push(() => (<any>child).afterInstall())
+        hooks.afterInstall.push(() => (<any>child).afterInstall())
+      }
+      if ((<any>child).beforeDestroy instanceof Function) {
+        hooks.beforeDestroy.push(() => (<any>child).beforeDestroy())
+      }
+      if ((<any>child).afterDestroy instanceof Function) {
+        hooks.afterDestroy.push(() => (<any>child).afterDestroy())
       }
     }
 
@@ -223,6 +256,9 @@ export function h(
         glues.push(...elem.glues)
         events.push(...elem.events)
         routers.push(...elem.routers)
+        hooks.afterInstall.push(...elem.hooks.afterInstall)
+        hooks.beforeDestroy.push(...elem.hooks.beforeDestroy)
+        hooks.afterDestroy.push(...elem.hooks.afterDestroy)
       }
     } else if (child && !is.prerender) {
       template += child.toString()
@@ -232,7 +268,7 @@ export function h(
   template += '</' + tag + '>'
 
   return new Elem(
-    id, template, glues, events, afterInstallFns, routers
+    id, template, glues, events, hooks, routers
   )
 }
 
@@ -240,4 +276,46 @@ function camelToSnake(str: string): string {
   return str.replace(/\.?[A-Z]+/g, (x, y) => {
     return "-" + y.toLowerCase()
   }).replace(/^-/, '')
+}
+
+export function h(
+  tag: string,
+  p1: (TChild | TChild[]) | IAllAttribute = null,
+  p2: TChild | TChild[] = []
+) {
+  // Syntatic sugar
+  let attrs = null
+  let children: any = []
+  if (
+    typeof p1 === 'string' ||
+    p1 instanceof ObsObject ||
+    Array.isArray(p1) ||
+    p1 instanceof Elem ||
+    p1 instanceof Component
+  ) {
+    attrs = null
+    children = Array.isArray(p1) ? p1 : [p1]
+  } else {
+    attrs = p1
+    children = p2
+  }
+
+  // Selector parse
+  tag.split(/(?=\.)|(?=#)/).forEach((str) => {
+    switch (str[0]) {
+      case '#':
+        attrs.id = str.slice(1)
+        break
+
+      case '.':
+        attrs.class += ' ' + str.slice(1)
+        break
+
+      default:
+        tag = str
+        break
+    }
+  })
+
+  return createElem(tag, attrs, children)
 }

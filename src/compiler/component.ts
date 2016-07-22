@@ -13,19 +13,16 @@ export function isComponentClass(t): t is IComponentClass {
 
 export abstract class Component {
   static _isComponentClass = true
-  static awaitState: PromiseLike<any>[] = []
   protected rawState = {}
   public _isComponent = true
-  public state: Observable
   public params = {}
   public query = {}
+  public state = new Observable(this, 'rawState')
 
   constructor(
     private attrs?,
     private children?: any[]
-  ) {
-    this.state = new Observable(this, 'rawState')
-  }
+  ) { }
 
   create(): Elem {
     if (RouterView.ROUTER) {
@@ -33,14 +30,10 @@ export abstract class Component {
       this.query = RouterView.ROUTER.state.query
     }
 
-    const e = this.render(this.state)
-
-    if ((<any>this).beforeInstall instanceof Function) {
-      (<any>this).beforeInstall()
-    }
+    const e = this.render(this.state, h)
 
     return e
   }
 
-  abstract render(state: Observable): Elem
+  abstract render(state: Observable, h): Elem
 }

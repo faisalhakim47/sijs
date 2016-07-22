@@ -1,13 +1,21 @@
-import { Glue, addEvents, installGlues, destroyGlues } from './glue'
+import { Glue, addEvents, installElem, destroyElem } from './glue'
 import { Elem } from '../compiler/elem'
-import { ObsObject } from '../observer/observable'
+import { ObsObject } from '../observer/observable-object'
 import { ObsArray } from '../observer/observable-array'
+
+export interface IItemList {
+  index: number
+  item
+  el: Element
+  elem: Elem
+}
 
 export class ListGlue extends Glue {
   helperEl: HTMLElement
   skip: number
   limit: number
-  public currentItems = []
+  public currentItems: IItemList[] = []
+
   constructor(
     private helperId: string,
     private items: ObsArray,
@@ -42,7 +50,7 @@ export class ListGlue extends Glue {
     )
 
     this.currentItems = this.currentItems.map((oldItem, index) => {
-      oldItem['el'] = helperParentEl.children[elIndex + index + 1]
+      oldItem.el = helperParentEl.children[elIndex + index + 1]
       return oldItem
     })
 
@@ -70,7 +78,7 @@ export class ListGlue extends Glue {
   listGenerator() {
     const { helperId, helperEl, items, listFn, skip, limit, currentItems } = this
 
-    let newItems = []
+    let newItems: IItemList[] = []
     let length = items.length()
     let i: number
 
@@ -107,25 +115,27 @@ export class ListGlue extends Glue {
         currentItem.index = index
         currentItems.push(currentItem)
       } else {
-        const itemParam = { item, index }
+        const itemParam: IItemList = { item, index, elem: null, el: null }
         const e = listFn(itemParam.item, () => itemParam.index)
-
-        helperEl.insertAdjacentHTML(
-          'afterend', e.template.replace('>', ' ' + helperId + '>')
-        )
-        installGlues(itemParam['glues'] = e.glues)
-        e.afterInstallFns.forEach((fn) => fn())
+        installElem(e, (template) => {
+          helperEl.insertAdjacentHTML(
+            'afterend', template.replace('>', ' ' + helperId + '>')
+          )
+        })
         addEvents(e.events)
 
-        itemParam['el'] = helperEl.nextSibling
+        itemParam.elem = e
+        itemParam.el = helperEl.nextElementSibling
         newItems.push(itemParam)
       }
     }
 
     currentItems.forEach((oldItem) => {
-      helperEl.parentElement.removeChild(oldItem.el)
-      destroyGlues(oldItem.glues)
+      destroyElem(oldItem.elem, () => {
+        helperEl.parentElement.removeChild(oldItem.el)
+      })
     })
+
     this.currentItems = newItems
     newItems = []
   }
