@@ -58,7 +58,7 @@ export function createElem(
   attrs: IAllAttribute = {},
   children: TChild[] = []
 ) {
-  if (!Object.keys(attrs || {}).length) attrs = { empty: true }
+  if (!attrs && !Object.keys(attrs || {}).length) attrs = { empty: true }
 
   let id: string
   const attrId = attrs.id
@@ -279,12 +279,14 @@ function camelToSnake(str: string): string {
 }
 
 export function h(
-  tag: string,
+  selector: string,
   p1: (TChild | TChild[]) | IAllAttribute = null,
-  p2: TChild | TChild[] = []
+  p2: TChild | TChild[] = [],
+  ...childrenArgs: TChild[]
 ) {
   // Syntatic sugar
-  let attrs = null
+  let tag: string = ''
+  let attrs: IAllAttribute = { class: '' }
   let children: any = []
   if (
     typeof p1 === 'string' ||
@@ -293,15 +295,14 @@ export function h(
     p1 instanceof Elem ||
     p1 instanceof Component
   ) {
-    attrs = null
     children = Array.isArray(p1) ? p1 : [p1]
   } else {
     attrs = p1
-    children = p2
+    children = Array.isArray(p2) ? p2 : [p2]
   }
 
   // Selector parse
-  tag.split(/(?=\.)|(?=#)/).forEach((str) => {
+  selector.split(/(?=\.)|(?=#)/).forEach((str) => {
     switch (str[0]) {
       case '#':
         attrs.id = str.slice(1)
@@ -316,6 +317,10 @@ export function h(
         break
     }
   })
+
+  if (!tag) tag = 'div'
+
+  children.push(...childrenArgs)
 
   return createElem(tag, attrs, children)
 }

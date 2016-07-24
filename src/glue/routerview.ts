@@ -38,7 +38,7 @@ export class RouterViewGlue extends Glue {
   updateRouter(router: RouterView, path: string) {
     if (this.shouldUpdate(router, path)) {
       RouterView.PATH = path
-      destroyElem(router.elem, () => {
+      destroyElem(router.currentElem, () => {
         this.destroyChild(this.el, this.el.id)
       })
 

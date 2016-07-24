@@ -1,4 +1,4 @@
-import { IUnwatcher, Emitter } from './emitter'
+import { IWatcher, Emitter } from './emitter'
 import { ObsObject } from './observable-object'
 import { GlobalEvent } from '../instance/global-event'
 import { get, set } from '../tools/object'
@@ -14,10 +14,9 @@ export function resetObsId() {
   idCound = 0
 }
 
-export class Observable {
-  private rawData
+export class Observable<T> {
+  private rawData: T
   private EE: Emitter = new Emitter()
-  private childWatcher: any = {}
   private childArray: any = {}
 
   constructor(
@@ -25,23 +24,23 @@ export class Observable {
     private basePath: string = '_dummy',
     public id?: string
   ) {
-    this.rawData = get(baseData, basePath)
-    if (this.rawData && this.rawData.undefined) {
+    this.rawData = get<T>(baseData, basePath)
+    if (this.rawData == null) {
       throw new Error('cannot create on undefined path')
     }
     if (!id) this.id = genId()
   }
 
-  raw(path: string = null) {
-    return get(this.rawData, path)
+  raw(path: string = null): T {
+    return get<T>(this.rawData, path)
   }
 
   val(path: string = null) {
     return Object.freeze(this.raw(path))
   }
 
-  get(path: string = null) {
-    return new ObsObject(this.id, path, this)
+  get<TChild>(path: string = null): ObsObject<TChild> {
+    return new ObsObject<TChild>(this.id, path, this)
   }
 
   set(path: string = null, value) {

@@ -7,7 +7,7 @@
  * console.log(obj.a.b === b) // true
  * ```
  */
-export function get(obj, path) {
+export function get<T>(obj, path): T {
   if (!path || !obj) return obj
 
   const parsedPath = pathParse(path)
@@ -17,7 +17,7 @@ export function get(obj, path) {
     obj = obj[parsedPath[i]]
     if (obj === undefined) {
       console.warn('can\'t get object', obj, 'on path', path)
-      return { undefined: true }
+      return undefined
     }
   }
 

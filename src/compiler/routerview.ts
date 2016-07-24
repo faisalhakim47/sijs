@@ -26,12 +26,13 @@ export class RouterView {
   static PATH: string = null
   static ROUTER: RouterView = null
 
-  id: string = null
-  elem: Elem
-  routes: IRoute[] = []
-  defaultRoute: IRoute = null
-  childRoutes: RouterView[] = []
-  state: IRouterState = {
+  private routes: IRoute[] = []
+  private defaultRoute: IRoute = null
+
+  public id: string = null
+  public currentElem: Elem
+  public childRoutes: RouterView[] = []
+  public state: IRouterState = {
     path: '',
     route: null,
     params: {},
@@ -54,8 +55,11 @@ export class RouterView {
       if (path.slice(0, 1) !== '/') {
         path = '/' + path
       }
-      if (path.substr(-1) === '/') {
+      if (path.length !== 1 && path.substr(-1) === '/') {
         path = path.slice(0, -1)
+      }
+      if (path.length === 0) {
+        path = '/'
       }
 
       let params = path.match(paramRxG)
@@ -141,6 +145,7 @@ export class RouterView {
     let matches: string[] = []
     for (let i = 0, l = this.routes.length; i < l; i++) {
       route = this.routes[i]
+      console.log(route.path, route.rx, RouterView.PATH)
       const matches = RouterView.PATH.match(route.rx)
       if (matches) break
       else route = null
@@ -151,6 +156,7 @@ export class RouterView {
     }
 
     matches.shift()
+
     return { route, matches }
   }
 
@@ -168,7 +174,7 @@ export class RouterView {
     this.childRoutes.push(...e.routers)
 
     // save component Elem and return it
-    return this.elem = e
+    return this.currentElem = e
   }
 
   generateState(

@@ -1,12 +1,12 @@
 import { Elem } from '../compiler/elem'
-import { IUnwatcher } from '../observer/emitter'
+import { IWatcher } from '../observer/emitter'
 import { GlobalEvent } from '../instance/global-event'
 
 export abstract class Glue {
   id: string
   el: HTMLElement
   isInstalled: boolean = false
-  watchers: IUnwatcher[] = []
+  watchers: IWatcher[] = []
   teardown() {
     this.watchers.forEach(
       (watcher) => watcher.unwatch()

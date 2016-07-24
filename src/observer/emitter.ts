@@ -1,42 +1,29 @@
-export interface IUnwatcher {
+export interface IWatcher {
   unwatch: () => void
 }
 
 export class Emitter {
-  watchers = {}
+  watchers: {
+    [name: string]: Set<Function>
+  } = {}
 
-  on(name: string, watcher): IUnwatcher {
+  on(name: string, watcher: Function): IWatcher {
     const watchers = this.watchers[name]
       ? this.watchers[name]
-      : (this.watchers[name] = [])
-
-    watcher.wi = watchers.push(watcher) - 1
-
-    return {
-      unwatch: () => this.off(name, watcher)
-    }
+      : (this.watchers[name] = new Set())
+    watchers.add(watcher)
+    return { unwatch: () => this.off(name, watcher) }
   }
 
-  off(name: string, watcher) {
+  off(name: string, watcher: Function) {
     const watchers = this.watchers[name]
-
-    if (!Array.isArray(watchers)) return
-
-    if (typeof watcher.wi === 'number') {
-      watchers.splice(watcher.wi, 1)
-    } else {
-      console.warn(watcher, 'does not contain watcher index (wi)')
-    }
+    if (!watchers) return
+    return watchers.delete(watcher)
   }
 
   emit(name: string, ...data) {
     const watchers = this.watchers[name]
-
     if (!watchers) return
-
-    let l = watchers.length
-    while (l--) {
-      watchers[l](...data)
-    }
+    watchers.forEach(watcher => watcher(...data))
   }
 }

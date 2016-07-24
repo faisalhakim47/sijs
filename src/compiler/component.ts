@@ -15,9 +15,9 @@ export abstract class Component {
   static _isComponentClass = true
   protected rawState = {}
   public _isComponent = true
-  public params = {}
-  public query = {}
-  public state = new Observable(this, 'rawState')
+  private params = {}
+  private query = {}
+  private state = new Observable(this, 'rawState')
 
   constructor(
     private attrs?,

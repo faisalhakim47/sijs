@@ -1,7 +1,7 @@
 import { Glue } from './glue'
 import { GlobalEvent } from '../instance/global-event'
 import { is } from '../instance/status'
-import { IUnwatcher, Emitter } from '../observer/emitter'
+import { IWatcher, Emitter } from '../observer/emitter'
 
 export function watchEvent(id: string, name: string, eventFn) {
   return GlobalEvent.on(id + ':' + name, eventFn)

@@ -1,15 +1,17 @@
-import { IUnwatcher } from './emitter'
+import { IWatcher } from './emitter'
 import { Observable } from './observable'
+import { escape } from '../tools/string'
 
-export class ObsObject {
+export class ObsObject<T> {
+  private filterFn = val => val
   constructor(
     public id: string,
     public path: string,
-    private parent: Observable
+    private parent: Observable<any>
   ) { }
 
-  get(childPath: string) {
-    return this.parent.get(this.path + '.' + childPath)
+  get<TChild>(childPath: string): ObsObject {
+    return this.parent.get<TChild>(this.path + '.' + childPath)
   }
 
   raw() {
@@ -17,7 +19,17 @@ export class ObsObject {
   }
 
   val() {
-    return Object.freeze(this.raw())
+    return this.filterFn(Object.freeze(this.raw()))
+  }
+
+  escape() {
+    this.filterFn = escape
+    return this
+  }
+
+  filter(filterFn: (val: any) => any) {
+    this.filterFn = filterFn
+    return this
   }
 
   set(value) {

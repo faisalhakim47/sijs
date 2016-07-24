@@ -1,4 +1,4 @@
-import { IUnwatcher, Emitter } from './emitter'
+import { IWatcher, Emitter } from './emitter'
 import { Observable } from './observable'
 import { ObsObject } from './observable-object'
 import { compute } from './compute'
@@ -10,8 +10,8 @@ export class ObsArray {
   private EE: Emitter = new Emitter()
 
   constructor(
-    private baseData = { _dummy: [] },
-    private basePath = '_dummy'
+    private baseData: any = { _dummy: [] },
+    private basePath: string = '_dummy'
   ) {
     const rawItems = get(baseData, basePath)
 
@@ -41,6 +41,10 @@ export class ObsArray {
 
   val() { // alias
     return this.getAll()
+  }
+
+  raw() {
+    return this.rawItems
   }
 
   set(index: number, value) {
