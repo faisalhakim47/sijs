@@ -1,29 +1,29 @@
-export interface IWatcher {
-  unwatch: () => void
+export interface IListener {
+  unlist: () => void
 }
 
 export class Emitter {
-  watchers: {
+  listeners: {
     [name: string]: Set<Function>
   } = {}
 
-  on(name: string, watcher: Function): IWatcher {
-    const watchers = this.watchers[name]
-      ? this.watchers[name]
-      : (this.watchers[name] = new Set())
-    watchers.add(watcher)
-    return { unwatch: () => this.off(name, watcher) }
+  on(name: string, listener: Function): IListener {
+    const listeners = this.listeners[name]
+      ? this.listeners[name]
+      : (this.listeners[name] = new Set())
+    listeners.add(listener)
+    return { unlist: () => this.off(name, listener) }
   }
 
-  off(name: string, watcher: Function) {
-    const watchers = this.watchers[name]
-    if (!watchers) return
-    return watchers.delete(watcher)
+  off(name: string, listener: Function) {
+    const listeners = this.listeners[name]
+    if (!listeners) return
+    return listeners.delete(listener)
   }
 
   emit(name: string, ...data) {
-    const watchers = this.watchers[name]
-    if (!watchers) return
-    watchers.forEach(watcher => watcher(...data))
+    const listeners = this.listeners[name]
+    if (!listeners) return
+    listeners.forEach(listener => listener(...data))
   }
 }

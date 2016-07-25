@@ -1,12 +1,14 @@
-import { IComponentClass } from '../compiler/component'
+import { CompilerState } from '../compiler/index'
+import { ComponentClass } from '../compiler/component'
 import { RouterView } from '../compiler/routerview'
 import { GlobalEvent } from '../instance/global-event'
 
-export function Generate(path: string, Component: IComponentClass, linkToApp: string) {
+export function Generate(path: string, Component: ComponentClass, linkToApp: string) {
   RouterView.PATH = path
-  let { template } = new Component().create()
+  let template = new Component().generate()
   RouterView.PATH = null
-  GlobalEvent.emit('resetIds')
+  GlobalEvent.emit('reset')
+  CompilerState.takeState()
   template = `
     <script>(function() {
       window._prerender = true;

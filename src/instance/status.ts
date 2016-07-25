@@ -14,10 +14,10 @@ const server = !!test['server'] && !browser
 
 const prerender = browser && window['_prerender']
 
-export const is = {
+export const status = {
   browser,
   server,
   prerender
 }
 
-export default is
+export default status

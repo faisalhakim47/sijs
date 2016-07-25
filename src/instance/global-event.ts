@@ -1,11 +1,10 @@
-import { is } from './status'
+import { status } from './status'
 import { Emitter } from '../observer/emitter'
-import { resetObsId } from '../observer/observable'
 import { resetElemId } from '../compiler/uid'
 
 export const GlobalEvent = new Emitter()
 
-if (is.browser) {
+if (status.browser) {
   const addEvent = (name, eventFn) => {
     window.addEventListener(name, eventFn)
   }
@@ -20,7 +19,6 @@ if (is.browser) {
   })
 }
 
-GlobalEvent.on('resetIds', () => {
-  resetObsId()
+GlobalEvent.on('reset', () => {
   resetElemId()
 })

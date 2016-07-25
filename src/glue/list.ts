@@ -1,13 +1,13 @@
-import { Glue, addEvents, installElem, destroyElem } from './glue'
-import { Elem } from '../compiler/elem'
-import { ObsObject } from '../observer/observable-object'
-import { ObsArray } from '../observer/observable-array'
+import { Glue, addEvents, installState, destroyState } from './index'
+import { CompilerStateConstructor, getChildState } from '../compiler/index'
+import { listenDeps } from '../observer/dependent'
+import { isObserved, isObservable, listenObs, parseObsValue } from '../observer/observable'
 
 export interface IItemList {
   index: number
   item
   el: Element
-  elem: Elem
+  state: CompilerStateConstructor
 }
 
 export class ListGlue extends Glue {
@@ -18,27 +18,35 @@ export class ListGlue extends Glue {
 
   constructor(
     private helperId: string,
-    private items: ObsArray,
-    private listFn: (item, index: () => number) => Elem,
+    private itemsFactory: Function,
+    private listFn: (item, index: () => number) => string,
     private opts: {
-      skip?: ObsObject | number,
-      limit?: ObsObject | number
+      skip?
+      limit?
     }
   ) {
     super()
     this.id = helperId
     const { skip, limit } = opts
-    if (skip instanceof ObsObject) {
-      this.skip = skip.val()
-      this.watchers.push(
-        skip.watch((val) => this.skipWatcher(val))
-      )
+    if (isObservable(skip)) {
+      this.skip = parseObsValue(skip)
+      if (isObserved(skip)) {
+        this.listeners.push(listenObs(skip, () => this.skipSetter()))
+      } else {
+        this.listeners.push(listenDeps(() => this.skipSetter()))
+      }
+    } else {
+      this.skip = skip
     }
-    if (limit instanceof ObsObject) {
-      this.limit = limit.val()
-      this.watchers.push(
-        limit.watch((val) => this.limitWatcher(val))
-      )
+    if (isObservable(limit)) {
+      this.limit = parseObsValue(limit)
+      if (isObserved(limit)) {
+        this.listeners.push(listenObs(limit, () => this.limitSetter()))
+      } else {
+        this.listeners.push(listenDeps(() => this.limitSetter()))
+      }
+    } else {
+      this.limit = limit
     }
   }
 
@@ -54,9 +62,7 @@ export class ListGlue extends Glue {
       return oldItem
     })
 
-    this.watchers.push(
-      this.items.watch(() => this.listGenerator())
-    )
+    this.listeners.push(listenDeps(() => this.listGenerator()))
     this.isInstalled = true
   }
 
@@ -67,19 +73,20 @@ export class ListGlue extends Glue {
     this.helperEl = null
   }
 
-  skipWatcher(val) {
-    this.skip = val
+  skipSetter() {
+    this.skip = (<Function>this.opts.skip)()
   }
 
-  limitWatcher(val) {
-    this.limit = val
+  limitSetter() {
+    this.limit = (<Function>this.opts.limit)()
   }
 
   listGenerator() {
-    const { helperId, helperEl, items, listFn, skip, limit, currentItems } = this
+    const { helperId, helperEl, itemsFactory, listFn, skip, limit, currentItems } = this
 
+    const items: any[] = itemsFactory()
     let newItems: IItemList[] = []
-    let length = items.length()
+    let length = items.length
     let i: number
 
     if (length <= skip + limit) {
@@ -97,7 +104,7 @@ export class ListGlue extends Glue {
 
     while (i--) {
       const index = skipIndex + i
-      const item = items.get(index)
+      const item = items[index]
 
       let indexItem: number = -1
       for (let i = 0, l = currentItems.length; i < l; i++) {
@@ -115,23 +122,26 @@ export class ListGlue extends Glue {
         currentItem.index = index
         currentItems.push(currentItem)
       } else {
-        const itemParam: IItemList = { item, index, elem: null, el: null }
-        const e = listFn(itemParam.item, () => itemParam.index)
-        installElem(e, (template) => {
+        const itemParam: IItemList = { item, index, state: null, el: null }
+        let template: string
+        const state = getChildState(() => {
+          template = listFn(itemParam.item, () => itemParam.index)
+        })
+
+        installState(state, () => {
           helperEl.insertAdjacentHTML(
             'afterend', template.replace('>', ' ' + helperId + '>')
           )
         })
-        addEvents(e.events)
 
-        itemParam.elem = e
+        itemParam.state = state
         itemParam.el = helperEl.nextElementSibling
         newItems.push(itemParam)
       }
     }
 
     currentItems.forEach((oldItem) => {
-      destroyElem(oldItem.elem, () => {
+      destroyState(oldItem.state, () => {
         helperEl.parentElement.removeChild(oldItem.el)
       })
     })

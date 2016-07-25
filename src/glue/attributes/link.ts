@@ -1,16 +1,15 @@
-import { Glue, getEl, removeElRef } from './glue'
-import { watchEvent } from './event'
-import { RouterView } from '../compiler/routerview'
-import { GlobalEvent } from '../instance/global-event'
-import { ObsObject } from '../observer/observable-object'
+import { Glue, getEl, removeElRef } from '../index'
+import { listenToEvent } from './event'
+import { RouterView } from '../../compiler/routerview'
+import { GlobalEvent } from '../../instance/global-event'
+import { parseObsValue } from '../../observer/observable'
 
 export class LinkGlue extends Glue {
   constructor(
-    id: string,
+    public id: string,
     private path: string
   ) {
     super()
-    this.id = id
   }
 
   install() {
@@ -19,12 +18,12 @@ export class LinkGlue extends Glue {
         'Input element #', this.id, 'has not inserted yet.', this
       )
     }
-    this.watchers.push(
-      watchEvent(this.id, 'onclick', (e) => {
+    this.listeners.push(
+      listenToEvent(this.id, 'onclick', (e) => {
         e.preventDefault()
-        RouterView.PATH = this.path
-        window.history.pushState({}, null, this.path)
-        GlobalEvent.emit('route:change', this.path)
+        RouterView.PATH = parseObsValue(this.path)
+        window.history.pushState({}, null, RouterView.PATH)
+        GlobalEvent.emit('route:change', RouterView.PATH)
       })
     )
     this.isInstalled = true

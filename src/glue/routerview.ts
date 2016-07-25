@@ -1,4 +1,4 @@
-import { Glue, getEl, removeElRef, addEvents, installElem, destroyElem } from './glue'
+import { Glue, getEl, removeElRef, addEvents, installState, destroyState } from './index'
 import { RouterView } from '../compiler/routerview'
 import { GlobalEvent } from '../instance/global-event'
 
@@ -17,7 +17,7 @@ export class RouterViewGlue extends Glue {
         'Input element #', this.id, 'has not been inserted yet.', this
       )
     }
-    this.watchers.push(
+    this.listeners.push(
       GlobalEvent.on('route:change', (path) => {
         this.updateRouter(this.router, path)
       })
@@ -38,17 +38,17 @@ export class RouterViewGlue extends Glue {
   updateRouter(router: RouterView, path: string) {
     if (this.shouldUpdate(router, path)) {
       RouterView.PATH = path
-      destroyElem(router.currentElem, () => {
+      destroyState(router.currentState, () => {
         this.destroyChild(this.el, this.el.id)
       })
 
       const { matches, route } = router.findTheRoute()
-      router.state = router.generateState(
+      router.routeState = router.generateState(
         path, matches, route
       )
-      const e = router.generateElem(route.component)
+      const template = router.generateTemplate(route.component)
 
-      installElem(e, (template) => {
+      installState(router.currentState, (template) => {
         this.el.insertAdjacentHTML('afterend',
           template.replace('>', ` ${router.id}>`)
         )
@@ -56,7 +56,7 @@ export class RouterViewGlue extends Glue {
     } else {
       const parentPath = RouterView.PATH
       const parentRouter = RouterView.ROUTER
-      RouterView.PATH = path.replace(router.state.route.rx, '')
+      RouterView.PATH = path.replace(router.routeState.route.rx, '')
       RouterView.ROUTER = router
   
       router.childRoutes.forEach((childRouter) => {
@@ -82,7 +82,7 @@ export class RouterViewGlue extends Glue {
   }
 
   shouldUpdate(router: RouterView, path: string) {
-    const route = router.state.route
+    const route = router.routeState.route
     if (!route.rx.test(path)) {
       return true
     }
@@ -91,7 +91,7 @@ export class RouterViewGlue extends Glue {
       const matches = path.match(route.rx)
       matches.shift()
       const newState = router.generateState(path, matches, route)
-      const oldState = router.state
+      const oldState = router.routeState
       for (let key in newState.params) {
         if (newState.params[key] !== oldState.params[key]) {
           return true

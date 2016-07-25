@@ -1,11 +1,12 @@
-import { Glue, getEl, removeElRef } from './glue'
-import { ObsObject } from '../observer/observable-object'
+import { Glue, getEl, removeElRef } from '../index'
+import { listenDeps } from '../../observer/dependent'
+import { isObserved, parseObsValue, listenObs } from '../../observer/observable'
 
 export class StyleGlue extends Glue {
   constructor(
     id: string,
     private name: string,
-    private value: ObsObject
+    private value
   ) {
     super()
     this.id = id
@@ -17,9 +18,11 @@ export class StyleGlue extends Glue {
         'Input element #', this.id, 'has not been inserted yet.', this
       )
     }
-    this.watchers.push(
-      this.value.watch((val) => this.styleWatcher(val))
-    )
+    if (isObserved(this.value)) {
+      this.listeners.push(listenObs(this.value, () => this.styleListener()))
+    } else {
+      this.listeners.push(listenDeps(() => this.styleListener()))
+    }
     this.isInstalled = true
   }
 
@@ -33,7 +36,7 @@ export class StyleGlue extends Glue {
     }
   }
 
-  styleWatcher(val) {
-    this.el.style[this.name] = val
+  styleListener() {
+    this.el.style[this.name] = parseObsValue(this.value)
   }
 }

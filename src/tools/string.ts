@@ -17,3 +17,9 @@ export function escape(str): string {
     return str
   }
 }
+
+export function camelToSnake(str: string): string {
+  return str.replace(/\.?[A-Z]+/g, (x, y) => {
+    return "-" + y.toLowerCase()
+  }).replace(/^-/, '')
+}

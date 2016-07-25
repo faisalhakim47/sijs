@@ -1,11 +1,12 @@
-import { Glue, getEl, removeElRef } from './glue'
-import { ObsObject } from '../observer/observable-object'
+import { listenDeps } from '../../observer/dependent'
+import { isObserved, isObservable, listenObs, parseObsValue } from '../../observer/observable'
+import { Glue, getEl, removeElRef } from '../index'
 
 export class ClassGlue extends Glue {
   constructor(
     id: string,
     private className: string,
-    private cond: ObsObject
+    private cond
   ) {
     super()
     this.id = id
@@ -13,9 +14,11 @@ export class ClassGlue extends Glue {
 
   install() {
     this.el = getEl(this.id)
-    this.watchers.push(
-      this.cond.watch((val) => this.classNameSetter(val))
-    )
+    if (isObserved(this.cond)) {
+      this.listeners.push(listenObs(this.cond, () => this.classNameSetter()))
+    } else {
+      this.listeners.push(listenDeps(() => this.classNameSetter()))
+    }
     this.isInstalled = true
   }
 
@@ -29,11 +32,12 @@ export class ClassGlue extends Glue {
     }
   }
 
-  classNameSetter(val) {
+  classNameSetter() {
     const isContain = this.el.classList.contains(this.className)
-    if (val && !isContain) {
+    const cond = parseObsValue(this.cond)
+    if (cond && !isContain) {
       this.el.classList.add(this.className)
-    } else if (!val && isContain) {
+    } else if (!cond && isContain) {
       this.el.classList.remove(this.className)
     }
   }

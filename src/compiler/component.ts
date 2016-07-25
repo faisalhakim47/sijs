@@ -1,39 +1,44 @@
-import { h, Elem } from './elem'
-import { Glue } from '../glue/glue'
-import { Observable } from '../observer/observable'
 import { RouterView } from './routerview'
+import { CompilerState } from './index'
+import { Glue } from '../glue/index'
+import { Observe } from '../observer/observable'
 
-export interface IComponentClass {
-  new (attrs?, children?): Component
+export interface ComponentClass {
+  new (): Component
 }
 
-export function isComponentClass(t): t is IComponentClass {
+export function isComponentClass(t): t is ComponentClass {
   return t && t._isComponentClass
 }
 
 export abstract class Component {
   static _isComponentClass = true
-  protected rawState = {}
+
   public _isComponent = true
+
   private params = {}
   private query = {}
-  private state = new Observable(this, 'rawState')
 
-  constructor(
-    private attrs?,
-    private children?: any[]
-  ) { }
-
-  create(): Elem {
+  generate(): string {
     if (RouterView.ROUTER) {
-      this.params = RouterView.ROUTER.state.params
-      this.query = RouterView.ROUTER.state.query
+      this.params = RouterView.ROUTER.routeState.params
+      this.query = RouterView.ROUTER.routeState.query
     }
 
-    const e = this.render(this.state, h)
+    const template = this.render.bind(Observe(this))()
 
-    return e
+    const beforeInstall = (<any>this).beforeInstall
+    const afterInstall = (<any>this).afterInstall
+    const beforeDestroy = (<any>this).beforeDestroy
+    const afterDestroy = (<any>this).afterDestroy
+
+    if (beforeInstall) CompilerState.hooks.beforeInstall.push(beforeInstall)
+    if (afterInstall) CompilerState.hooks.beforeInstall.push(afterInstall)
+    if (beforeDestroy) CompilerState.hooks.beforeInstall.push(beforeDestroy)
+    if (afterDestroy) CompilerState.hooks.beforeInstall.push(afterDestroy)
+
+    return template
   }
 
-  abstract render(state: Observable, h): Elem
+  abstract render(): string
 }

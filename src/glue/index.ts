@@ -1,17 +1,17 @@
-import { Elem } from '../compiler/elem'
-import { IWatcher } from '../observer/emitter'
+import { CompilerStateConstructor } from '../compiler/index'
+import { IListener } from '../observer/emitter'
 import { GlobalEvent } from '../instance/global-event'
 
 export abstract class Glue {
   id: string
   el: HTMLElement
   isInstalled: boolean = false
-  watchers: IWatcher[] = []
+  listeners: IListener[] = []
   teardown() {
-    this.watchers.forEach(
-      (watcher) => watcher.unwatch()
+    this.listeners.forEach(
+      (listener) => listener.unlist()
     )
-    this.watchers = []
+    this.listeners = []
     this.el = null
     removeElRef(this.id)
     this.isInstalled = false
@@ -46,31 +46,30 @@ export function removeElRef(id: string): void {
   }
 }
 
-export function installElem(e: Elem, installDOM: (template: string) => void) {
-  e.hooks.beforeInstall.forEach((fn) => fn())
-  e.hooks.beforeInstall = []
+export function installState({ glues, events, hooks }: CompilerStateConstructor, installDOM: Function) {
+  hooks.beforeInstall.forEach((fn) => fn())
+  hooks.beforeInstall = []
 
-  installDOM(e.template)
-  e.template = ''
+  installDOM()
 
-  e.glues.forEach((glue) => glue.install())
-  addEvents(e.events)
+  glues.forEach((glue) => glue.install())
+  addEvents(events)
 
-  e.hooks.afterInstall.forEach((fn) => fn())
-  e.hooks.afterInstall = []
+  hooks.afterInstall.forEach((fn) => fn())
+  hooks.afterInstall = []
 }
 
-export function destroyElem(e: Elem, removeDOM: Function) {
-  e.hooks.beforeDestroy.forEach((fn) => fn())
-  e.hooks.beforeDestroy = []
+export function destroyState({ glues, hooks }: CompilerStateConstructor, removeDOM: Function) {
+  hooks.beforeDestroy.forEach((fn) => fn())
+  hooks.beforeDestroy = []
 
   removeDOM()
 
-  e.glues.forEach((glue) => glue.destroy())
-  e.glues = []
+  glues.forEach((glue) => glue.destroy())
+  glues = []
 
-  e.hooks.afterDestroy.forEach((fn) => fn())
-  e.hooks.afterDestroy = []
+  hooks.afterDestroy.forEach((fn) => fn())
+  hooks.afterDestroy = []
 }
 
 let activeEvents = {}
