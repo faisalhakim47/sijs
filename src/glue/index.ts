@@ -46,30 +46,32 @@ export function removeElRef(id: string): void {
   }
 }
 
-export function installState({ glues, events, hooks }: CompilerStateConstructor, installDOM: Function) {
-  hooks.beforeInstall.forEach((fn) => fn())
-  hooks.beforeInstall = []
-
+export function installState(
+  { glues, events, components }: CompilerStateConstructor,
+  installDOM: Function
+) {
   installDOM()
 
   glues.forEach((glue) => glue.install())
   addEvents(events)
 
-  hooks.afterInstall.forEach((fn) => fn())
-  hooks.afterInstall = []
+  components.forEach((c: any) => {
+    c.$install()
+    if (c.ready) c.ready()
+  })
 }
 
-export function destroyState({ glues, hooks }: CompilerStateConstructor, removeDOM: Function) {
-  hooks.beforeDestroy.forEach((fn) => fn())
-  hooks.beforeDestroy = []
+export function destroyState(state: CompilerStateConstructor, removeDOM: Function) {
+  state.components.forEach((c: any) => {
+    if (c.beforeDestroy) c.beforeDestroy()
+    c.$destroy()
+  })
+  state.components = []
 
   removeDOM()
 
-  glues.forEach((glue) => glue.destroy())
-  glues = []
-
-  hooks.afterDestroy.forEach((fn) => fn())
-  hooks.afterDestroy = []
+  state.glues.forEach((glue) => glue.destroy())
+  state.glues = []
 }
 
 let activeEvents = {}

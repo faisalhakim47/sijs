@@ -3,7 +3,6 @@ import { CompilerState, getChildState } from './index'
 import { RouterView } from './routerview'
 import { Glue } from '../glue/index'
 import { ListGlue } from '../glue/list'
-import { parseObsValue } from '../observer/observable'
 
 export interface IListFn {
   (item, index: () => number): string
@@ -22,8 +21,14 @@ export function List(
   }
 ): string {
   if (!opts) opts = { limit: 0, skip: 0 }
-  let skip = parseObsValue(opts.skip)
-  let limit = parseObsValue(opts.limit)
+
+  let skip: number = opts.skip instanceof Function
+    ? (<Function>opts.skip)()
+    : opts.skip
+  let limit: number = opts.limit instanceof Function
+    ? (<Function>opts.limit)()
+    : opts.limit
+
   const items = itemsFactory()
   const id = genId()
   const listGlue = new ListGlue(id, itemsFactory, listFn, opts)

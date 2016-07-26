@@ -1,18 +1,24 @@
-import { Attrs } from '../compiler/attributes'
-import { Component } from '../compiler/component'
+import { attrs } from '../compiler/attributes';
+import { Component } from '../compiler/component';
+import { render } from '../compiler/index';
+import { listenObs } from '../observer/dependent';
+import { getSetter } from '../observer/setter';
+import { IListener } from '../observer/emitter';
 
-class InputText extends Component {
+export class InputText extends Component {
+  render() {
+    return `<input ${attrs({
+      oninput: ({ target }) => this.setModel(target.value),
+      value: this.model,
+    })} type="text">`
+  }
+
+  setModel: (value) => void 
+
   constructor(
-    private factory: Function
+    private model: Function
   ) {
     super()
-  }
-
-  render() {
-    return `<input type="text" ${Attrs({ oninput: this.oninput })}/>`
-  }
-
-  oninput() {
-    this.factory()
+    this.setModel = getSetter(model)
   }
 }

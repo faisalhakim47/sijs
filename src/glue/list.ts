@@ -1,7 +1,6 @@
 import { Glue, addEvents, installState, destroyState } from './index'
 import { CompilerStateConstructor, getChildState } from '../compiler/index'
-import { listenDeps } from '../observer/dependent'
-import { isObserved, isObservable, listenObs, parseObsValue } from '../observer/observable'
+import { listenObs } from '../observer/dependent'
 
 export interface IItemList {
   index: number
@@ -28,23 +27,13 @@ export class ListGlue extends Glue {
     super()
     this.id = helperId
     const { skip, limit } = opts
-    if (isObservable(skip)) {
-      this.skip = parseObsValue(skip)
-      if (isObserved(skip)) {
-        this.listeners.push(listenObs(skip, () => this.skipSetter()))
-      } else {
-        this.listeners.push(listenDeps(() => this.skipSetter()))
-      }
+    if (skip instanceof Function) {
+      this.listeners.push(listenObs(() => this.skipSetter()))
     } else {
       this.skip = skip
     }
-    if (isObservable(limit)) {
-      this.limit = parseObsValue(limit)
-      if (isObserved(limit)) {
-        this.listeners.push(listenObs(limit, () => this.limitSetter()))
-      } else {
-        this.listeners.push(listenDeps(() => this.limitSetter()))
-      }
+    if (limit instanceof Function) {
+      this.listeners.push(listenObs(() => this.limitSetter()))
     } else {
       this.limit = limit
     }
@@ -62,7 +51,7 @@ export class ListGlue extends Glue {
       return oldItem
     })
 
-    this.listeners.push(listenDeps(() => this.listGenerator()))
+    this.listeners.push(listenObs(this.itemsFactory, () => this.listGenerator()))
     this.isInstalled = true
   }
 

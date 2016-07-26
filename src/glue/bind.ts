@@ -1,6 +1,5 @@
 import { Glue, getEl, removeElRef } from './index'
-import { listenDeps } from '../observer/dependent'
-import { isObserved, parseObsValue, listenObs } from '../observer/observable'
+import { listenObs } from '../observer/dependent'
 
 export class BindGlue extends Glue {
   constructor(
@@ -13,11 +12,7 @@ export class BindGlue extends Glue {
 
   install() {
     this.el = getEl(this.id)
-    if (isObserved(this.value)) {
-      this.listeners.push(listenObs(this.value, () => this.bindSetter()))
-    } else {
-      this.listeners.push(listenDeps(() => this.bindSetter()))
-    }
+    this.listeners.push(listenObs(this.value, () => this.bindSetter()))
     this.isInstalled = true
   }
 
@@ -32,7 +27,7 @@ export class BindGlue extends Glue {
   }
 
   bindSetter() {
-    const val = parseObsValue(this.value)
+    const val = this.value()
     if (this.el.innerText == val) return
     this.el.innerText = val
   }

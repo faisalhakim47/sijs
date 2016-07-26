@@ -1,15 +1,15 @@
 import { status } from './status'
-import { Component } from '../compiler/component'
+import { ComponentClass } from '../compiler/component'
 import { RouterView } from '../compiler/routerview'
-import { CompilerState } from '../compiler/index'
+import { CompilerState, render } from '../compiler/index'
 import { installState, addEvents } from '../glue/index'
 
-export function Bootstrap(Component: Component) {
+export function Bootstrap(Component: ComponentClass) {
   if (status.browser) {
     RouterView.PATH = window.location.pathname + window.location.search
 
     // generate template and glues
-    const template = Component.generate()
+    const template = render(Component)
 
     // execute all beforeInstall components function
     if ((<any>Component).beforeInstall) (<any>Component).beforeInstall()
@@ -17,17 +17,17 @@ export function Bootstrap(Component: Component) {
     // install state
     const STATE = CompilerState.takeState()
 
-    installState(STATE, (template) => {
+    installState(STATE, () => {
       if (!status.prerender) document.write(template)
     })
 
-    // execute all afterInstall components function
-    if ((<any>Component).afterInstall) (<any>Component).afterInstall()
+    // execute ready components function
+    if ((<any>Component).ready) (<any>Component).ready()
 
     // ensure prerender false
     status.prerender = false
 
-    console.log(Component, STATE)
+    console.log(STATE)
   } else {
     console.error('Cannot Bootsrap(), this is not browser.')
   }

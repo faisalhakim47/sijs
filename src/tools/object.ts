@@ -16,7 +16,7 @@ export function get<T>(obj, path): T {
   for (let i = 0; i < l; i++) {
     obj = obj[parsedPath[i]]
     if (obj === undefined) {
-      console.warn('can\'t get object', obj, 'on path', path)
+      console.trace('can\'t get object', obj, 'on path', path)
       return undefined
     }
   }

@@ -1,3 +1,4 @@
+import { Component } from './component'
 import { RouterView } from './routerview'
 import { CompilerState } from './index'
 import { genId } from './uid'
@@ -10,14 +11,18 @@ import { StyleGlue } from '../glue/attributes/style'
 import { status } from '../instance/status'
 import { camelToSnake } from '../tools/string'
 import { isBoolean, isString } from '../tools/typecheck'
-import { isObservable, isObserved, getObsValue, parseObsValue } from '../observer/observable'
 
 const onRx = /^on/
 
-export function Attrs(attrs: IAllAttribute = {}): string {
+export function attrs(attrs: IAllAttribute = {}): string {
   let id: string
   if (attrs.id) {
-    id = parseObsValue(attrs.id)
+    const attrId = attrs.id
+    if (attrId instanceof Function) {
+      id = attrId()
+    } else {
+      id = attrId
+    }
   } else {
     id = genId()
   }
@@ -27,15 +32,18 @@ export function Attrs(attrs: IAllAttribute = {}): string {
   if (attrs.className !== undefined) {
     template += ' class="'
     if (attrs.class !== undefined) {
-      template += `${parseObsValue(attrs.class)}`
+      const attrClass = attrs.class
+      template += attrClass instanceof Function
+        ? attrClass()
+        : attrClass
       attrs.class = null
     }
     Object.keys(attrs.className).forEach((className) => {
-      const cond = parseObsValue(attrs.className[name])
-      if (cond && isObservable(attrs.className[name])) {
-        if (cond) template = ` ${className}`
+      const cond = attrs.className[name]
+      if (cond instanceof Function) {
+        if (cond()) template = ` ${className}`
         CompilerState.glues.push(
-          new ClassGlue(id, name, attrs.className[name])
+          new ClassGlue(id, name, cond)
         )
       } else if (!!cond) {
         template = ` ${className}`
@@ -48,13 +56,15 @@ export function Attrs(attrs: IAllAttribute = {}): string {
   if (attrs.style !== undefined) {
     template += 'style="'
     Object.keys(attrs.style).forEach((styleName) => {
-      let value = parseObsValue(attrs.style[styleName])
-      if (isObservable(attrs.style[styleName])) {
+      let value = attrs.style[styleName]
+      if (value instanceof Function) {
         CompilerState.glues.push(
           new StyleGlue(id, styleName, attrs.style[styleName])
         )
+        template += `${camelToSnake(styleName)}:${value()};`
+      } else {
+        template += `${camelToSnake(styleName)}:${value};`
       }
-      template += `${camelToSnake(styleName)}:${value}`
     })
     template += '"'
     attrs.style = null
@@ -72,23 +82,22 @@ export function Attrs(attrs: IAllAttribute = {}): string {
   }
 
   Object.keys(attrs).forEach((name) => {
-    const val = parseObsValue(attrs[name])
+    const value = attrs[name]
 
-    if (val === null) return
+    if (value === null) return
 
     if (onRx.test(name)) {
-      CompilerState.glues.push(
-        new EventGlue(id, name, val)
-      )
+      CompilerState.glues.push(new EventGlue(
+        id, name, value.bind(Component.ACTIVE_COMPONENT)
+      ))
       CompilerState.events.push(name)
+    } else if (value instanceof Function) {
+      template += `${name}="${value()}"`
+      CompilerState.glues.push(
+        new AttrGlue(id, name, value)
+      )
     } else {
-      template += `${name}="${val}"`
-      if (isObservable(attrs[name])) {
-        CompilerState.glues.push(
-          new AttrGlue(id, name, attrs[name])
-        )
-      }
-      template += '"'
+      template += `${name}="${value}"`
     }
   })
 
@@ -106,19 +115,19 @@ export interface IGlobalAttribute {
   }
 
   // https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes
-  accesskey? // FUTURE CHANGE
-  class? // FUTURE CHANGE
-  dir? // FUTURE CHANGE
-  draggable? // FUTURE CHANGE
-  dropzone? // FUTURE CHANGE
-  hidden? // FUTURE CHANGE
-  id? // FUTURE CHANGE
-  itemprop? // FUTURE CHANGE
-  lang? // FUTURE CHANGE
-  spellcheck? // FUTURE CHANGE
-  style? // FUTURE CHANGE
-  tabindex? // FUTURE CHANGE
-  title? // FUTURE CHANGE
+  accesskey?: string | Function
+  class?: string | Function
+  dir?: string | Function
+  draggable?: string | Function
+  dropzone?: string | Function
+  hidden?: string | Function
+  id?: string | Function
+  itemprop?: string | Function
+  lang?: string | Function
+  spellcheck?: string | Function
+  style?: string | Function
+  tabindex?: string | Function
+  title?: string | Function
 
   // Events
   onabort?: Function
@@ -188,463 +197,463 @@ export interface IGlobalAttribute {
 
 export interface IAllAttribute extends IGlobalAttribute {
   // https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes
-  accept? // FUTURE CHANGE
-  'accept-charset'? // FUTURE CHANGE
-  accesskey? // FUTURE CHANGE
-  action? // FUTURE CHANGE
-  align? // FUTURE CHANGE
-  alt? // FUTURE CHANGE
-  autocomplete? // FUTURE CHANGE
-  autofocus? // FUTURE CHANGE
-  autoplay? // FUTURE CHANGE
-  autosave? // FUTURE CHANGE
-  bgcolor? // FUTURE CHANGE
-  border? // FUTURE CHANGE
-  buffered? // FUTURE CHANGE
-  challenge? // FUTURE CHANGE
-  charset? // FUTURE CHANGE
-  checked? // FUTURE CHANGE
-  cite? // FUTURE CHANGE
-  class? // FUTURE CHANGE
-  code? // FUTURE CHANGE
-  codebase? // FUTURE CHANGE
-  color? // FUTURE CHANGE
-  cols? // FUTURE CHANGE
-  colspan? // FUTURE CHANGE
-  content? // FUTURE CHANGE
-  contenteditable? // FUTURE CHANGE
-  contextmenu? // FUTURE CHANGE
-  controls? // FUTURE CHANGE
-  coords? // FUTURE CHANGE
-  data? // FUTURE CHANGE
-  datetime? // FUTURE CHANGE
-  default? // FUTURE CHANGE
-  defer? // FUTURE CHANGE
-  dir? // FUTURE CHANGE
-  dirname? // FUTURE CHANGE
-  disabled? // FUTURE CHANGE
-  download? // FUTURE CHANGE
-  draggable? // FUTURE CHANGE
-  dropzone? // FUTURE CHANGE
-  enctype? // FUTURE CHANGE
-  for? // FUTURE CHANGE
-  form? // FUTURE CHANGE
-  formaction? // FUTURE CHANGE
-  headers? // FUTURE CHANGE
-  height? // FUTURE CHANGE
-  hidden? // FUTURE CHANGE
-  high? // FUTURE CHANGE
-  href? // FUTURE CHANGE
-  hreflang? // FUTURE CHANGE
-  'http-equiv'? // FUTURE CHANGE
-  icon? // FUTURE CHANGE
-  id? // FUTURE CHANGE
-  ismap? // FUTURE CHANGE
-  itemprop? // FUTURE CHANGE
-  keytype? // FUTURE CHANGE
-  kind? // FUTURE CHANGE
-  label? // FUTURE CHANGE
-  lang? // FUTURE CHANGE
-  language? // FUTURE CHANGE
-  list? // FUTURE CHANGE
-  loop? // FUTURE CHANGE
-  low? // FUTURE CHANGE
-  manifest? // FUTURE CHANGE
-  max? // FUTURE CHANGE
-  maxlength? // FUTURE CHANGE
-  media? // FUTURE CHANGE
-  method? // FUTURE CHANGE
-  min? // FUTURE CHANGE
-  multiple? // FUTURE CHANGE
-  muted? // FUTURE CHANGE
-  name? // FUTURE CHANGE
-  novalidate? // FUTURE CHANGE
-  open? // FUTURE CHANGE
-  optimum? // FUTURE CHANGE
-  pattern? // FUTURE CHANGE
-  ping? // FUTURE CHANGE
-  placeholder? // FUTURE CHANGE
-  poster? // FUTURE CHANGE
-  preload? // FUTURE CHANGE
-  radiogroup? // FUTURE CHANGE
-  readonly? // FUTURE CHANGE
-  rel? // FUTURE CHANGE
-  required? // FUTURE CHANGE
-  reversed? // FUTURE CHANGE
-  rows? // FUTURE CHANGE
-  rowspan? // FUTURE CHANGE
-  scope? // FUTURE CHANGE
-  scoped? // FUTURE CHANGE
-  seamless? // FUTURE CHANGE
-  selected? // FUTURE CHANGE
-  shape? // FUTURE CHANGE
-  size? // FUTURE CHANGE
-  sizes? // FUTURE CHANGE
-  span? // FUTURE CHANGE
-  spellcheck? // FUTURE CHANGE
-  src? // FUTURE CHANGE
-  srcdoc? // FUTURE CHANGE
-  srclang? // FUTURE CHANGE
-  srcset? // FUTURE CHANGE
-  start? // FUTURE CHANGE
-  step? // FUTURE CHANGE
-  style? // FUTURE CHANGE
-  summary? // FUTURE CHANGE
-  tabindex? // FUTURE CHANGE
-  target? // FUTURE CHANGE
-  title? // FUTURE CHANGE
-  type? // FUTURE CHANGE
-  usemap? // FUTURE CHANGE
-  value? // FUTURE CHANGE
-  width? // FUTURE CHANGE
-  wrap? // FUTURE CHANGE
+  accept?: string | Function
+  'accept-charset'?: string | Function
+  accesskey?: string | Function
+  action?: string | Function
+  align?: string | Function
+  alt?: string | Function
+  autocomplete?: string | Function
+  autofocus?: string | Function
+  autoplay?: string | Function
+  autosave?: string | Function
+  bgcolor?: string | Function
+  border?: string | Function
+  buffered?: string | Function
+  challenge?: string | Function
+  charset?: string | Function
+  checked?: string | Function
+  cite?: string | Function
+  class?: string | Function
+  code?: string | Function
+  codebase?: string | Function
+  color?: string | Function
+  cols?: string | Function
+  colspan?: string | Function
+  content?: string | Function
+  contenteditable?: string | Function
+  contextmenu?: string | Function
+  controls?: string | Function
+  coords?: string | Function
+  data?: string | Function
+  datetime?: string | Function
+  default?: string | Function
+  defer?: string | Function
+  dir?: string | Function
+  dirname?: string | Function
+  disabled?: string | Function
+  download?: string | Function
+  draggable?: string | Function
+  dropzone?: string | Function
+  enctype?: string | Function
+  for?: string | Function
+  form?: string | Function
+  formaction?: string | Function
+  headers?: string | Function
+  height?: string | Function
+  hidden?: string | Function
+  high?: string | Function
+  href?: string | Function
+  hreflang?: string | Function
+  'http-equiv'?: string | Function
+  icon?: string | Function
+  id?: string | Function
+  ismap?: string | Function
+  itemprop?: string | Function
+  keytype?: string | Function
+  kind?: string | Function
+  label?: string | Function
+  lang?: string | Function
+  language?: string | Function
+  list?: string | Function
+  loop?: string | Function
+  low?: string | Function
+  manifest?: string | Function
+  max?: string | Function
+  maxlength?: string | Function
+  media?: string | Function
+  method?: string | Function
+  min?: string | Function
+  multiple?: string | Function
+  muted?: string | Function
+  name?: string | Function
+  novalidate?: string | Function
+  open?: string | Function
+  optimum?: string | Function
+  pattern?: string | Function
+  ping?: string | Function
+  placeholder?: string | Function
+  poster?: string | Function
+  preload?: string | Function
+  radiogroup?: string | Function
+  readonly?: string | Function
+  rel?: string | Function
+  required?: string | Function
+  reversed?: string | Function
+  rows?: string | Function
+  rowspan?: string | Function
+  scope?: string | Function
+  scoped?: string | Function
+  seamless?: string | Function
+  selected?: string | Function
+  shape?: string | Function
+  size?: string | Function
+  sizes?: string | Function
+  span?: string | Function
+  spellcheck?: string | Function
+  src?: string | Function
+  srcdoc?: string | Function
+  srclang?: string | Function
+  srcset?: string | Function
+  start?: string | Function
+  step?: string | Function
+  style?: string | Function
+  summary?: string | Function
+  tabindex?: string | Function
+  target?: string | Function
+  title?: string | Function
+  type?: string | Function
+  usemap?: string | Function
+  value?: string | Function
+  width?: string | Function
+  wrap?: string | Function
 }
 
 export interface IStyles {
   [index: number]: any
-  alignContent? // FUTURE CHANGE
-  alignItems? // FUTURE CHANGE
-  alignSelf? // FUTURE CHANGE
-  alignmentBaseline? // FUTURE CHANGE
-  animation? // FUTURE CHANGE
-  animationDelay? // FUTURE CHANGE
-  animationDirection? // FUTURE CHANGE
-  animationDuration? // FUTURE CHANGE
-  animationFillMode? // FUTURE CHANGE
-  animationIterationCount? // FUTURE CHANGE
-  animationName? // FUTURE CHANGE
-  animationPlayState? // FUTURE CHANGE
-  animationTimingFunction? // FUTURE CHANGE
-  backfaceVisibility? // FUTURE CHANGE
-  background? // FUTURE CHANGE
-  backgroundAttachment? // FUTURE CHANGE
-  backgroundClip? // FUTURE CHANGE
-  backgroundColor? // FUTURE CHANGE
-  backgroundImage? // FUTURE CHANGE
-  backgroundOrigin? // FUTURE CHANGE
-  backgroundPosition? // FUTURE CHANGE
-  backgroundPositionX? // FUTURE CHANGE
-  backgroundPositionY? // FUTURE CHANGE
-  backgroundRepeat? // FUTURE CHANGE
-  backgroundSize? // FUTURE CHANGE
-  baselineShift? // FUTURE CHANGE
-  border? // FUTURE CHANGE
-  borderBottom? // FUTURE CHANGE
-  borderBottomColor? // FUTURE CHANGE
-  borderBottomLeftRadius? // FUTURE CHANGE
-  borderBottomRightRadius? // FUTURE CHANGE
-  borderBottomStyle? // FUTURE CHANGE
-  borderBottomWidth? // FUTURE CHANGE
-  borderCollapse? // FUTURE CHANGE
-  borderColor? // FUTURE CHANGE
-  borderImage? // FUTURE CHANGE
-  borderImageOutset? // FUTURE CHANGE
-  borderImageRepeat? // FUTURE CHANGE
-  borderImageSlice? // FUTURE CHANGE
-  borderImageSource? // FUTURE CHANGE
-  borderImageWidth? // FUTURE CHANGE
-  borderLeft? // FUTURE CHANGE
-  borderLeftColor? // FUTURE CHANGE
-  borderLeftStyle? // FUTURE CHANGE
-  borderLeftWidth? // FUTURE CHANGE
-  borderRadius? // FUTURE CHANGE
-  borderRight? // FUTURE CHANGE
-  borderRightColor? // FUTURE CHANGE
-  borderRightStyle? // FUTURE CHANGE
-  borderRightWidth? // FUTURE CHANGE
-  borderSpacing? // FUTURE CHANGE
-  borderStyle? // FUTURE CHANGE
-  borderTop? // FUTURE CHANGE
-  borderTopColor? // FUTURE CHANGE
-  borderTopLeftRadius? // FUTURE CHANGE
-  borderTopRightRadius? // FUTURE CHANGE
-  borderTopStyle? // FUTURE CHANGE
-  borderTopWidth? // FUTURE CHANGE
-  borderWidth? // FUTURE CHANGE
-  bottom? // FUTURE CHANGE
-  boxShadow? // FUTURE CHANGE
-  boxSizing? // FUTURE CHANGE
-  breakAfter? // FUTURE CHANGE
-  breakBefore? // FUTURE CHANGE
-  breakInside? // FUTURE CHANGE
-  captionSide? // FUTURE CHANGE
-  clear? // FUTURE CHANGE
-  clip? // FUTURE CHANGE
-  clipPath? // FUTURE CHANGE
-  clipRule? // FUTURE CHANGE
-  color? // FUTURE CHANGE
-  colorInterpolationFilters? // FUTURE CHANGE
-  columnCount? // FUTURE CHANGE
-  columnFill? // FUTURE CHANGE
-  columnGap? // FUTURE CHANGE
-  columnRule? // FUTURE CHANGE
-  columnRuleColor? // FUTURE CHANGE
-  columnRuleStyle? // FUTURE CHANGE
-  columnRuleWidth? // FUTURE CHANGE
-  columnSpan? // FUTURE CHANGE
-  columnWidth? // FUTURE CHANGE
-  columns? // FUTURE CHANGE
-  content? // FUTURE CHANGE
-  counterIncrement? // FUTURE CHANGE
-  counterReset? // FUTURE CHANGE
-  cssFloat? // FUTURE CHANGE
-  cssText? // FUTURE CHANGE
-  cursor? // FUTURE CHANGE
-  direction? // FUTURE CHANGE
-  display? // FUTURE CHANGE
-  dominantBaseline? // FUTURE CHANGE
-  emptyCells? // FUTURE CHANGE
-  enableBackground? // FUTURE CHANGE
-  fill? // FUTURE CHANGE
-  fillOpacity? // FUTURE CHANGE
-  fillRule? // FUTURE CHANGE
-  filter? // FUTURE CHANGE
-  flex? // FUTURE CHANGE
-  flexBasis? // FUTURE CHANGE
-  flexDirection? // FUTURE CHANGE
-  flexFlow? // FUTURE CHANGE
-  flexGrow? // FUTURE CHANGE
-  flexShrink? // FUTURE CHANGE
-  flexWrap? // FUTURE CHANGE
-  floodColor? // FUTURE CHANGE
-  floodOpacity? // FUTURE CHANGE
-  font? // FUTURE CHANGE
-  fontFamily? // FUTURE CHANGE
-  fontFeatureSettings? // FUTURE CHANGE
-  fontSize? // FUTURE CHANGE
-  fontSizeAdjust? // FUTURE CHANGE
-  fontStretch? // FUTURE CHANGE
-  fontStyle? // FUTURE CHANGE
-  fontVariant? // FUTURE CHANGE
-  fontWeight? // FUTURE CHANGE
-  glyphOrientationHorizontal? // FUTURE CHANGE
-  glyphOrientationVertical? // FUTURE CHANGE
-  height? // FUTURE CHANGE
-  imeMode? // FUTURE CHANGE
-  justifyContent? // FUTURE CHANGE
-  kerning? // FUTURE CHANGE
-  left? // FUTURE CHANGE
-  length? // FUTURE CHANGE
-  letterSpacing? // FUTURE CHANGE
-  lightingColor? // FUTURE CHANGE
-  lineHeight? // FUTURE CHANGE
-  listStyle? // FUTURE CHANGE
-  listStyleImage? // FUTURE CHANGE
-  listStylePosition? // FUTURE CHANGE
-  listStyleType? // FUTURE CHANGE
-  margin? // FUTURE CHANGE
-  marginBottom? // FUTURE CHANGE
-  marginLeft? // FUTURE CHANGE
-  marginRight? // FUTURE CHANGE
-  marginTop? // FUTURE CHANGE
-  marker? // FUTURE CHANGE
-  markerEnd? // FUTURE CHANGE
-  markerMid? // FUTURE CHANGE
-  markerStart? // FUTURE CHANGE
-  mask? // FUTURE CHANGE
-  maxHeight? // FUTURE CHANGE
-  maxWidth? // FUTURE CHANGE
-  minHeight? // FUTURE CHANGE
-  minWidth? // FUTURE CHANGE
-  msContentZoomChaining? // FUTURE CHANGE
-  msContentZoomLimit? // FUTURE CHANGE
-  msContentZoomLimitMax? // FUTURE CHANGE
-  msContentZoomLimitMin? // FUTURE CHANGE
-  msContentZoomSnap? // FUTURE CHANGE
-  msContentZoomSnapPoints? // FUTURE CHANGE
-  msContentZoomSnapType? // FUTURE CHANGE
-  msContentZooming? // FUTURE CHANGE
-  msFlowFrom? // FUTURE CHANGE
-  msFlowInto? // FUTURE CHANGE
-  msFontFeatureSettings? // FUTURE CHANGE
-  msGridColumn? // FUTURE CHANGE
-  msGridColumnAlign? // FUTURE CHANGE
-  msGridColumnSpan? // FUTURE CHANGE
-  msGridColumns? // FUTURE CHANGE
-  msGridRow? // FUTURE CHANGE
-  msGridRowAlign? // FUTURE CHANGE
-  msGridRowSpan? // FUTURE CHANGE
-  msGridRows? // FUTURE CHANGE
-  msHighContrastAdjust? // FUTURE CHANGE
-  msHyphenateLimitChars? // FUTURE CHANGE
-  msHyphenateLimitLines? // FUTURE CHANGE
-  msHyphenateLimitZone? // FUTURE CHANGE
-  msHyphens? // FUTURE CHANGE
-  msImeAlign? // FUTURE CHANGE
-  msOverflowStyle? // FUTURE CHANGE
-  msScrollChaining? // FUTURE CHANGE
-  msScrollLimit? // FUTURE CHANGE
-  msScrollLimitXMax? // FUTURE CHANGE
-  msScrollLimitXMin? // FUTURE CHANGE
-  msScrollLimitYMax? // FUTURE CHANGE
-  msScrollLimitYMin? // FUTURE CHANGE
-  msScrollRails? // FUTURE CHANGE
-  msScrollSnapPointsX? // FUTURE CHANGE
-  msScrollSnapPointsY? // FUTURE CHANGE
-  msScrollSnapType? // FUTURE CHANGE
-  msScrollSnapX? // FUTURE CHANGE
-  msScrollSnapY? // FUTURE CHANGE
-  msScrollTranslation? // FUTURE CHANGE
-  msTextCombineHorizontal? // FUTURE CHANGE
-  msTextSizeAdjust? // FUTURE CHANGE
-  msTouchAction? // FUTURE CHANGE
-  msTouchSelect? // FUTURE CHANGE
-  msUserSelect? // FUTURE CHANGE
-  msWrapFlow? // FUTURE CHANGE
-  msWrapMargin? // FUTURE CHANGE
-  msWrapThrough? // FUTURE CHANGE
-  opacity? // FUTURE CHANGE
-  order? // FUTURE CHANGE
-  orphans? // FUTURE CHANGE
-  outline? // FUTURE CHANGE
-  outlineColor? // FUTURE CHANGE
-  outlineStyle? // FUTURE CHANGE
-  outlineWidth? // FUTURE CHANGE
-  overflow? // FUTURE CHANGE
-  overflowX? // FUTURE CHANGE
-  overflowY? // FUTURE CHANGE
-  padding? // FUTURE CHANGE
-  paddingBottom? // FUTURE CHANGE
-  paddingLeft? // FUTURE CHANGE
-  paddingRight? // FUTURE CHANGE
-  paddingTop? // FUTURE CHANGE
-  pageBreakAfter? // FUTURE CHANGE
-  pageBreakBefore? // FUTURE CHANGE
-  pageBreakInside? // FUTURE CHANGE
+  alignContent?: string | Function
+  alignItems?: string | Function
+  alignSelf?: string | Function
+  alignmentBaseline?: string | Function
+  animation?: string | Function
+  animationDelay?: string | Function
+  animationDirection?: string | Function
+  animationDuration?: string | Function
+  animationFillMode?: string | Function
+  animationIterationCount?: string | Function
+  animationName?: string | Function
+  animationPlayState?: string | Function
+  animationTimingFunction?: string | Function
+  backfaceVisibility?: string | Function
+  background?: string | Function
+  backgroundAttachment?: string | Function
+  backgroundClip?: string | Function
+  backgroundColor?: string | Function
+  backgroundImage?: string | Function
+  backgroundOrigin?: string | Function
+  backgroundPosition?: string | Function
+  backgroundPositionX?: string | Function
+  backgroundPositionY?: string | Function
+  backgroundRepeat?: string | Function
+  backgroundSize?: string | Function
+  baselineShift?: string | Function
+  border?: string | Function
+  borderBottom?: string | Function
+  borderBottomColor?: string | Function
+  borderBottomLeftRadius?: string | Function
+  borderBottomRightRadius?: string | Function
+  borderBottomStyle?: string | Function
+  borderBottomWidth?: string | Function
+  borderCollapse?: string | Function
+  borderColor?: string | Function
+  borderImage?: string | Function
+  borderImageOutset?: string | Function
+  borderImageRepeat?: string | Function
+  borderImageSlice?: string | Function
+  borderImageSource?: string | Function
+  borderImageWidth?: string | Function
+  borderLeft?: string | Function
+  borderLeftColor?: string | Function
+  borderLeftStyle?: string | Function
+  borderLeftWidth?: string | Function
+  borderRadius?: string | Function
+  borderRight?: string | Function
+  borderRightColor?: string | Function
+  borderRightStyle?: string | Function
+  borderRightWidth?: string | Function
+  borderSpacing?: string | Function
+  borderStyle?: string | Function
+  borderTop?: string | Function
+  borderTopColor?: string | Function
+  borderTopLeftRadius?: string | Function
+  borderTopRightRadius?: string | Function
+  borderTopStyle?: string | Function
+  borderTopWidth?: string | Function
+  borderWidth?: string | Function
+  bottom?: string | Function
+  boxShadow?: string | Function
+  boxSizing?: string | Function
+  breakAfter?: string | Function
+  breakBefore?: string | Function
+  breakInside?: string | Function
+  captionSide?: string | Function
+  clear?: string | Function
+  clip?: string | Function
+  clipPath?: string | Function
+  clipRule?: string | Function
+  color?: string | Function
+  colorInterpolationFilters?: string | Function
+  columnCount?: string | Function
+  columnFill?: string | Function
+  columnGap?: string | Function
+  columnRule?: string | Function
+  columnRuleColor?: string | Function
+  columnRuleStyle?: string | Function
+  columnRuleWidth?: string | Function
+  columnSpan?: string | Function
+  columnWidth?: string | Function
+  columns?: string | Function
+  content?: string | Function
+  counterIncrement?: string | Function
+  counterReset?: string | Function
+  cssFloat?: string | Function
+  cssText?: string | Function
+  cursor?: string | Function
+  direction?: string | Function
+  display?: string | Function
+  dominantBaseline?: string | Function
+  emptyCells?: string | Function
+  enableBackground?: string | Function
+  fill?: string | Function
+  fillOpacity?: string | Function
+  fillRule?: string | Function
+  filter?: string | Function
+  flex?: string | Function
+  flexBasis?: string | Function
+  flexDirection?: string | Function
+  flexFlow?: string | Function
+  flexGrow?: string | Function
+  flexShrink?: string | Function
+  flexWrap?: string | Function
+  floodColor?: string | Function
+  floodOpacity?: string | Function
+  font?: string | Function
+  fontFamily?: string | Function
+  fontFeatureSettings?: string | Function
+  fontSize?: string | Function
+  fontSizeAdjust?: string | Function
+  fontStretch?: string | Function
+  fontStyle?: string | Function
+  fontVariant?: string | Function
+  fontWeight?: string | Function
+  glyphOrientationHorizontal?: string | Function
+  glyphOrientationVertical?: string | Function
+  height?: string | Function
+  imeMode?: string | Function
+  justifyContent?: string | Function
+  kerning?: string | Function
+  left?: string | Function
+  length?: string | Function
+  letterSpacing?: string | Function
+  lightingColor?: string | Function
+  lineHeight?: string | Function
+  listStyle?: string | Function
+  listStyleImage?: string | Function
+  listStylePosition?: string | Function
+  listStyleType?: string | Function
+  margin?: string | Function
+  marginBottom?: string | Function
+  marginLeft?: string | Function
+  marginRight?: string | Function
+  marginTop?: string | Function
+  marker?: string | Function
+  markerEnd?: string | Function
+  markerMid?: string | Function
+  markerStart?: string | Function
+  mask?: string | Function
+  maxHeight?: string | Function
+  maxWidth?: string | Function
+  minHeight?: string | Function
+  minWidth?: string | Function
+  msContentZoomChaining?: string | Function
+  msContentZoomLimit?: string | Function
+  msContentZoomLimitMax?: string | Function
+  msContentZoomLimitMin?: string | Function
+  msContentZoomSnap?: string | Function
+  msContentZoomSnapPoints?: string | Function
+  msContentZoomSnapType?: string | Function
+  msContentZooming?: string | Function
+  msFlowFrom?: string | Function
+  msFlowInto?: string | Function
+  msFontFeatureSettings?: string | Function
+  msGridColumn?: string | Function
+  msGridColumnAlign?: string | Function
+  msGridColumnSpan?: string | Function
+  msGridColumns?: string | Function
+  msGridRow?: string | Function
+  msGridRowAlign?: string | Function
+  msGridRowSpan?: string | Function
+  msGridRows?: string | Function
+  msHighContrastAdjust?: string | Function
+  msHyphenateLimitChars?: string | Function
+  msHyphenateLimitLines?: string | Function
+  msHyphenateLimitZone?: string | Function
+  msHyphens?: string | Function
+  msImeAlign?: string | Function
+  msOverflowStyle?: string | Function
+  msScrollChaining?: string | Function
+  msScrollLimit?: string | Function
+  msScrollLimitXMax?: string | Function
+  msScrollLimitXMin?: string | Function
+  msScrollLimitYMax?: string | Function
+  msScrollLimitYMin?: string | Function
+  msScrollRails?: string | Function
+  msScrollSnapPointsX?: string | Function
+  msScrollSnapPointsY?: string | Function
+  msScrollSnapType?: string | Function
+  msScrollSnapX?: string | Function
+  msScrollSnapY?: string | Function
+  msScrollTranslation?: string | Function
+  msTextCombineHorizontal?: string | Function
+  msTextSizeAdjust?: string | Function
+  msTouchAction?: string | Function
+  msTouchSelect?: string | Function
+  msUserSelect?: string | Function
+  msWrapFlow?: string | Function
+  msWrapMargin?: string | Function
+  msWrapThrough?: string | Function
+  opacity?: string | Function
+  order?: string | Function
+  orphans?: string | Function
+  outline?: string | Function
+  outlineColor?: string | Function
+  outlineStyle?: string | Function
+  outlineWidth?: string | Function
+  overflow?: string | Function
+  overflowX?: string | Function
+  overflowY?: string | Function
+  padding?: string | Function
+  paddingBottom?: string | Function
+  paddingLeft?: string | Function
+  paddingRight?: string | Function
+  paddingTop?: string | Function
+  pageBreakAfter?: string | Function
+  pageBreakBefore?: string | Function
+  pageBreakInside?: string | Function
   parentRule?: CSSRule
-  perspective? // FUTURE CHANGE
-  perspectiveOrigin? // FUTURE CHANGE
-  pointerEvents? // FUTURE CHANGE
-  position? // FUTURE CHANGE
-  quotes? // FUTURE CHANGE
-  right? // FUTURE CHANGE
-  rubyAlign? // FUTURE CHANGE
-  rubyOverhang? // FUTURE CHANGE
-  rubyPosition? // FUTURE CHANGE
-  stopColor? // FUTURE CHANGE
-  stopOpacity? // FUTURE CHANGE
-  stroke? // FUTURE CHANGE
-  strokeDasharray? // FUTURE CHANGE
-  strokeDashoffset? // FUTURE CHANGE
-  strokeLinecap? // FUTURE CHANGE
-  strokeLinejoin? // FUTURE CHANGE
-  strokeMiterlimit? // FUTURE CHANGE
-  strokeOpacity? // FUTURE CHANGE
-  strokeWidth? // FUTURE CHANGE
-  tableLayout? // FUTURE CHANGE
-  textAlign? // FUTURE CHANGE
-  textAlignLast? // FUTURE CHANGE
-  textAnchor? // FUTURE CHANGE
-  textDecoration? // FUTURE CHANGE
-  textFillColor? // FUTURE CHANGE
-  textIndent? // FUTURE CHANGE
-  textJustify? // FUTURE CHANGE
-  textKashida? // FUTURE CHANGE
-  textKashidaSpace? // FUTURE CHANGE
-  textOverflow? // FUTURE CHANGE
-  textShadow? // FUTURE CHANGE
-  textTransform? // FUTURE CHANGE
-  textUnderlinePosition? // FUTURE CHANGE
-  top? // FUTURE CHANGE
-  touchAction? // FUTURE CHANGE
-  transform? // FUTURE CHANGE
-  transformOrigin? // FUTURE CHANGE
-  transformStyle? // FUTURE CHANGE
-  transition? // FUTURE CHANGE
-  transitionDelay? // FUTURE CHANGE
-  transitionDuration? // FUTURE CHANGE
-  transitionProperty? // FUTURE CHANGE
-  transitionTimingFunction? // FUTURE CHANGE
-  unicodeBidi? // FUTURE CHANGE
-  verticalAlign? // FUTURE CHANGE
-  visibility? // FUTURE CHANGE
-  webkitAlignContent? // FUTURE CHANGE
-  webkitAlignItems? // FUTURE CHANGE
-  webkitAlignSelf? // FUTURE CHANGE
-  webkitAnimation? // FUTURE CHANGE
-  webkitAnimationDelay? // FUTURE CHANGE
-  webkitAnimationDirection? // FUTURE CHANGE
-  webkitAnimationDuration? // FUTURE CHANGE
-  webkitAnimationFillMode? // FUTURE CHANGE
-  webkitAnimationIterationCount? // FUTURE CHANGE
-  webkitAnimationName? // FUTURE CHANGE
-  webkitAnimationPlayState? // FUTURE CHANGE
-  webkitAnimationTimingFunction? // FUTURE CHANGE
-  webkitAppearance? // FUTURE CHANGE
-  webkitBackfaceVisibility? // FUTURE CHANGE
-  webkitBackground? // FUTURE CHANGE
-  webkitBackgroundAttachment? // FUTURE CHANGE
-  webkitBackgroundClip? // FUTURE CHANGE
-  webkitBackgroundColor? // FUTURE CHANGE
-  webkitBackgroundImage? // FUTURE CHANGE
-  webkitBackgroundOrigin? // FUTURE CHANGE
-  webkitBackgroundPosition? // FUTURE CHANGE
-  webkitBackgroundPositionX? // FUTURE CHANGE
-  webkitBackgroundPositionY? // FUTURE CHANGE
-  webkitBackgroundRepeat? // FUTURE CHANGE
-  webkitBackgroundSize? // FUTURE CHANGE
-  webkitBorderBottomLeftRadius? // FUTURE CHANGE
-  webkitBorderBottomRightRadius? // FUTURE CHANGE
-  webkitBorderImage? // FUTURE CHANGE
-  webkitBorderImageOutset? // FUTURE CHANGE
-  webkitBorderImageRepeat? // FUTURE CHANGE
-  webkitBorderImageSlice? // FUTURE CHANGE
-  webkitBorderImageSource? // FUTURE CHANGE
-  webkitBorderImageWidth? // FUTURE CHANGE
-  webkitBorderRadius? // FUTURE CHANGE
-  webkitBorderTopLeftRadius? // FUTURE CHANGE
-  webkitBorderTopRightRadius? // FUTURE CHANGE
-  webkitBoxAlign? // FUTURE CHANGE
-  webkitBoxDirection? // FUTURE CHANGE
-  webkitBoxFlex? // FUTURE CHANGE
-  webkitBoxOrdinalGroup? // FUTURE CHANGE
-  webkitBoxOrient? // FUTURE CHANGE
-  webkitBoxPack? // FUTURE CHANGE
-  webkitBoxSizing? // FUTURE CHANGE
-  webkitColumnBreakAfter? // FUTURE CHANGE
-  webkitColumnBreakBefore? // FUTURE CHANGE
-  webkitColumnBreakInside? // FUTURE CHANGE
-  webkitColumnCount? // FUTURE CHANGE
-  webkitColumnGap? // FUTURE CHANGE
-  webkitColumnRule? // FUTURE CHANGE
-  webkitColumnRuleColor? // FUTURE CHANGE
-  webkitColumnRuleStyle? // FUTURE CHANGE
-  webkitColumnRuleWidth? // FUTURE CHANGE
-  webkitColumnSpan? // FUTURE CHANGE
-  webkitColumnWidth? // FUTURE CHANGE
-  webkitColumns? // FUTURE CHANGE
-  webkitFilter? // FUTURE CHANGE
-  webkitFlex? // FUTURE CHANGE
-  webkitFlexBasis? // FUTURE CHANGE
-  webkitFlexDirection? // FUTURE CHANGE
-  webkitFlexFlow? // FUTURE CHANGE
-  webkitFlexGrow? // FUTURE CHANGE
-  webkitFlexShrink? // FUTURE CHANGE
-  webkitFlexWrap? // FUTURE CHANGE
-  webkitJustifyContent? // FUTURE CHANGE
-  webkitOrder? // FUTURE CHANGE
-  webkitPerspective? // FUTURE CHANGE
-  webkitPerspectiveOrigin? // FUTURE CHANGE
-  webkitTapHighlightColor? // FUTURE CHANGE
-  webkitTextFillColor? // FUTURE CHANGE
-  webkitTextSizeAdjust? // FUTURE CHANGE
-  webkitTransform? // FUTURE CHANGE
-  webkitTransformOrigin? // FUTURE CHANGE
-  webkitTransformStyle? // FUTURE CHANGE
-  webkitTransition? // FUTURE CHANGE
-  webkitTransitionDelay? // FUTURE CHANGE
-  webkitTransitionDuration? // FUTURE CHANGE
-  webkitTransitionProperty? // FUTURE CHANGE
-  webkitTransitionTimingFunction? // FUTURE CHANGE
-  webkitUserSelect? // FUTURE CHANGE
-  webkitWritingMode? // FUTURE CHANGE
-  whiteSpace? // FUTURE CHANGE
-  widows? // FUTURE CHANGE
-  width? // FUTURE CHANGE
-  wordBreak? // FUTURE CHANGE
-  wordSpacing? // FUTURE CHANGE
-  wordWrap? // FUTURE CHANGE
-  writingMode? // FUTURE CHANGE
-  zIndex? // FUTURE CHANGE
-  zoom? // FUTURE CHANGE
+  perspective?: string | Function
+  perspectiveOrigin?: string | Function
+  pointerEvents?: string | Function
+  position?: string | Function
+  quotes?: string | Function
+  right?: string | Function
+  rubyAlign?: string | Function
+  rubyOverhang?: string | Function
+  rubyPosition?: string | Function
+  stopColor?: string | Function
+  stopOpacity?: string | Function
+  stroke?: string | Function
+  strokeDasharray?: string | Function
+  strokeDashoffset?: string | Function
+  strokeLinecap?: string | Function
+  strokeLinejoin?: string | Function
+  strokeMiterlimit?: string | Function
+  strokeOpacity?: string | Function
+  strokeWidth?: string | Function
+  tableLayout?: string | Function
+  textAlign?: string | Function
+  textAlignLast?: string | Function
+  textAnchor?: string | Function
+  textDecoration?: string | Function
+  textFillColor?: string | Function
+  textIndent?: string | Function
+  textJustify?: string | Function
+  textKashida?: string | Function
+  textKashidaSpace?: string | Function
+  textOverflow?: string | Function
+  textShadow?: string | Function
+  textTransform?: string | Function
+  textUnderlinePosition?: string | Function
+  top?: string | Function
+  touchAction?: string | Function
+  transform?: string | Function
+  transformOrigin?: string | Function
+  transformStyle?: string | Function
+  transition?: string | Function
+  transitionDelay?: string | Function
+  transitionDuration?: string | Function
+  transitionProperty?: string | Function
+  transitionTimingFunction?: string | Function
+  unicodeBidi?: string | Function
+  verticalAlign?: string | Function
+  visibility?: string | Function
+  webkitAlignContent?: string | Function
+  webkitAlignItems?: string | Function
+  webkitAlignSelf?: string | Function
+  webkitAnimation?: string | Function
+  webkitAnimationDelay?: string | Function
+  webkitAnimationDirection?: string | Function
+  webkitAnimationDuration?: string | Function
+  webkitAnimationFillMode?: string | Function
+  webkitAnimationIterationCount?: string | Function
+  webkitAnimationName?: string | Function
+  webkitAnimationPlayState?: string | Function
+  webkitAnimationTimingFunction?: string | Function
+  webkitAppearance?: string | Function
+  webkitBackfaceVisibility?: string | Function
+  webkitBackground?: string | Function
+  webkitBackgroundAttachment?: string | Function
+  webkitBackgroundClip?: string | Function
+  webkitBackgroundColor?: string | Function
+  webkitBackgroundImage?: string | Function
+  webkitBackgroundOrigin?: string | Function
+  webkitBackgroundPosition?: string | Function
+  webkitBackgroundPositionX?: string | Function
+  webkitBackgroundPositionY?: string | Function
+  webkitBackgroundRepeat?: string | Function
+  webkitBackgroundSize?: string | Function
+  webkitBorderBottomLeftRadius?: string | Function
+  webkitBorderBottomRightRadius?: string | Function
+  webkitBorderImage?: string | Function
+  webkitBorderImageOutset?: string | Function
+  webkitBorderImageRepeat?: string | Function
+  webkitBorderImageSlice?: string | Function
+  webkitBorderImageSource?: string | Function
+  webkitBorderImageWidth?: string | Function
+  webkitBorderRadius?: string | Function
+  webkitBorderTopLeftRadius?: string | Function
+  webkitBorderTopRightRadius?: string | Function
+  webkitBoxAlign?: string | Function
+  webkitBoxDirection?: string | Function
+  webkitBoxFlex?: string | Function
+  webkitBoxOrdinalGroup?: string | Function
+  webkitBoxOrient?: string | Function
+  webkitBoxPack?: string | Function
+  webkitBoxSizing?: string | Function
+  webkitColumnBreakAfter?: string | Function
+  webkitColumnBreakBefore?: string | Function
+  webkitColumnBreakInside?: string | Function
+  webkitColumnCount?: string | Function
+  webkitColumnGap?: string | Function
+  webkitColumnRule?: string | Function
+  webkitColumnRuleColor?: string | Function
+  webkitColumnRuleStyle?: string | Function
+  webkitColumnRuleWidth?: string | Function
+  webkitColumnSpan?: string | Function
+  webkitColumnWidth?: string | Function
+  webkitColumns?: string | Function
+  webkitFilter?: string | Function
+  webkitFlex?: string | Function
+  webkitFlexBasis?: string | Function
+  webkitFlexDirection?: string | Function
+  webkitFlexFlow?: string | Function
+  webkitFlexGrow?: string | Function
+  webkitFlexShrink?: string | Function
+  webkitFlexWrap?: string | Function
+  webkitJustifyContent?: string | Function
+  webkitOrder?: string | Function
+  webkitPerspective?: string | Function
+  webkitPerspectiveOrigin?: string | Function
+  webkitTapHighlightColor?: string | Function
+  webkitTextFillColor?: string | Function
+  webkitTextSizeAdjust?: string | Function
+  webkitTransform?: string | Function
+  webkitTransformOrigin?: string | Function
+  webkitTransformStyle?: string | Function
+  webkitTransition?: string | Function
+  webkitTransitionDelay?: string | Function
+  webkitTransitionDuration?: string | Function
+  webkitTransitionProperty?: string | Function
+  webkitTransitionTimingFunction?: string | Function
+  webkitUserSelect?: string | Function
+  webkitWritingMode?: string | Function
+  whiteSpace?: string | Function
+  widows?: string | Function
+  width?: string | Function
+  wordBreak?: string | Function
+  wordSpacing?: string | Function
+  wordWrap?: string | Function
+  writingMode?: string | Function
+  zIndex?: string | Function
+  zoom?: string | Function
 }

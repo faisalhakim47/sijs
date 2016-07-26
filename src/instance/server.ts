@@ -5,7 +5,7 @@ import { GlobalEvent } from '../instance/global-event'
 
 export function Generate(path: string, Component: ComponentClass, linkToApp: string) {
   RouterView.PATH = path
-  let template = new Component().generate()
+  let template = new Component().$compile()
   RouterView.PATH = null
   GlobalEvent.emit('reset')
   CompilerState.takeState()

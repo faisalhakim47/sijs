@@ -1,12 +1,14 @@
-import { Observe } from './observable'
+import { Observable } from './observable'
 
-export function listenDeps(testFn: Function) {
-  Observe.DEPENDENT = testFn
+export function listenObs(testFn: Function, subFn?: Function) {
+  Observable.DEPENDENT = subFn || testFn
+
   testFn()
-  Observe.DEPENDENT = null
 
-  const listeners = Observe.LISTENERS
-  Observe.LISTENERS = []
+  Observable.DEPENDENT = null
+
+  const listeners = Observable.LISTENERS
+  Observable.LISTENERS = []
 
   return {
     unlist() {

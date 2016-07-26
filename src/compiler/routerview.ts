@@ -132,7 +132,7 @@ export class RouterView {
     for (let i = 0, l = this.routes.length; i < l; i++) {
       route = this.routes[i]
 
-      console.log(route.path, route.rx, RouterView.PATH)
+      console.log('Route', route.path, route.rx, RouterView.PATH)
 
       const matches = RouterView.PATH.match(route.rx)
       if (matches) break
@@ -155,7 +155,7 @@ export class RouterView {
       if (Component instanceof RouterView) {
         template = Component.generate()
       } else {
-        template = new Component().generate()
+        template = new Component().$compile()
       }
     })
 

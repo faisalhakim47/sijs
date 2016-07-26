@@ -2,7 +2,6 @@ import { Glue, getEl, removeElRef } from '../index'
 import { listenToEvent } from './event'
 import { RouterView } from '../../compiler/routerview'
 import { GlobalEvent } from '../../instance/global-event'
-import { parseObsValue } from '../../observer/observable'
 
 export class LinkGlue extends Glue {
   constructor(
@@ -21,7 +20,7 @@ export class LinkGlue extends Glue {
     this.listeners.push(
       listenToEvent(this.id, 'onclick', (e) => {
         e.preventDefault()
-        RouterView.PATH = parseObsValue(this.path)
+        RouterView.PATH = this.path
         window.history.pushState({}, null, RouterView.PATH)
         GlobalEvent.emit('route:change', RouterView.PATH)
       })

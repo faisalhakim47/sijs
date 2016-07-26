@@ -1,7 +1,8 @@
 import { RouterView } from './routerview'
 import { CompilerState } from './index'
+import { genId } from './uid'
 import { Glue } from '../glue/index'
-import { Observe } from '../observer/observable'
+import { Observable } from '../observer/observable'
 
 export interface ComponentClass {
   new (): Component
@@ -11,33 +12,56 @@ export function isComponentClass(t): t is ComponentClass {
   return t && t._isComponentClass
 }
 
+const rxAttrId = /^<\w* *id="(\w*)"/
+
 export abstract class Component {
   static _isComponentClass = true
+  static ACTIVE_COMPONENT = null
 
   public _isComponent = true
 
-  private params = {}
-  private query = {}
+  protected id: string
+  protected el: Element
+  protected params = {}
 
-  generate(): string {
+  private $this = Observable(this)
+
+  $compile(): string {
+    // Hooks
+    if ((<any>this).beforeCompile) (<any>this).beforeCompile()
+
     if (RouterView.ROUTER) {
       this.params = RouterView.ROUTER.routeState.params
-      this.query = RouterView.ROUTER.routeState.query
     }
 
-    const template = this.render.bind(Observe(this))()
+    if (!(<any>this).render) console.error('You must implement render Fn')
 
-    const beforeInstall = (<any>this).beforeInstall
-    const afterInstall = (<any>this).afterInstall
-    const beforeDestroy = (<any>this).beforeDestroy
-    const afterDestroy = (<any>this).afterDestroy
+    const ParentComponent = Component.ACTIVE_COMPONENT
+    Component.ACTIVE_COMPONENT = this.$this
 
-    if (beforeInstall) CompilerState.hooks.beforeInstall.push(beforeInstall)
-    if (afterInstall) CompilerState.hooks.beforeInstall.push(afterInstall)
-    if (beforeDestroy) CompilerState.hooks.beforeInstall.push(beforeDestroy)
-    if (afterDestroy) CompilerState.hooks.beforeInstall.push(afterDestroy)
+    let template: string = (<any>this).render.bind(this.$this)()
+
+    const match = template.match(rxAttrId)
+    if (match) {
+      this.id = template.match(rxAttrId)[1]
+    } else {
+      this.id = genId()
+      template = template.replace('>',  ` id="${this.id}">`)
+    }
+
+    Component.ACTIVE_COMPONENT = ParentComponent
+
+    CompilerState.components.push(this)
 
     return template
+  }
+
+  $install() {
+    this.el = document.getElementById(this.id)
+  }
+
+  $destroy() {
+    this.el = null
   }
 
   abstract render(): string

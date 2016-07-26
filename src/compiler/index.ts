@@ -1,33 +1,25 @@
-import { ComponentClass } from './component'
+import { ComponentClass, Component } from './component'
 import { RouterView } from './routerview'
 import { Glue } from '../glue/index'
-import { getObsValue, isObserved } from '../observer/observable'
 
-export interface Hooks {
-  beforeInstall: Function[]
-  afterInstall: Function[]
-  beforeDestroy: Function[]
-  afterDestroy: Function[]
-}
-
-export const CompilerState = new CompilerStateConstructor()
+// export interface Hooks {
+//   beforeInstall: Function[]
+//   install: Function[]
+//   destroy: Function[]
+//   afterDestroy: Function[]
+// }
 
 export class CompilerStateConstructor {
   constructor(
     public glues: Glue[] = [],
     public events: string[] = [],
     public routers: RouterView[] = [],
-    public hooks: Hooks = {
-      beforeInstall: [],
-      afterInstall: [],
-      beforeDestroy: [],
-      afterDestroy: []
-    }
+    public components: Component[] = []
   ) { }
 
   getState() {
     return new CompilerStateConstructor(
-      this.glues, this.events, this.routers, this.hooks
+      this.glues, this.events, this.routers, this.components
     )
   }
 
@@ -36,12 +28,7 @@ export class CompilerStateConstructor {
     this.glues = []
     this.events = []
     this.routers = []
-    this.hooks = {
-      beforeInstall: [],
-      afterInstall: [],
-      beforeDestroy: [],
-      afterDestroy: []
-    }
+    this.components = []
     return state
   }
 
@@ -49,13 +36,12 @@ export class CompilerStateConstructor {
     this.glues.push(...state.glues)
     this.events.push(...state.events)
     this.routers.push(...state.routers)
-    this.hooks.beforeInstall.push(...state.hooks.beforeInstall)
-    this.hooks.afterInstall.push(...state.hooks.afterInstall)
-    this.hooks.beforeDestroy.push(...state.hooks.beforeDestroy)
-    this.hooks.afterDestroy.push(...state.hooks.afterDestroy)
+    this.components.push(...state.components)
     return this
   }
 }
+
+export const CompilerState = new CompilerStateConstructor()
 
 export function getChildState(renderFn: Function): CompilerStateConstructor {
   const parentState = CompilerState.takeState()
@@ -71,12 +57,14 @@ export function getChildState(renderFn: Function): CompilerStateConstructor {
   return currentState
 }
 
-export function render(Component: ComponentClass | RouterView) {
-  if (Component instanceof RouterView) {
-    var template = Component.generate()
-    CompilerState.routers.push(Component)
+export function render(Instance: ComponentClass | Component | RouterView) {
+  if (Instance instanceof RouterView) {
+    var template = Instance.generate()
+    CompilerState.routers.push(Instance)
+  } else if (Instance instanceof Component) {
+    var template = Instance.$compile()
   } else {
-    var template = new Component().generate()
+    var template = new Instance().$compile()
   }
   return template
 }

@@ -1,12 +1,11 @@
 import { Glue, getEl, removeElRef } from '../index'
-import { listenDeps } from '../../observer/dependent'
-import { isObserved, listenObs, parseObsValue } from '../../observer/observable'
+import { listenObs } from '../../observer/dependent'
 
 export class AttrGlue extends Glue {
   constructor(
     id: string,
     private attrName: string,
-    private attrValue
+    private attrValue: Function
   ) {
     super()
     this.id = id
@@ -18,11 +17,7 @@ export class AttrGlue extends Glue {
         'Input element #', this.id, 'has not inserted yet.', this
       )
     }
-    if (isObserved(this.attrValue)) {
-      this.listeners.push(listenObs(this.attrValue, () => this.attrSetter()))
-    } else {
-      this.listeners.push(listenDeps(() => this.attrSetter()))
-    }
+    this.listeners.push(listenObs(this.attrValue, () => this.attrSetter()))
     this.isInstalled = true
   }
 
@@ -37,6 +32,6 @@ export class AttrGlue extends Glue {
   }
 
   attrSetter() {
-    this.el.setAttribute(this.attrName, parseObsValue(this.attrValue))
+    this.el.setAttribute(this.attrName, this.attrValue())
   }
 }
