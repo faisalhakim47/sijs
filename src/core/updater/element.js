@@ -2,10 +2,8 @@ import { Updater } from './updater.js'
 import { IFELSE } from '../../constant.js'
 
 export class ElementUpdater extends Updater {
-  static filter() { return true }
-
   /**
-   * @param {Element} node 
+   * @param {Element} node
    */
   constructor(node) {
     super()
@@ -13,7 +11,6 @@ export class ElementUpdater extends Updater {
     this.prevNode = node.previousSibling
     this.nextNode = node.nextSibling
     this.options = {}
-    this.numberOfPart = 1
   }
 
   update(options) {

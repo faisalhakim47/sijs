@@ -43,22 +43,25 @@
       x = e.clientX
       y = e.clientY
       const xy = x + y
-      // items = []
-      // const length = random(x, xy)
-      // for (let index = 0; index < length; index++) {
-      //   items.push(' ' + random(x, y))
-      // }
-      // items.sort()
+      items = []
+      const length = Math.min(random(x, xy), 25)
+      for (let index = 0; index < length; index++) {
+        items.push(' ' + random(x, y))
+      }
+      items.sort()
       renderUpdate()
     }
     function MousemoveApp() {
+      const random = Math.floor(Math.random() * 100)
       return html`
-        <section id="app" onmousemove=${onmousemove}>
+        <section id="app" data-test="${random}-${random}" onmousemove=${onmousemove}>
           ${Heading('SIJS', '= new HyperHTML()')}
           <p>x: ${x}, y: ${y}</p>
           <p ${{ if: x + y < (window.innerHeight / 2) }}>the fact is that ${window.innerHeight / 2} is greater than ${x + y}</p>
           <p ${{ elseIf: true }}>the fact is not right.</p>
-          
+          <p>${repeat(items, item =>
+            html` <span>${item}</span>`
+          )}</p>
         </section>
       `
     }

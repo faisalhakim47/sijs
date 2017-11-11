@@ -14,7 +14,10 @@ export function walkDomTree(dom, walkerFn, { whatToShow, acceptNode } = {}) {
   )
   let nodeIndex = -1
   let isContinue = true
-  const stop = () => isContinue = false
+  const stop = () => {
+    console.log('TREEWALKER STOPED')
+    isContinue = false
+  }
   while (walker.nextNode() && isContinue) {
     nodeIndex++
     walkerFn(walker.currentNode, nodeIndex, stop)

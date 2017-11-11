@@ -1,9 +1,18 @@
-import { getNodeTypes, NodeType } from '../structure/1_nodetype/nodetype.js'
-import { getExpressionsFor, Expression } from '../structure/2_expression/expression.js'
-import { getUpdatersFor, Updater } from '../structure/3_updater/updater.js'
 import { MARKER, PLACEHOLDER } from '../constant.js'
 import { walkDomTree } from '../tools/dom.js'
 import { List } from '../tools/list.js'
+
+import { Expression } from './expression/expression.js';
+import { AttributeExpression } from './expression/attribute.js';
+import { ElementExpression } from './expression/element.js';
+import { EventExpression } from './expression/event.js';
+import { ContentExpression } from './expression/content.js';
+
+import { Updater } from './updater/updater.js';
+import { AttributeUpdater } from './updater/attribute.js';
+import { ElementUpdater } from './updater/element.js';
+import { EventUpdater } from './updater/event.js';
+import { ContentUpdater } from './updater/content.js';
 
 export const templateCache = new List()
 
@@ -41,54 +50,69 @@ class Template {
      * you have to do it after the walkDomTree
      * or else walkDomTree will stop.
      */
-    const doAfterWalkTree = []
-
+    let doAfterWalkTree = []
     walkDomTree(templateElm.content, (node) => {
-      if (node.nodeValue.indexOf(MARKER) === -1) return
       const fragment = document.createDocumentFragment()
       const staticParts = node.nodeValue
+        .replace(new RegExp(MARKER, 'g'), MARKER + PLACEHOLDER + MARKER)
         .split(MARKER)
-        .join(MARKER + PLACEHOLDER + MARKER)
-        .split(MARKER)
-        .map((text) => document.createTextNode(text))
-        .forEach((textNode) => {
-          fragment.appendChild(textNode)
-        })
+      const length = staticParts.length
+      for (let index = 0; index < length; index++) {
+        fragment.appendChild(
+          document.createTextNode(staticParts[index])
+        )
+      }
       doAfterWalkTree.push(() => {
         node.parentNode.replaceChild(fragment, node)
       })
     }, {
         whatToShow: NodeFilter.SHOW_TEXT,
         acceptNode(node) {
-          if (node.nodeValue.indexOf(MARKER) !== -1) {
-            return NodeFilter.FILTER_ACCEPT
-          }
+          return node.nodeValue.indexOf(MARKER) !== -1
+            ? NodeFilter.FILTER_ACCEPT
+            : NodeFilter.FILTER_REJECT
         }
       })
-
     doAfterWalkTree.forEach((fn) => fn())
 
     walkDomTree(templateElm.content, (node, nodeIndex) => {
-      const NodeTypeBase = getNodeTypes()
-        .find((NodeTypeBase) => {
-          return NodeTypeBase.filter(node)
-        })
+      if (node.nodeType === Node.TEXT_NODE)
+        return templateParts.push(new ContentExpression(
+          nodeIndex,
+        ))
 
-      if (!(NodeTypeBase && NodeTypeBase.prototype instanceof NodeType)) return
+      const length = node.attributes.length
+      for (let index = 0; index < length; index++) {
+        const attribute = node.attributes.item(index)
+        if (attribute.name === MARKER)
+          templateParts.push(new ElementExpression(
+            nodeIndex,
+          ))
 
-      NodeTypeBase.map(node, nodeIndex, (...args) => {
+        else if (attribute.name.slice(0, 2) === 'on')
+          templateParts.push(new EventExpression(
+            nodeIndex,
+            attribute.name.slice(2),
+          ))
 
-        const ExpressionBase = getExpressionsFor(NodeTypeBase)
-          .find((ExpressionBase) => {
-            return ExpressionBase.filter(...args)
-          })
-
-        if (!(ExpressionBase && ExpressionBase.prototype instanceof Expression)) return
-
-        templateParts.push(new ExpressionBase(nodeIndex, ...args))
-
+        else if (attribute.value.indexOf(MARKER) !== -1)
+          templateParts.push(new AttributeExpression(
+            nodeIndex,
+            attribute.name,
+            attribute.value.split(MARKER),
+          ))
+      }
+    }, {
+        acceptNode(node) {
+          if (node.nodeType === Node.TEXT_NODE)
+            return node.nodeValue === PLACEHOLDER
+              ? NodeFilter.FILTER_ACCEPT
+              : NodeFilter.FILTER_SKIP
+          else return node.hasAttributes()
+            ? NodeFilter.FILTER_ACCEPT
+            : NodeFilter.FILTER_SKIP
+        }
       })
-    })
 
     this.templateElm = templateElm
     this.templateParts = templateParts
@@ -97,28 +121,42 @@ class Template {
   create() {
     const partUpdaters = []
     const element = document.importNode(this.templateElm.content, true)
-    let partIndex = 0
-    let expression = this.templateParts[partIndex]
-
-    const doAfterWalkTree = []
 
     walkDomTree(element, (node, nodeIndex, stop) => {
-      if (!expression) return stop()
-      if (expression.nodeIndex !== nodeIndex) return
 
-      const UpdaterBase = getUpdatersFor(expression.constructor)
-        .find((UpdaterBase) => {
-          return UpdaterBase.filter(expression)
-        })
+      this.templateParts.filter((expression) => {
+        return expression.nodeIndex === nodeIndex
+      }).forEach((expression) => {
+        if (expression instanceof ContentExpression)
+          partUpdaters.push(new ContentUpdater(node))
 
-      if (!(UpdaterBase && UpdaterBase.prototype instanceof Updater)) return
+        else if (expression instanceof AttributeExpression)
+          partUpdaters.push(new AttributeUpdater(
+            node.attributes.getNamedItem(expression.attributeName),
+            expression.staticParts,
+          ))
 
-      partUpdaters.push(new UpdaterBase(node, expression))
+        else if (expression instanceof ElementExpression)
+          partUpdaters.push(new ElementUpdater(node))
 
-      expression = this.templateParts[++partIndex]
-    })
+        else if (expression instanceof EventExpression)
+          partUpdaters.push(new EventUpdater(
+            node,
+            expression.eventName,
+          ))
+      })
 
-    doAfterWalkTree.forEach((fn) => fn())
+    }, {
+        acceptNode(node) {
+          if (node.nodeType === Node.TEXT_NODE)
+            return node.nodeValue === PLACEHOLDER
+              ? NodeFilter.FILTER_ACCEPT
+              : NodeFilter.FILTER_SKIP
+          else return node.hasAttributes()
+            ? NodeFilter.FILTER_ACCEPT
+            : NodeFilter.FILTER_SKIP
+        }
+      })
 
     return new TemplateInstance(
       this,

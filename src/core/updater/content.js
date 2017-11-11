@@ -1,24 +1,25 @@
 import { Updater } from './updater.js'
-import { Repeat } from '../4_directive/repeat.js'
+import { Repeat } from '../directive/repeat.js'
 import { LitTag } from '../../core/littag.js'
 
 export class ContentUpdater extends Updater {
-  static filter() { return true }
-
   /**
    * @param {Node} node
    */
-  constructor(node, expression) {
+  constructor(node) {
     super()
-    if (node.previousSibling == null) {
+
+    if (node.previousSibling == null)
       node.parentNode.insertBefore(
         document.createTextNode(''),
-        node
+        node,
       )
-    }
+
+    if (node.nextSibling == null)
+      node.parentNode.appendChild(document.createTextNode(''))
+
     this.prevNode = node.previousSibling
     this.nextNode = node.nextSibling
-    this.numberOfPart = 1
   }
 
   get oldElements() {
@@ -35,7 +36,7 @@ export class ContentUpdater extends Updater {
   }
 
   update(newValues) {
-    const oldElement = this.oldElements[0]
+    const oldElement = this.prevNode.nextSibling
     const newValue = newValues[0]
     if (newValue instanceof LitTag) {
       newValue.render(oldElement)
@@ -43,8 +44,8 @@ export class ContentUpdater extends Updater {
     else if (newValue instanceof Repeat) {
       newValue.update(this.oldElements, this.prevNode, this.nextNode)
     }
-    else if (('' + newValues) !== this.oldElements[0].nodeValue) {
-      oldElement.nodeValue = newValues
+    else if (('' + newValue) !== this.oldElements[0].nodeValue) {
+      oldElement.nodeValue = newValue
     }
   }
 }

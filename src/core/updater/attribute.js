@@ -1,18 +1,14 @@
 import { Updater } from './updater.js'
-import { AttributeExpression } from '../2_expression/attribute.js'
 
 export class AttributeUpdater extends Updater {
-  static filter() { return true }
-
   /**
-   * @param {Node} node 
-   * @param {AttributeExpression} expression
+   * @param {Attr} attribute 
+   * @param {string[]} expression
    */
-  constructor(node, expression) {
+  constructor(attribute, staticParts) {
     super()
-    this.node = node
-    this.attributeName = expression.attributeName
-    this.staticParts = expression.staticParts
+    this.attribute = attribute
+    this.staticParts = staticParts
     /* @type {string[]}  */
     this.oldValues = []
     this.numberOfPart = staticParts.length - 1
@@ -31,7 +27,7 @@ export class AttributeUpdater extends Updater {
       if (index === lastPartIndex) return staticPart
       return staticPart + newValues[newValueIndex++]
     }).join('')
-    this.node.setAttribute(this.attributeName, value)
+    this.attribute.value = value
     this.oldValues = newValues
   }
 }
