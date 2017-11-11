@@ -15,7 +15,7 @@ export class AttributeUpdater extends Updater {
   }
 
   /**
-   * @param {string[]} newValues 
+   * @param {string[]} newValues
    */
   update(newValues) {
     if (newValues.findIndex((newValue, index) => {
@@ -27,7 +27,7 @@ export class AttributeUpdater extends Updater {
       if (index === lastPartIndex) return staticPart
       return staticPart + newValues[newValueIndex++]
     }).join('')
-    this.attribute.value = value
+    this.attribute.nodeValue = value
     this.oldValues = newValues
   }
 }

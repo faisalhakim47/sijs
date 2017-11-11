@@ -37,20 +37,16 @@
 
     let x = 0
     let y = 0
-    let items = []
     const random = (min, max) => (min + Math.floor(Math.random() * (max - min)))
     const onmousemove = (e) => {
       x = e.clientX
       y = e.clientY
       const xy = x + y
-      items = []
-      for (let index = 0; index < 10; index++) {
-        items.push(' ' + random(x, y))
-      }
-      items.sort()
       renderUpdate()
     }
     function MousemoveApp() {
+      const items = []
+      for (let index = 0; index < 10; index++) items.push(' ' + random(x, y))
       return html`
         <section id="app" data-test="${random(10, 100)}-${random(10, 100)}" onmousemove=${onmousemove}>
           ${Heading('SIJS', '= new HyperHTML()')}
@@ -58,10 +54,22 @@
           <p ${{ if: x + y < (window.innerHeight / 2) }}>the fact is that ${window.innerHeight / 2} is greater than ${x + y}</p>
           <p ${{ elseIf: true }}>the fact is not right.</p>
           <p>${repeat(items, item =>
-            html` <span>${item}</span>`
-          )}</p>
+          html` <span>${item}</span>`
+        )}</p>
         </section>
       `
+    }
+
+    class App extends Component {
+      constructor() {
+        super()
+      }
+
+      render() {
+        return html`
+          
+        `
+      }
     }
 
     renderUpdate()

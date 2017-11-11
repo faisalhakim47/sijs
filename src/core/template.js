@@ -95,11 +95,11 @@ class Template {
             attribute.name.slice(2),
           ))
 
-        else if (attribute.value.indexOf(MARKER) !== -1)
+        else if (attribute.nodeValue.indexOf(MARKER) !== -1)
           templateParts.push(new AttributeExpression(
             nodeIndex,
             attribute.name,
-            attribute.value.split(MARKER),
+            attribute.nodeValue.split(MARKER),
           ))
       }
     }, {

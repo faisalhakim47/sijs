@@ -44,7 +44,7 @@ export class ContentUpdater extends Updater {
     else if (newValue instanceof Repeat) {
       newValue.update(this.oldElements, this.prevNode, this.nextNode)
     }
-    else if (('' + newValue) !== this.oldElements[0].nodeValue) {
+    else if (('' + newValue) !== oldElement.nodeValue) {
       oldElement.nodeValue = newValue
     }
   }
