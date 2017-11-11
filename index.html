@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Counter App</title>
+  <style>
+    html,
+    body,
+    #app {
+      margin: 0px;
+      padding: 0px;
+      height: 100%;
+      width: 100%;
+    }
+
+    #app {
+      display: flex;
+      justify-content: center;
+      align-content: center;
+      flex-direction: column;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <section id="app"></section>
+  <script type="module">
+    import { html, repeat } from './src/index.js'
+
+    function Heading(title, subtitle) {
+      return html`<h1>${title} <small>${subtitle}</small></h1>`
+    }
+
+    let x = 0
+    let y = 0
+    let items = []
+    const random = (min, max) => (min + Math.floor(Math.random() * (max - min)))
+    const onmousemove = (e) => {
+      x = e.clientX
+      y = e.clientY
+      const xy = x + y
+      // items = []
+      // const length = random(x, xy)
+      // for (let index = 0; index < length; index++) {
+      //   items.push(' ' + random(x, y))
+      // }
+      // items.sort()
+      renderUpdate()
+    }
+    function MousemoveApp() {
+      return html`
+        <section id="app" onmousemove=${onmousemove}>
+          ${Heading('SIJS', '= new HyperHTML()')}
+          <p>x: ${x}, y: ${y}</p>
+          <p ${{ if: x + y < (window.innerHeight / 2) }}>the fact is that ${window.innerHeight / 2} is greater than ${x + y}</p>
+          <p ${{ elseIf: true }}>the fact is not right.</p>
+          
+        </section>
+      `
+    }
+
+    renderUpdate()
+    function renderUpdate() {
+      MousemoveApp().render(document.getElementById('app'))
+    }
+  </script>
+</body>
+
+</html>

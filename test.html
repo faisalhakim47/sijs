@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script>
+    classTest()
+    function classTest() {
+      class Parent {
+        static implement() {
+
+        }
+
+        implement() {
+
+        }
+      }
+
+      class Child extends Parent {
+        static implement() {
+          console.log('static')
+        }
+
+        implement() {
+          console.log('methods')
+        }
+      }
+
+      const child = new Child()
+
+      Child.implement()
+      child.implement()
+
+      console.log({
+        childInstanceOfChild: child instanceof Child,
+        childInstanceOfParent: child instanceof Parent,
+      })
+    }
+  </script>
+  
+  <script>
+    fragmentChildNodesIsMovedWhenItIsMounted()
+    function fragmentChildNodesIsMovedWhenItIsMounted() {
+      const fragment = document.createDocumentFragment()
+      const text1 = document.createTextNode('text1')
+      const text2 = document.createTextNode('text2')
+      const text3 = document.createTextNode('text3')
+      const text4 = document.createTextNode('text4')
+      fragment.appendChild(text1)
+      fragment.appendChild(text2)
+      fragment.appendChild(text3)
+      fragment.appendChild(text4)
+      const prevChildNodesLength = fragment.childNodes.length
+      app.appendChild(fragment)
+      console.log({
+        prevChildNodesLength,
+        currChildNodesLength: fragment.childNodes.length
+      })
+    }
+  </script>
+</body>
+
+</html>
