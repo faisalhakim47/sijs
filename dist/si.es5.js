@@ -38,8 +38,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     var nodeIndex = -1;
     var isContinue = true;
     var stop = function stop() {
-      console.log('TREEWALKER STOPED');
-      isContinue = false;
+      return isContinue = false;
     };
     while (walker.nextNode() && isContinue) {
       nodeIndex++;
