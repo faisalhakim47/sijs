@@ -7,14 +7,16 @@ const IFELSE = '__siie__';
  * @param {Node} dom 
  * @param {(node: Node, nodeIndex: number, stop?: Function) => void} walkerFn 
  */
-function walkDomTree(dom, walkerFn, { whatToShow, acceptNode } = {}) {
-  const options = {
-    acceptNode: acceptNode || (() => NodeFilter.FILTER_ACCEPT)
-  };
+function walkDomTree(
+  dom,
+  walkerFn, {
+  whatToShow = 1 /* NodeFilter.SHOW_ELEMENT */ | 4 /* NodeFilter.SHOW_TEXT */,
+  acceptNode = () => 1 /* NodeFilter.FILTER_ACCEPT */ } = {}
+) {
   const walker = document.createTreeWalker(
     dom,
-    whatToShow || (NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT),
-    options,
+    whatToShow,
+    { acceptNode },
     false
   );
   let nodeIndex = -1;
@@ -113,28 +115,34 @@ class AttributeUpdater extends Updater {
    */
   constructor(attribute, staticParts) {
     super();
+    this.node = attribute.parentElement;
     this.attribute = attribute;
     this.staticParts = staticParts;
     /* @type {string[]}  */
-    this.oldValues = [];
+    this.oldValue = '';
     this.numberOfPart = staticParts.length - 1;
   }
 
   /**
-   * @param {string[]} newValues 
+   * @param {string[]} newValues
    */
   update(newValues) {
-    if (newValues.findIndex((newValue, index) => {
-      return newValue !== this.oldValues[index]
-    }) === -1) return
-    let newValueIndex = 0;
-    const lastPartIndex = this.numberOfPart;
-    const value = this.staticParts.map((staticPart, index) => {
-      if (index === lastPartIndex) return staticPart
-      return staticPart + newValues[newValueIndex++]
-    }).join('');
-    this.attribute.value = value;
-    this.oldValues = newValues;
+    const length = this.staticParts.length;
+    if (length === 1 && typeof newValues[0] === 'boolean') {
+      if (newValues[0])
+        this.node.removeAttributeNode(this.attribute);
+      else
+        this.node.setAttributeNode(this.attribute);
+    } else {
+      let value = '';
+      for (let index = 0; index < length; index++) {
+        value += this.staticParts[index] + (newValues[index] || '');
+      }
+      if (value !== this.oldValue) {
+        this.attribute.nodeValue = value;
+        this.oldValue = value;
+      }
+    }
   }
 }
 
@@ -148,6 +156,7 @@ class ElementUpdater extends Updater {
     this.prevNode = node.previousSibling;
     this.nextNode = node.nextSibling;
     this.options = {};
+    node.removeAttribute(MARKER);
   }
 
   update(options) {
@@ -240,22 +249,28 @@ class Repeat {
   }
 
   /**
+   * @param {Node[]} oldElements 
    * @param {Node} prevNode 
    * @param {Node} nextNode 
    */
   update(oldElements, prevNode, nextNode) {
     const parentNode = nextNode.parentNode;
-    this.items.map(this.mapFn).forEach((litTag) => {
+    const length = this.items.length;
+    for (let index = 0; index < length; index++) {
+      const litTag = this.mapFn(this.items[index]);
       const oldElement = oldElements.shift();
       if (oldElement) litTag.render(oldElement);
       else {
-        const instance = litTag.compile();
-        parentNode.insertBefore(instance.element, nextNode);
+        parentNode.insertBefore(
+          litTag.compile().element,
+          nextNode,
+        );
       }
-    });
-    oldElements.forEach((oldElement) => {
+    }
+    let oldElement;
+    while (oldElement = oldElements.shift()) {
       parentNode.removeChild(oldElement);
-    });
+    }
   }
 }
 
@@ -279,11 +294,11 @@ class ContentUpdater extends Updater {
     this.nextNode = node.nextSibling;
   }
 
+  /**
+   * @returns {Node[]}
+   */
   get oldElements() {
     let content = this.prevNode.nextSibling;
-    /**
-     * @type {Node[]}
-     */
     const oldElements = [];
     while (content !== this.nextNode) {
       oldElements.push(content);
@@ -293,17 +308,18 @@ class ContentUpdater extends Updater {
   }
 
   update(newValues) {
-    const oldElement = this.prevNode.nextSibling;
     const newValue = newValues[0];
-    if (newValue instanceof LitTag) {
+    const oldElement = this.prevNode.nextSibling;
+
+    if (newValue instanceof LitTag)
       newValue.render(oldElement);
-    }
-    else if (newValue instanceof Repeat) {
+
+    else if (newValue instanceof Repeat)
       newValue.update(this.oldElements, this.prevNode, this.nextNode);
-    }
-    else if (('' + newValue) !== this.oldElements[0].nodeValue) {
+
+    else if ((newValue + '') !== oldElement.nodeValue)
       oldElement.nodeValue = newValue;
-    }
+
   }
 }
 
@@ -317,12 +333,12 @@ function requestTemplate(staticParts) {
    * @type {Template}
    */
   const cachedTemplate = templateCache.get(staticParts);
-  if (cachedTemplate instanceof Template) {
-    return cachedTemplate
+  if (cachedTemplate) return cachedTemplate
+  else {
+    const newTemplate = new Template(staticParts);
+    templateCache.set(staticParts, newTemplate);
+    return newTemplate
   }
-  const newTemplate = new Template(staticParts);
-  templateCache.set(staticParts, newTemplate);
-  return newTemplate
 }
 
 class Template {
@@ -359,17 +375,17 @@ class Template {
         node.parentNode.replaceChild(fragment, node);
       });
     }, {
-        whatToShow: NodeFilter.SHOW_TEXT,
+        whatToShow: 4 /* NodeFilter.SHOW_TEXT */,
         acceptNode(node) {
           return node.nodeValue.indexOf(MARKER) !== -1
-            ? NodeFilter.FILTER_ACCEPT
-            : NodeFilter.FILTER_REJECT
+            ? 1 /* NodeFilter.FILTER_ACCEPT */
+            : 3 /* NodeFilter.FILTER_SKIP */
         }
       });
     doAfterWalkTree.forEach((fn) => fn());
 
     walkDomTree(templateElm.content, (node, nodeIndex) => {
-      if (node.nodeType === Node.TEXT_NODE)
+      if (node.nodeType === 3 /* Node.TEXT_NODE */)
         return templateParts.push(new ContentExpression(
           nodeIndex,
         ))
@@ -377,6 +393,7 @@ class Template {
       const length = node.attributes.length;
       for (let index = 0; index < length; index++) {
         const attribute = node.attributes.item(index);
+
         if (attribute.name === MARKER)
           templateParts.push(new ElementExpression(
             nodeIndex,
@@ -388,25 +405,26 @@ class Template {
             attribute.name.slice(2),
           ));
 
-        else if (attribute.value.indexOf(MARKER) !== -1)
+        else if (attribute.nodeValue.indexOf(MARKER) !== -1)
           templateParts.push(new AttributeExpression(
             nodeIndex,
             attribute.name,
-            attribute.value.split(MARKER),
+            attribute.nodeValue.split(MARKER),
           ));
       }
     }, {
         acceptNode(node) {
-          if (node.nodeType === Node.TEXT_NODE)
+          if (node.nodeType === 3 /* Node.TEXT_NODE */)
             return node.nodeValue === PLACEHOLDER
-              ? NodeFilter.FILTER_ACCEPT
-              : NodeFilter.FILTER_SKIP
+              ? 1 /* NodeFilter.FILTER_ACCEPT */
+              : 3 /* NodeFilter.FILTER_SKIP */
           else return node.hasAttributes()
-            ? NodeFilter.FILTER_ACCEPT
-            : NodeFilter.FILTER_SKIP
+            ? 1 /* NodeFilter.FILTER_ACCEPT */
+            : 3 /* NodeFilter.FILTER_SKIP */
         }
       });
 
+    this.staticParts = staticParts;
     this.templateElm = templateElm;
     this.templateParts = templateParts;
   }
@@ -417,9 +435,13 @@ class Template {
 
     walkDomTree(element, (node, nodeIndex, stop) => {
 
-      this.templateParts.filter((expression) => {
-        return expression.nodeIndex === nodeIndex
-      }).forEach((expression) => {
+      const length = this.templateParts.length;
+
+      for (let index = 0; index < length; index++) {
+        const expression = this.templateParts[index];
+
+        if (expression.nodeIndex !== nodeIndex) continue
+
         if (expression instanceof ContentExpression)
           partUpdaters.push(new ContentUpdater(node));
 
@@ -437,22 +459,22 @@ class Template {
             node,
             expression.eventName,
           ));
-      });
+      }
 
     }, {
         acceptNode(node) {
-          if (node.nodeType === Node.TEXT_NODE)
+          if (node.nodeType === 3 /* Node.TEXT_NODE */)
             return node.nodeValue === PLACEHOLDER
-              ? NodeFilter.FILTER_ACCEPT
-              : NodeFilter.FILTER_SKIP
+              ? 1 /* NodeFilter.FILTER_ACCEPT */
+              : 3 /* NodeFilter.FILTER_SKIP */
           else return node.hasAttributes()
-            ? NodeFilter.FILTER_ACCEPT
-            : NodeFilter.FILTER_SKIP
+            ? 1 /* NodeFilter.FILTER_ACCEPT */
+            : 3 /* NodeFilter.FILTER_SKIP */
         }
       });
 
     return new TemplateInstance(
-      this,
+      this.staticParts,
       element.children.item(0),
       partUpdaters,
     )
@@ -461,12 +483,12 @@ class Template {
 
 class TemplateInstance {
   /**
-   * @param {Template} template 
+   * @param {TemplateStringsArray} staticParts 
    * @param {Node} element 
    * @param {Updater[]} partUpdaters 
    */
-  constructor(template, element, partUpdaters) {
-    this.template = template;
+  constructor(staticParts, element, partUpdaters) {
+    this.staticParts = staticParts;
     this.element = element;
     this.partUpdaters = partUpdaters;
   }
@@ -476,12 +498,14 @@ class TemplateInstance {
    */
   update(expressions) {
     let startIndex = 0;
-    this.partUpdaters.forEach((updater) => {
+    let index = 0;
+    let updater;
+    while (updater = this.partUpdaters[index++]) {
       updater.update(expressions.slice(
         startIndex,
         startIndex += updater.numberOfPart,
       ));
-    });
+    }
   }
 }
 
@@ -499,7 +523,7 @@ class LitTag {
    * @param {TemplateInstance} instance 
    */
   verify(instance) {
-    return templateCache.get(this.staticParts) === instance.template
+    return this.staticParts === instance.staticParts
   }
 
   compile() {
@@ -513,12 +537,15 @@ class LitTag {
    * @param {Node} container
    */
   render(container) {
-    if (container[INSTANCE] instanceof TemplateInstance && this.verify(container[INSTANCE])) {
-      const instance = container[INSTANCE];
+    /** @type {TemplateInstance} */
+    const instance = container[INSTANCE];
+    if (instance instanceof TemplateInstance && this.verify(instance)) {
       instance.update(this.dymanicParts);
     } else {
-      const instance = this.compile();
-      container.parentNode.replaceChild(instance.element, container);
+      container.parentNode.replaceChild(
+        this.compile().element,
+        container,
+      );
     }
   }
 }

@@ -19,19 +19,24 @@ export class Repeat {
   }
 
   /**
+   * @param {Node[]} oldElements 
    * @param {Node} prevNode 
    * @param {Node} nextNode 
    */
   update(oldElements, prevNode, nextNode) {
     const parentNode = nextNode.parentNode
-    this.items.map(this.mapFn).forEach((litTag) => {
+    const length = this.items.length
+    for (let index = 0; index < length; index++) {
+      const litTag = this.mapFn(this.items[index])
       const oldElement = oldElements.shift()
       if (oldElement) litTag.render(oldElement)
       else {
-        const instance = litTag.compile()
-        parentNode.insertBefore(instance.element, nextNode)
+        parentNode.insertBefore(
+          litTag.compile().element,
+          nextNode,
+        )
       }
-    })
+    }
     let oldElement
     while (oldElement = oldElements.shift()) {
       parentNode.removeChild(oldElement)

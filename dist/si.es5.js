@@ -26,15 +26,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
    */
   function walkDomTree(dom, walkerFn) {
     var _ref = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {},
-        whatToShow = _ref.whatToShow,
-        acceptNode = _ref.acceptNode;
+        _ref$whatToShow = _ref.whatToShow,
+        whatToShow = _ref$whatToShow === undefined ? 1 /* NodeFilter.SHOW_ELEMENT */ | 4 : _ref$whatToShow,
+        _ref$acceptNode = _ref.acceptNode,
+        acceptNode = _ref$acceptNode === undefined ? function () {
+      return 1;
+    } : _ref$acceptNode;
 
-    var options = {
-      acceptNode: acceptNode || function () {
-        return NodeFilter.FILTER_ACCEPT;
-      }
-    };
-    var walker = document.createTreeWalker(dom, whatToShow || NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, options, false);
+    var walker = document.createTreeWalker(dom, whatToShow, { acceptNode: acceptNode }, false);
     var nodeIndex = -1;
     var isContinue = true;
     var stop = function stop() {
@@ -184,35 +183,36 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
       var _this5 = _possibleConstructorReturn(this, (AttributeUpdater.__proto__ || Object.getPrototypeOf(AttributeUpdater)).call(this));
 
+      _this5.node = attribute.parentElement;
       _this5.attribute = attribute;
       _this5.staticParts = staticParts;
       /* @type {string[]}  */
-      _this5.oldValues = [];
+      _this5.oldValue = '';
       _this5.numberOfPart = staticParts.length - 1;
       return _this5;
     }
 
     /**
-     * @param {string[]} newValues 
+     * @param {string[]} newValues
      */
 
 
     _createClass(AttributeUpdater, [{
       key: 'update',
       value: function update(newValues) {
-        var _this6 = this;
-
-        if (newValues.findIndex(function (newValue, index) {
-          return newValue !== _this6.oldValues[index];
-        }) === -1) return;
-        var newValueIndex = 0;
-        var lastPartIndex = this.numberOfPart;
-        var value = this.staticParts.map(function (staticPart, index) {
-          if (index === lastPartIndex) return staticPart;
-          return staticPart + newValues[newValueIndex++];
-        }).join('');
-        this.attribute.value = value;
-        this.oldValues = newValues;
+        var length = this.staticParts.length;
+        if (length === 1 && typeof newValues[0] === 'boolean') {
+          if (newValues[0]) this.node.removeAttributeNode(this.attribute);else this.node.setAttributeNode(this.attribute);
+        } else {
+          var value = '';
+          for (var index = 0; index < length; index++) {
+            value += this.staticParts[index] + (newValues[index] || '');
+          }
+          if (value !== this.oldValue) {
+            this.attribute.nodeValue = value;
+            this.oldValue = value;
+          }
+        }
       }
     }]);
 
@@ -228,13 +228,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     function ElementUpdater(node) {
       _classCallCheck(this, ElementUpdater);
 
-      var _this7 = _possibleConstructorReturn(this, (ElementUpdater.__proto__ || Object.getPrototypeOf(ElementUpdater)).call(this));
+      var _this6 = _possibleConstructorReturn(this, (ElementUpdater.__proto__ || Object.getPrototypeOf(ElementUpdater)).call(this));
 
-      _this7.node = node;
-      _this7.prevNode = node.previousSibling;
-      _this7.nextNode = node.nextSibling;
-      _this7.options = {};
-      return _this7;
+      _this6.node = node;
+      _this6.prevNode = node.previousSibling;
+      _this6.nextNode = node.nextSibling;
+      _this6.options = {};
+      node.removeAttribute(MARKER);
+      return _this6;
     }
 
     _createClass(ElementUpdater, [{
@@ -284,13 +285,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     function EventUpdater(node, eventName) {
       _classCallCheck(this, EventUpdater);
 
-      var _this8 = _possibleConstructorReturn(this, (EventUpdater.__proto__ || Object.getPrototypeOf(EventUpdater)).call(this));
+      var _this7 = _possibleConstructorReturn(this, (EventUpdater.__proto__ || Object.getPrototypeOf(EventUpdater)).call(this));
 
-      _this8.node = node;
-      _this8.eventName = eventName;
-      _this8.oldListener = null;
+      _this7.node = node;
+      _this7.eventName = eventName;
+      _this7.oldListener = null;
       node.removeAttribute('on' + eventName);
-      return _this8;
+      return _this7;
     }
 
     /**
@@ -335,6 +336,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }
 
     /**
+     * @param {Node[]} oldElements 
      * @param {Node} prevNode 
      * @param {Node} nextNode 
      */
@@ -344,16 +346,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       key: 'update',
       value: function update(oldElements, prevNode, nextNode) {
         var parentNode = nextNode.parentNode;
-        this.items.map(this.mapFn).forEach(function (litTag) {
-          var oldElement = oldElements.shift();
-          if (oldElement) litTag.render(oldElement);else {
-            var instance = litTag.compile();
-            parentNode.insertBefore(instance.element, nextNode);
+        var length = this.items.length;
+        for (var index = 0; index < length; index++) {
+          var litTag = this.mapFn(this.items[index]);
+          var _oldElement = oldElements.shift();
+          if (_oldElement) litTag.render(_oldElement);else {
+            parentNode.insertBefore(litTag.compile().element, nextNode);
           }
-        });
-        oldElements.forEach(function (oldElement) {
+        }
+        var oldElement = void 0;
+        while (oldElement = oldElements.shift()) {
           parentNode.removeChild(oldElement);
-        });
+        }
       }
     }]);
 
@@ -369,37 +373,34 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     function ContentUpdater(node) {
       _classCallCheck(this, ContentUpdater);
 
-      var _this9 = _possibleConstructorReturn(this, (ContentUpdater.__proto__ || Object.getPrototypeOf(ContentUpdater)).call(this));
+      var _this8 = _possibleConstructorReturn(this, (ContentUpdater.__proto__ || Object.getPrototypeOf(ContentUpdater)).call(this));
 
       if (node.previousSibling == null) node.parentNode.insertBefore(document.createTextNode(''), node);
 
       if (node.nextSibling == null) node.parentNode.appendChild(document.createTextNode(''));
 
-      _this9.prevNode = node.previousSibling;
-      _this9.nextNode = node.nextSibling;
-      return _this9;
+      _this8.prevNode = node.previousSibling;
+      _this8.nextNode = node.nextSibling;
+      return _this8;
     }
+
+    /**
+     * @returns {Node[]}
+     */
+
 
     _createClass(ContentUpdater, [{
       key: 'update',
       value: function update(newValues) {
-        var oldElement = this.prevNode.nextSibling;
         var newValue = newValues[0];
-        if (newValue instanceof LitTag) {
-          newValue.render(oldElement);
-        } else if (newValue instanceof Repeat) {
-          newValue.update(this.oldElements, this.prevNode, this.nextNode);
-        } else if ('' + newValue !== this.oldElements[0].nodeValue) {
-          oldElement.nodeValue = newValue;
-        }
+        var oldElement = this.prevNode.nextSibling;
+
+        if (newValue instanceof LitTag) newValue.render(oldElement);else if (newValue instanceof Repeat) newValue.update(this.oldElements, this.prevNode, this.nextNode);else if (newValue + '' !== oldElement.nodeValue) oldElement.nodeValue = newValue;
       }
     }, {
       key: 'oldElements',
       get: function get() {
         var content = this.prevNode.nextSibling;
-        /**
-         * @type {Node[]}
-         */
         var oldElements = [];
         while (content !== this.nextNode) {
           oldElements.push(content);
@@ -422,12 +423,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      * @type {Template}
      */
     var cachedTemplate = templateCache.get(staticParts);
-    if (cachedTemplate instanceof Template) {
-      return cachedTemplate;
+    if (cachedTemplate) return cachedTemplate;else {
+      var newTemplate = new Template(staticParts);
+      templateCache.set(staticParts, newTemplate);
+      return newTemplate;
     }
-    var newTemplate = new Template(staticParts);
-    templateCache.set(staticParts, newTemplate);
-    return newTemplate;
   }
 
   var Template = function () {
@@ -462,9 +462,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           node.parentNode.replaceChild(fragment, node);
         });
       }, {
-        whatToShow: NodeFilter.SHOW_TEXT,
-        acceptNode: function acceptNode(node) {
-          return node.nodeValue.indexOf(MARKER) !== -1 ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+        whatToShow: 4 /* NodeFilter.SHOW_TEXT */
+        , acceptNode: function acceptNode(node) {
+          return node.nodeValue.indexOf(MARKER) !== -1 ? 1 /* NodeFilter.FILTER_ACCEPT */
+          : 3; /* NodeFilter.FILTER_SKIP */
         }
       });
       doAfterWalkTree.forEach(function (fn) {
@@ -472,19 +473,24 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       });
 
       walkDomTree(templateElm.content, function (node, nodeIndex) {
-        if (node.nodeType === Node.TEXT_NODE) return templateParts.push(new ContentExpression(nodeIndex));
+        if (node.nodeType === 3 /* Node.TEXT_NODE */) return templateParts.push(new ContentExpression(nodeIndex));
 
         var length = node.attributes.length;
         for (var index = 0; index < length; index++) {
           var attribute = node.attributes.item(index);
-          if (attribute.name === MARKER) templateParts.push(new ElementExpression(nodeIndex));else if (attribute.name.slice(0, 2) === 'on') templateParts.push(new EventExpression(nodeIndex, attribute.name.slice(2)));else if (attribute.value.indexOf(MARKER) !== -1) templateParts.push(new AttributeExpression(nodeIndex, attribute.name, attribute.value.split(MARKER)));
+
+          if (attribute.name === MARKER) templateParts.push(new ElementExpression(nodeIndex));else if (attribute.name.slice(0, 2) === 'on') templateParts.push(new EventExpression(nodeIndex, attribute.name.slice(2)));else if (attribute.nodeValue.indexOf(MARKER) !== -1) templateParts.push(new AttributeExpression(nodeIndex, attribute.name, attribute.nodeValue.split(MARKER)));
         }
       }, {
         acceptNode: function acceptNode(node) {
-          if (node.nodeType === Node.TEXT_NODE) return node.nodeValue === PLACEHOLDER ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;else return node.hasAttributes() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+          if (node.nodeType === 3 /* Node.TEXT_NODE */) return node.nodeValue === PLACEHOLDER ? 1 /* NodeFilter.FILTER_ACCEPT */
+            : 3; /* NodeFilter.FILTER_SKIP */
+          else return node.hasAttributes() ? 1 /* NodeFilter.FILTER_ACCEPT */
+            : 3; /* NodeFilter.FILTER_SKIP */
         }
       });
 
+      this.staticParts = staticParts;
       this.templateElm = templateElm;
       this.templateParts = templateParts;
     }
@@ -492,25 +498,32 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     _createClass(Template, [{
       key: 'create',
       value: function create() {
-        var _this10 = this;
+        var _this9 = this;
 
         var partUpdaters = [];
         var element = document.importNode(this.templateElm.content, true);
 
         walkDomTree(element, function (node, nodeIndex, stop) {
 
-          _this10.templateParts.filter(function (expression) {
-            return expression.nodeIndex === nodeIndex;
-          }).forEach(function (expression) {
+          var length = _this9.templateParts.length;
+
+          for (var index = 0; index < length; index++) {
+            var expression = _this9.templateParts[index];
+
+            if (expression.nodeIndex !== nodeIndex) continue;
+
             if (expression instanceof ContentExpression) partUpdaters.push(new ContentUpdater(node));else if (expression instanceof AttributeExpression) partUpdaters.push(new AttributeUpdater(node.attributes.getNamedItem(expression.attributeName), expression.staticParts));else if (expression instanceof ElementExpression) partUpdaters.push(new ElementUpdater(node));else if (expression instanceof EventExpression) partUpdaters.push(new EventUpdater(node, expression.eventName));
-          });
+          }
         }, {
           acceptNode: function acceptNode(node) {
-            if (node.nodeType === Node.TEXT_NODE) return node.nodeValue === PLACEHOLDER ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;else return node.hasAttributes() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+            if (node.nodeType === 3 /* Node.TEXT_NODE */) return node.nodeValue === PLACEHOLDER ? 1 /* NodeFilter.FILTER_ACCEPT */
+              : 3; /* NodeFilter.FILTER_SKIP */
+            else return node.hasAttributes() ? 1 /* NodeFilter.FILTER_ACCEPT */
+              : 3; /* NodeFilter.FILTER_SKIP */
           }
         });
 
-        return new TemplateInstance(this, element.children.item(0), partUpdaters);
+        return new TemplateInstance(this.staticParts, element.children.item(0), partUpdaters);
       }
     }]);
 
@@ -519,14 +532,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   var TemplateInstance = function () {
     /**
-     * @param {Template} template 
+     * @param {TemplateStringsArray} staticParts 
      * @param {Node} element 
      * @param {Updater[]} partUpdaters 
      */
-    function TemplateInstance(template, element, partUpdaters) {
+    function TemplateInstance(staticParts, element, partUpdaters) {
       _classCallCheck(this, TemplateInstance);
 
-      this.template = template;
+      this.staticParts = staticParts;
       this.element = element;
       this.partUpdaters = partUpdaters;
     }
@@ -540,9 +553,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       key: 'update',
       value: function update(expressions) {
         var startIndex = 0;
-        this.partUpdaters.forEach(function (updater) {
+        var index = 0;
+        var updater = void 0;
+        while (updater = this.partUpdaters[index++]) {
           updater.update(expressions.slice(startIndex, startIndex += updater.numberOfPart));
-        });
+        }
       }
     }]);
 
@@ -569,7 +584,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     _createClass(LitTag, [{
       key: 'verify',
       value: function verify(instance) {
-        return templateCache.get(this.staticParts) === instance.template;
+        return this.staticParts === instance.staticParts;
       }
     }, {
       key: 'compile',
@@ -587,12 +602,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'render',
       value: function render(container) {
-        if (container[INSTANCE] instanceof TemplateInstance && this.verify(container[INSTANCE])) {
-          var instance = container[INSTANCE];
+        /** @type {TemplateInstance} */
+        var instance = container[INSTANCE];
+        if (instance instanceof TemplateInstance && this.verify(instance)) {
           instance.update(this.dymanicParts);
         } else {
-          var _instance = this.compile();
-          container.parentNode.replaceChild(_instance.element, container);
+          container.parentNode.replaceChild(this.compile().element, container);
         }
       }
     }]);

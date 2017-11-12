@@ -36,16 +36,17 @@ export class ContentUpdater extends Updater {
   }
 
   update(newValues) {
-    const oldElement = this.prevNode.nextSibling
     const newValue = newValues[0]
-    if (newValue instanceof LitTag) {
+    const oldElement = this.prevNode.nextSibling
+
+    if (newValue instanceof LitTag)
       newValue.render(oldElement)
-    }
-    else if (newValue instanceof Repeat) {
+
+    else if (newValue instanceof Repeat)
       newValue.update(this.oldElements, this.prevNode, this.nextNode)
-    }
-    else if (('' + newValue) !== oldElement.nodeValue) {
+
+    else if ((newValue + '') !== oldElement.nodeValue)
       oldElement.nodeValue = newValue
-    }
+
   }
 }
