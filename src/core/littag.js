@@ -15,7 +15,7 @@ export class LitTag {
    * @param {TemplateInstance} instance 
    */
   verify(instance) {
-    return templateCache.get(this.staticParts) === instance.template
+    return this.staticParts === instance.staticParts
   }
 
   compile() {
@@ -29,12 +29,15 @@ export class LitTag {
    * @param {Node} container
    */
   render(container) {
-    if (container[INSTANCE] instanceof TemplateInstance && this.verify(container[INSTANCE])) {
-      const instance = container[INSTANCE]
+    /** @type {TemplateInstance} */
+    const instance = container[INSTANCE]
+    if (instance instanceof TemplateInstance && this.verify(instance)) {
       instance.update(this.dymanicParts)
     } else {
-      const instance = this.compile()
-      container.parentNode.replaceChild(instance.element, container)
+      container.parentNode.replaceChild(
+        this.compile().element,
+        container,
+      )
     }
   }
 }

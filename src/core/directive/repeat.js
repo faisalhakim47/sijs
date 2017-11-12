@@ -32,8 +32,9 @@ export class Repeat {
         parentNode.insertBefore(instance.element, nextNode)
       }
     })
-    oldElements.forEach((oldElement) => {
+    let oldElement
+    while (oldElement = oldElements.shift()) {
       parentNode.removeChild(oldElement)
-    })
+    }
   }
 }

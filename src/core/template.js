@@ -24,12 +24,12 @@ export function requestTemplate(staticParts) {
    * @type {Template}
    */
   const cachedTemplate = templateCache.get(staticParts)
-  if (cachedTemplate instanceof Template) {
-    return cachedTemplate
+  if (cachedTemplate) return cachedTemplate
+  else {
+    const newTemplate = new Template(staticParts)
+    templateCache.set(staticParts, newTemplate)
+    return newTemplate
   }
-  const newTemplate = new Template(staticParts)
-  templateCache.set(staticParts, newTemplate)
-  return newTemplate
 }
 
 class Template {
@@ -66,17 +66,17 @@ class Template {
         node.parentNode.replaceChild(fragment, node)
       })
     }, {
-        whatToShow: NodeFilter.SHOW_TEXT,
+        whatToShow: 4 /* NodeFilter.SHOW_TEXT */,
         acceptNode(node) {
           return node.nodeValue.indexOf(MARKER) !== -1
-            ? NodeFilter.FILTER_ACCEPT
-            : NodeFilter.FILTER_REJECT
+            ? 1 /* NodeFilter.FILTER_ACCEPT */
+            : 3 /* NodeFilter.FILTER_SKIP */
         }
       })
     doAfterWalkTree.forEach((fn) => fn())
 
     walkDomTree(templateElm.content, (node, nodeIndex) => {
-      if (node.nodeType === Node.TEXT_NODE)
+      if (node.nodeType === 3 /* Node.TEXT_NODE */)
         return templateParts.push(new ContentExpression(
           nodeIndex,
         ))
@@ -84,6 +84,7 @@ class Template {
       const length = node.attributes.length
       for (let index = 0; index < length; index++) {
         const attribute = node.attributes.item(index)
+
         if (attribute.name === MARKER)
           templateParts.push(new ElementExpression(
             nodeIndex,
@@ -104,16 +105,17 @@ class Template {
       }
     }, {
         acceptNode(node) {
-          if (node.nodeType === Node.TEXT_NODE)
+          if (node.nodeType === 3 /* Node.TEXT_NODE */)
             return node.nodeValue === PLACEHOLDER
-              ? NodeFilter.FILTER_ACCEPT
-              : NodeFilter.FILTER_SKIP
+              ? 1 /* NodeFilter.FILTER_ACCEPT */
+              : 3 /* NodeFilter.FILTER_SKIP */
           else return node.hasAttributes()
-            ? NodeFilter.FILTER_ACCEPT
-            : NodeFilter.FILTER_SKIP
+            ? 1 /* NodeFilter.FILTER_ACCEPT */
+            : 3 /* NodeFilter.FILTER_SKIP */
         }
       })
 
+    this.staticParts = staticParts
     this.templateElm = templateElm
     this.templateParts = templateParts
   }
@@ -124,9 +126,13 @@ class Template {
 
     walkDomTree(element, (node, nodeIndex, stop) => {
 
-      this.templateParts.filter((expression) => {
-        return expression.nodeIndex === nodeIndex
-      }).forEach((expression) => {
+      const length = this.templateParts.length
+
+      for (let index = 0; index < length; index++) {
+        const expression = this.templateParts[index]
+
+        if (expression.nodeIndex !== nodeIndex) continue
+
         if (expression instanceof ContentExpression)
           partUpdaters.push(new ContentUpdater(node))
 
@@ -144,22 +150,22 @@ class Template {
             node,
             expression.eventName,
           ))
-      })
+      }
 
     }, {
         acceptNode(node) {
-          if (node.nodeType === Node.TEXT_NODE)
+          if (node.nodeType === 3 /* Node.TEXT_NODE */)
             return node.nodeValue === PLACEHOLDER
-              ? NodeFilter.FILTER_ACCEPT
-              : NodeFilter.FILTER_SKIP
+              ? 1 /* NodeFilter.FILTER_ACCEPT */
+              : 3 /* NodeFilter.FILTER_SKIP */
           else return node.hasAttributes()
-            ? NodeFilter.FILTER_ACCEPT
-            : NodeFilter.FILTER_SKIP
+            ? 1 /* NodeFilter.FILTER_ACCEPT */
+            : 3 /* NodeFilter.FILTER_SKIP */
         }
       })
 
     return new TemplateInstance(
-      this,
+      this.staticParts,
       element.children.item(0),
       partUpdaters,
     )
@@ -168,12 +174,12 @@ class Template {
 
 export class TemplateInstance {
   /**
-   * @param {Template} template 
+   * @param {TemplateStringsArray} staticParts 
    * @param {Node} element 
    * @param {Updater[]} partUpdaters 
    */
-  constructor(template, element, partUpdaters) {
-    this.template = template
+  constructor(staticParts, element, partUpdaters) {
+    this.staticParts = staticParts
     this.element = element
     this.partUpdaters = partUpdaters
   }
@@ -183,11 +189,13 @@ export class TemplateInstance {
    */
   update(expressions) {
     let startIndex = 0
-    this.partUpdaters.forEach((updater) => {
+    let index = 0
+    let updater
+    while (updater = this.partUpdaters[index++]) {
       updater.update(expressions.slice(
         startIndex,
         startIndex += updater.numberOfPart,
       ))
-    })
+    }
   }
 }

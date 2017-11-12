@@ -2,14 +2,16 @@
  * @param {Node} dom 
  * @param {(node: Node, nodeIndex: number, stop?: Function) => void} walkerFn 
  */
-export function walkDomTree(dom, walkerFn, { whatToShow, acceptNode } = {}) {
-  const options = {
-    acceptNode: acceptNode || (() => NodeFilter.FILTER_ACCEPT)
-  }
+export function walkDomTree(
+  dom,
+  walkerFn, {
+  whatToShow = 1 /* NodeFilter.SHOW_ELEMENT */ | 4 /* NodeFilter.SHOW_TEXT */,
+  acceptNode = () => 1 /* NodeFilter.FILTER_ACCEPT */ } = {}
+) {
   const walker = document.createTreeWalker(
     dom,
-    whatToShow || (NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT),
-    options,
+    whatToShow,
+    { acceptNode },
     false
   )
   let nodeIndex = -1

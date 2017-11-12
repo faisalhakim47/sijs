@@ -22,11 +22,11 @@ export class ContentUpdater extends Updater {
     this.nextNode = node.nextSibling
   }
 
+  /**
+   * @returns {Node[]}
+   */
   get oldElements() {
     let content = this.prevNode.nextSibling
-    /**
-     * @type {Node[]}
-     */
     const oldElements = []
     while (content !== this.nextNode) {
       oldElements.push(content)

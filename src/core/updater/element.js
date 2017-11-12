@@ -1,5 +1,5 @@
 import { Updater } from './updater.js'
-import { IFELSE } from '../../constant.js'
+import { IFELSE, MARKER } from '../../constant.js'
 
 export class ElementUpdater extends Updater {
   /**
@@ -11,6 +11,7 @@ export class ElementUpdater extends Updater {
     this.prevNode = node.previousSibling
     this.nextNode = node.nextSibling
     this.options = {}
+    node.removeAttribute(MARKER)
   }
 
   update(options) {
