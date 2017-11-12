@@ -1,3 +1,4 @@
+import { prepareToRemoveNode } from '../core/component.js'
 import { Directive } from '../core/directive.js'
 import { LitTag } from '../core/littag.js'
 
@@ -36,15 +37,16 @@ class Repeat extends Directive {
     for (let index = 0; index < length; index++) {
       const litTag = this.map(this.items[index])
       const oldElement = currentNodes.shift()
-      if (oldElement) litTag.render(oldElement)
+      if (oldElement) litTag.mount(oldElement)
       else parentNode.insertBefore(
         litTag.compile().element,
         nextNode,
       )
     }
-    let removedNode
-    while (removedNode = currentNodes.shift()) {
-      parentNode.removeChild(removedNode)
+    let nodeToRemove
+    while (nodeToRemove = currentNodes.shift()) {
+      prepareToRemoveNode(nodeToRemove)
+      parentNode.removeChild(nodeToRemove)
     }
   }
 }

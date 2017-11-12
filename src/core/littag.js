@@ -1,3 +1,4 @@
+import { prepareToRemoveNode } from './component.js'
 import { requestTemplate, TemplateInstance, templateCache } from './template.js'
 import { INSTANCE } from '../constant.js'
 
@@ -21,19 +22,20 @@ export class LitTag {
   compile() {
     const instance = requestTemplate(this.staticParts).create()
     instance.element[INSTANCE] = instance
-    instance.update(this.dymanicParts)
+    instance.update(this.dymanicParts, { isInit: true })
     return instance
   }
 
   /**
    * @param {Node} container
    */
-  render(container) {
+  mount(container) {
     /** @type {TemplateInstance} */
     const instance = container[INSTANCE]
     if (instance instanceof TemplateInstance && this.verify(instance)) {
       instance.update(this.dymanicParts)
     } else {
+      prepareToRemoveNode(container)
       container.parentNode.replaceChild(
         this.compile().element,
         container,

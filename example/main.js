@@ -32,7 +32,7 @@ function MousemoveApp() {
 }
 
 function renderUpdate() {
-  MousemoveApp().render(document.getElementById('app'))
+  MousemoveApp().mount(document.getElementById('app'))
 }
 
 renderUpdate()

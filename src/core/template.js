@@ -187,7 +187,7 @@ export class TemplateInstance {
   /**
    * @param {any[]} expressions 
    */
-  update(expressions) {
+  update(expressions, { isInit = false } = {}) {
     let startIndex = 0
     let index = 0
     let updater
@@ -195,7 +195,7 @@ export class TemplateInstance {
       updater.update(expressions.slice(
         startIndex,
         startIndex += updater.numberOfPart,
-      ))
+      ), { isInit })
     }
   }
 }
