@@ -1,5 +1,5 @@
 import { Updater } from './updater.js'
-import { Repeat } from '../directive/repeat.js'
+import { Directive } from '../directive.js'
 import { LitTag } from '../../core/littag.js'
 
 export class ContentUpdater extends Updater {
@@ -22,31 +22,22 @@ export class ContentUpdater extends Updater {
     this.nextNode = node.nextSibling
   }
 
-  /**
-   * @returns {Node[]}
-   */
-  get oldElements() {
-    let content = this.prevNode.nextSibling
-    const oldElements = []
-    while (content !== this.nextNode) {
-      oldElements.push(content)
-      content = content.nextSibling
-    }
-    return oldElements
-  }
-
   update(newValues) {
     const newValue = newValues[0]
-    const oldElement = this.prevNode.nextSibling
+    const currNode = this.prevNode.nextSibling
 
     if (newValue instanceof LitTag)
-      newValue.render(oldElement)
+      newValue.render(currNode)
 
-    else if (newValue instanceof Repeat)
-      newValue.update(this.oldElements, this.prevNode, this.nextNode)
+    else if (newValue instanceof Directive)
+      newValue.update(
+        currNode === this.nextNode ? null : currNode,
+        this.prevNode,
+        this.nextNode,
+      )
 
-    else if ((newValue + '') !== oldElement.nodeValue)
-      oldElement.nodeValue = newValue
+    else if ((newValue + '') !== currNode.nodeValue)
+      currNode.nodeValue = newValue
 
   }
 }
