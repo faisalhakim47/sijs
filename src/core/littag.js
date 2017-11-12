@@ -16,7 +16,8 @@ export class LitTag {
    * @param {TemplateInstance} instance 
    */
   verify(instance) {
-    return this.staticParts === instance.staticParts
+    return instance instanceof TemplateInstance
+      && instance.staticParts === this.staticParts
   }
 
   compile() {
@@ -32,7 +33,7 @@ export class LitTag {
   mount(container) {
     /** @type {TemplateInstance} */
     const instance = container[INSTANCE]
-    if (instance instanceof TemplateInstance && this.verify(instance)) {
+    if (this.verify(instance)) {
       instance.update(this.dymanicParts)
     } else {
       prepareToRemoveNode(container)

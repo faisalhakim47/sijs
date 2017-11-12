@@ -16,8 +16,11 @@ export class ElementUpdater extends Updater {
 
   update(options) {
     options = options[0]
-    for (const key in options) {
+    const keys = Object.keys(options)
+    let key
+    while (key = keys.shift()) {
       const newOption = options[key]
+
       if (key === 'if') {
         if (newOption === this.options.if) continue
         else if (!newOption) {
@@ -35,6 +38,7 @@ export class ElementUpdater extends Updater {
         }
         this.options.if = newOption
       }
+
       else if (key === 'elseIf') {
         const prevIf = this.prevNode[IFELSE]
         if (newOption === this.options.elseIf && prevIf === this.options.prevIf) {
@@ -56,6 +60,7 @@ export class ElementUpdater extends Updater {
         this.options.prevIf = prevIf
         this.options.elseIf = newOption
       }
+
     }
   }
 }

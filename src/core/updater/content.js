@@ -23,6 +23,7 @@ export class ContentUpdater extends Updater {
 
     this.prevNode = node.previousSibling
     this.nextNode = node.nextSibling
+    this.oldValue = null
   }
 
   /**
@@ -47,7 +48,8 @@ export class ContentUpdater extends Updater {
       if (isInit) initiateComponent(newValue, currNode)
       else updateComponent(newValue, currNode)
 
-    else if ((newValue + '') !== currNode.nodeValue)
-      currNode.nodeValue = newValue
+    else if ((newValue + '') !== this.oldValue)
+      this.oldValue = currNode.nodeValue = newValue
+
   }
 }

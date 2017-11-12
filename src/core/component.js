@@ -47,7 +47,7 @@ export class Component {
 export function initiateComponent(component, currNode) {
   const props = {}
   const propNames = Object.keys(component)
-  let propName  
+  let propName
   while (propName = propNames.shift()) {
     props[propName] = component[propName]
   }
@@ -64,9 +64,9 @@ export function initiateComponent(component, currNode) {
   }
 
   component.beforeCreate()
-  
+
   const instance = component.render().compile()
-  
+
   component.$props = props
   component.$instance = instance
   instance.$component = component
@@ -85,17 +85,16 @@ export function updateComponent(newComponent, currNode) {
   let isUpdate = false
   let propName
   while (propName = propNames.shift()) {
-    if (!isUpdate) isUpdate = component[propName] !== newComponent[propName]
-    if (isUpdate) component[propName] = newComponent[propName]
+    const newProp = newComponent[propName]
+    if (!isUpdate) isUpdate = component[propName] !== newProp
+    if (isUpdate) component[propName] = newProp
   }
   if (isUpdate) component.update()
 }
 
-
 /**
  * @param {Node} node
  */
-
 export function prepareToRemoveNode(node) {
   const instance = node[INSTANCE]
   if (instance instanceof TemplateInstance) {
