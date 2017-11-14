@@ -1,5 +1,6 @@
 import { Updater } from './updater.js'
-import { IFELSE, MARKER } from '../../constant.js'
+import { registeredController } from '../controller.js'
+import { MARKER } from '../../constant.js'
 
 export class ElementUpdater extends Updater {
   /**
@@ -8,59 +9,18 @@ export class ElementUpdater extends Updater {
   constructor(node) {
     super()
     this.node = node
-    this.prevNode = node.previousSibling
-    this.nextNode = node.nextSibling
-    this.options = {}
     node.removeAttribute(MARKER)
   }
 
+  init(options) {
+    const length = registeredController.length
+    for (let index = 0; index < length; index++)
+      registeredController[index].init(this.node, options)
+  }
+
   update(options) {
-    options = options[0]
-    const keys = Object.keys(options)
-    let key
-    while (key = keys.shift()) {
-      const newOption = options[key]
-
-      if (key === 'if') {
-        if (newOption === this.options.if) continue
-        else if (!newOption) {
-          this.nextNode.parentNode.removeChild(
-            this.node,
-          )
-          this.nextNode[IFELSE] = false
-        }
-        else if (newOption) {
-          this.nextNode.parentNode.insertBefore(
-            this.node,
-            this.nextNode,
-          )
-          this.nextNode[IFELSE] = true
-        }
-        this.options.if = newOption
-      }
-
-      else if (key === 'elseIf') {
-        const prevIf = this.prevNode[IFELSE]
-        if (newOption === this.options.elseIf && prevIf === this.options.prevIf) {
-          continue
-        }
-        if (!newOption || prevIf) {
-          this.nextNode.parentNode.removeChild(
-            this.node,
-          )
-          this.nextNode[IFELSE] = prevIf
-        }
-        else if (newOption) {
-          this.nextNode.parentNode.insertBefore(
-            this.node,
-            this.nextNode,
-          )
-          this.nextNode[IFELSE] = true
-        }
-        this.options.prevIf = prevIf
-        this.options.elseIf = newOption
-      }
-
-    }
+    const length = registeredController.length
+    for (let index = 0; index < length; index++)
+      registeredController[index].update(this.node, options)
   }
 }

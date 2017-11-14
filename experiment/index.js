@@ -1,4 +1,27 @@
-import { Component, html } from '../src/index.js'
+import { Component, html, repeat, until } from '../src/index.js'
+
+const items = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+class TestUntil extends Component {
+  loadText() {
+    return new Promise((resolve) => {
+      const interval = 5000 * Math.random()
+      setTimeout(() => {
+        resolve({ interval })
+      }, interval)
+    })
+  }
+
+  render() {
+    return this.html`
+      <p>${repeat(items, () =>
+        until(this.loadText().then(({ interval }) =>
+          this.html`<span> - ${interval} - </span>`
+        ), this.html`<p><loading class=""></loading></p>`)
+      )}</p>
+    `
+  }
+}
 
 class Test1 extends Component {
   props(index = 0) {
@@ -42,5 +65,7 @@ html`
   <section>
     <h1>Test 1</h1>
     ${new Test1n2()}
+    <h1>TestUntil</h1>
+    ${new TestUntil()}
   </section>
 `.mount(document.getElementById('test1'))

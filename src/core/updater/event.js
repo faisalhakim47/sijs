@@ -16,6 +16,15 @@ export class EventUpdater extends Updater {
   /**
    * @param {((event:Event) => void)[]} newListener 
    */
+  init(newListener) {
+    newListener = newListener[0]
+    if (newListener) this.node.addEventListener(this.eventName, newListener)
+    this.oldListener = newListener
+  }
+
+  /**
+   * @param {((event:Event) => void)[]} newListener 
+   */
   update(newListener) {
     newListener = newListener[0]
     if (newListener === this.oldListener) return

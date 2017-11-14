@@ -42,9 +42,9 @@ export class Component {
 
 /**
  * @param {Component} component 
- * @param {Node} currNode 
+ * @param {Node} currentNode 
  */
-export function initiateComponent(component, currNode) {
+export function initComponent(component, currentNode) {
   const props = {}
   const propNames = Object.keys(component)
   let propName
@@ -71,7 +71,7 @@ export function initiateComponent(component, currNode) {
   component.$instance = instance
   instance.$component = component
 
-  currNode.parentNode.replaceChild(instance.element, currNode)
+  currentNode.parentNode.replaceChild(instance.element, currentNode)
 }
 
 /**

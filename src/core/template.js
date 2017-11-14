@@ -1,4 +1,4 @@
-import { MARKER, PLACEHOLDER } from '../constant.js'
+import { MARKER } from '../constant.js'
 import { walkDomTree } from '../tools/dom.js'
 import { List } from '../tools/list.js'
 
@@ -17,6 +17,9 @@ import { ContentUpdater } from './updater/content.js';
 export const templateCache = new List()
 
 /**
+ * Template cache controller
+ * it detect whether template is cached
+ * then return it
  * @param {TemplateStringsArray} staticParts 
  */
 export function requestTemplate(staticParts) {
@@ -32,6 +35,9 @@ export function requestTemplate(staticParts) {
   }
 }
 
+/**
+ * Template class is creating template and cloning template
+ */
 class Template {
   /**
    * @param {TemplateStringsArray} staticParts 
@@ -51,17 +57,30 @@ class Template {
      * or else walkDomTree will stop.
      */
     let doAfterWalkTree = []
+    /**
+     * normalize the TextNode
+     * because as default, after we join all staticParts with MARKER,
+     * the TextNode can contains more than one MARKER
+     * so we change the MARKER part with
+     * comment that hold the MARKER
+     */
     walkDomTree(templateElm.content, (node) => {
       const fragment = document.createDocumentFragment()
-      const staticParts = node.nodeValue
-        .replace(new RegExp(MARKER, 'g'), MARKER + PLACEHOLDER + MARKER)
-        .split(MARKER)
-      const length = staticParts.length
-      for (let index = 0; index < length; index++) {
+      const staticParts = node.nodeValue.split(MARKER)
+
+      const lastStaticIndex = staticParts.length - 1
+      for (let index = 0; index < lastStaticIndex; index++) {
         fragment.appendChild(
           document.createTextNode(staticParts[index])
         )
+        fragment.appendChild(
+          document.createComment(MARKER)
+        )
       }
+      fragment.appendChild(
+        document.createTextNode(staticParts[lastStaticIndex])
+      )
+
       doAfterWalkTree.push(() => {
         node.parentNode.replaceChild(fragment, node)
       })
@@ -75,8 +94,13 @@ class Template {
       })
     doAfterWalkTree.forEach((fn) => fn())
 
+    /**
+     * detecting MARKER and save its position.
+     * So at the cloning proccess it already know
+     * which part to look at.
+     */
     walkDomTree(templateElm.content, (node, nodeIndex) => {
-      if (node.nodeType === 3 /* Node.TEXT_NODE */)
+      if (node.nodeType === 8 /* Node.COMMENT_NODE */)
         return templateParts.push(new ContentExpression(
           nodeIndex,
         ))
@@ -104,9 +128,10 @@ class Template {
           ))
       }
     }, {
+        whatToShow: 1 /* NodeFilter.SHOW_ELEMENT */ | 128 /* NodeFilter.SHOW_COMMENT */,
         acceptNode(node) {
-          if (node.nodeType === 3 /* Node.TEXT_NODE */)
-            return node.nodeValue === PLACEHOLDER
+          if (node.nodeType === 8 /* Node.COMMENT_NODE */)
+            return node.nodeValue === MARKER
               ? 1 /* NodeFilter.FILTER_ACCEPT */
               : 3 /* NodeFilter.FILTER_SKIP */
           else return node.hasAttributes()
@@ -120,7 +145,7 @@ class Template {
     this.templateParts = templateParts
   }
 
-  create() {
+  clone() {
     const partUpdaters = []
     const element = document.importNode(this.templateElm.content, true)
 
@@ -153,9 +178,10 @@ class Template {
       }
 
     }, {
+        whatToShow: 1 /* NodeFilter.SHOW_ELEMENT */ | 128 /* NodeFilter.SHOW_COMMENT */,
         acceptNode(node) {
-          if (node.nodeType === 3 /* Node.TEXT_NODE */)
-            return node.nodeValue === PLACEHOLDER
+          if (node.nodeType === 8 /* Node.COMMENT_NODE */)
+            return node.nodeValue === MARKER
               ? 1 /* NodeFilter.FILTER_ACCEPT */
               : 3 /* NodeFilter.FILTER_SKIP */
           else return node.hasAttributes()
@@ -187,15 +213,28 @@ export class TemplateInstance {
   /**
    * @param {any[]} expressions 
    */
-  update(expressions, { isInit = false } = {}) {
+  init(expressions) {
     let startIndex = 0
     let index = 0
     let updater
-    while (updater = this.partUpdaters[index++]) {
+    while (updater = this.partUpdaters[index++])
+      updater.init(expressions.slice(
+        startIndex,
+        startIndex += updater.numberOfPart,
+      ))
+  }
+
+  /**
+   * @param {any[]} expressions 
+   */
+  update(expressions) {
+    let startIndex = 0
+    let index = 0
+    let updater
+    while (updater = this.partUpdaters[index++])
       updater.update(expressions.slice(
         startIndex,
         startIndex += updater.numberOfPart,
-      ), { isInit })
-    }
+      ))
   }
 }

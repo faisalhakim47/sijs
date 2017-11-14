@@ -10,30 +10,49 @@ export class AttributeUpdater extends Updater {
     this.node = attribute.parentElement
     this.attribute = attribute
     this.staticParts = staticParts
-    /* @type {string[]}  */
+    /** @type {string[]} */
     this.oldValue = ''
     this.numberOfPart = staticParts.length - 1
   }
 
+  generateValue(values) {
+    let value = ''
+    const staticParts = this.staticParts
+    const lastStaticIndex = staticParts.length - 1
+    for (let index = 0; index < lastStaticIndex; index++) {
+      value += staticParts[index] + values[index]
+    }
+    value += staticParts[lastStaticIndex]
+    return value
+  }
+
   /**
-   * @param {string[]} newValues
+   * @param {string[]} values
    */
-  update(newValues) {
-    const length = this.staticParts.length
-    if (length === 1 && typeof newValues[0] === 'boolean') {
-      if (newValues[0])
+  init(values) {
+    if (values.length === 1 && typeof values[0] === 'boolean') {
+      if (values[0])
         this.node.removeAttributeNode(this.attribute)
       else
         this.node.setAttributeNode(this.attribute)
     } else {
-      let value = ''
-      for (let index = 0; index < length; index++) {
-        value += this.staticParts[index] + (newValues[index] || '')
-      }
-      if (value !== this.oldValue) {
-        this.attribute.nodeValue = value
-        this.oldValue = value
-      }
+      this.oldValue = this.attribute.nodeValue = this.generateValue(values)
+    }
+  }
+
+  /**
+   * @param {string[]} values
+   */
+  update(values) {
+    if (values.length === 1 && typeof values[0] === 'boolean') {
+      if (values[0])
+        this.node.removeAttributeNode(this.attribute)
+      else
+        this.node.setAttributeNode(this.attribute)
+    } else {
+      const value = this.generateValue(values)
+      if (value !== this.oldValue)
+        this.oldValue = this.attribute.nodeValue = value
     }
   }
 }

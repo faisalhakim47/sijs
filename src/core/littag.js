@@ -21,9 +21,9 @@ export class LitTag {
   }
 
   compile() {
-    const instance = requestTemplate(this.staticParts).create()
+    const instance = requestTemplate(this.staticParts).clone()
     instance.element[INSTANCE] = instance
-    instance.update(this.dymanicParts, { isInit: true })
+    instance.init(this.dymanicParts)
     return instance
   }
 

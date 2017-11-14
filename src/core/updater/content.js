@@ -1,8 +1,7 @@
 import { Updater } from './updater.js'
-import { Component, initiateComponent, updateComponent } from '../component.js'
+import { Component, initComponent, updateComponent } from '../component.js'
 import { Directive } from '../directive.js'
 import { LitTag } from '../../core/littag.js'
-import { TemplateInstance } from '../../core/template.js'
 import { INSTANCE } from '../../constant.js'
 
 export class ContentUpdater extends Updater {
@@ -21,35 +20,55 @@ export class ContentUpdater extends Updater {
     if (node.nextSibling == null)
       node.parentNode.appendChild(document.createTextNode(''))
 
-    this.prevNode = node.previousSibling
+    this.previousNode = node.previousSibling
     this.nextNode = node.nextSibling
     this.oldValue = null
   }
 
   /**
-   * @param {any[]} newValues 
-   * @param {any} flags 
+   * @param {any[]} values 
    */
-  update(newValues, { isInit }) {
-    let newValue = newValues[0]
-    const currNode = this.prevNode.nextSibling
+  init(values) {
+    const currentNode = this.previousNode.nextSibling
+    const value = values[0]
 
-    if (newValue instanceof LitTag)
-      newValue.mount(currNode)
+    if (value instanceof LitTag)
+      value.mount(currentNode)
 
-    else if (newValue instanceof Directive)
-      newValue.update(
-        currNode === this.nextNode ? null : currNode,
-        this.prevNode,
-        this.nextNode,
+    else if (value instanceof Directive)
+      value.init(this)
+
+    else if (value instanceof Component)
+      initComponent(value, currentNode)
+
+    else {
+      const textNode = document.createTextNode(value)
+      currentNode.parentNode.replaceChild(
+        textNode,
+        currentNode,
       )
+      this.oldValue = textNode.nodeValue
+    }
+  }
 
-    else if (newValue instanceof Component)
-      if (isInit) initiateComponent(newValue, currNode)
-      else updateComponent(newValue, currNode)
+  /**
+   * @param {any[]} values 
+   */
+  update(values) {
+    let currentNode = this.previousNode.nextSibling
+    let value = values[0]
 
-    else if ((newValue + '') !== this.oldValue)
-      this.oldValue = currNode.nodeValue = newValue
+    if (value instanceof LitTag)
+      value.mount(currentNode)
+
+    else if (value instanceof Directive)
+      value.update(this)
+
+    else if (value instanceof Component)
+      updateComponent(value, currentNode)
+
+    else if ((value + '') !== this.oldValue)
+      this.oldValue = currentNode.nodeValue = value
 
   }
 }

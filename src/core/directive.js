@@ -1,8 +1,12 @@
+import { ContentUpdater } from '../core/updater/content.js'
+
 export class Directive {
   /**
-   * @param {Node} currNode 
-   * @param {Node} prevNode 
-   * @param {Node} nextNode 
+   * @param {ContentUpdater} contentUpdater 
    */
-  update(currNode, prevNode, nextNode) { }
+  init(contentUpdater) { }
+  /**
+   * @param {ContentUpdater} contentUpdater 
+   */
+  update(contentUpdater) { }
 }

@@ -17,16 +17,19 @@ const onmousemove = (e) => {
 
 function MousemoveApp() {
   const items = []
-  for (let index = 0; index < 10; index++) items.push(' ' + random(x, y))
+  const randomLength = 10 + Math.floor(Math.random() * 10)
+  for (let index = 0; index < randomLength; index++) items.push(random(x, y))
   return html`
     <section id="app" data-test="${random(10, 100)}-${random(10, 100)}" onmousemove=${onmousemove}>
       ${Heading('SIJS', '= new HyperHTML()')}
       <p>x: ${x}, y: ${y}</p>
-      <p ${{ if: x + y < (window.innerHeight / 2) }}>the fact is that ${window.innerHeight / 2} is greater than ${x + y}</p>
-      <p ${{ elseIf: true }}>the fact is not right.</p>
+      ${x + y < (window.innerHeight / 2)
+        ? html`<p>the fact is that ${window.innerHeight / 2} is greater than ${x + y}</p>`
+        : html`<p>the fact is not right.</p>`
+      }
       <p>${repeat(items, item =>
-        html`<span> ${item}</span>`
-      )}</p>
+      html`<span> ${item}</span>`
+    )}</p>
     </section>
   `
 }

@@ -4,8 +4,11 @@ export class Updater {
   }
 
   /**
-   * @param {any[]} newValues 
-   * @param {any} flags 
+   * @param {any[]} values 
    */
-  update(newValues, flags) { }
+  init(values) { }
+  /**
+   * @param {any[]} values 
+   */
+  update(values) { }
 }
