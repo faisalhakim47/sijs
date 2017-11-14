@@ -36,7 +36,7 @@ export class ContentUpdater extends Updater {
       value.mount(currentNode)
 
     else if (value instanceof Directive)
-      value.init(this)
+      this.oldValue = value.init(this)
 
     else if (value instanceof Component)
       initComponent(value, currentNode)
@@ -62,7 +62,7 @@ export class ContentUpdater extends Updater {
       value.mount(currentNode)
 
     else if (value instanceof Directive)
-      value.update(this)
+      this.oldValue = value.update(this.oldValue, this)
 
     else if (value instanceof Component)
       updateComponent(value, currentNode)

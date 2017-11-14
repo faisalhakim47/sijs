@@ -34,8 +34,10 @@ export class Component {
   render() { return html`` }
 
   // --- HOOKS ---
-  beforeCreate() { }
-  created() { }
+  data() {
+    /** @type {TemplateInstance} */
+    this.$instance = null
+  }
   mounted() { }
   beforeDestroy() { }
 }

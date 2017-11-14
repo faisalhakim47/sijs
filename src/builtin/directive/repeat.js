@@ -50,7 +50,7 @@ class Repeat extends Directive {
    * @param {ContentUpdater} listUpdater 
    */
   init(listUpdater) {
-    listUpdater.cache = {}
+    const cache = {}
     const { previousNode, nextNode } = listUpdater
     const parentNode = previousNode.parentNode
     const fragment = document.createDocumentFragment()
@@ -66,18 +66,20 @@ class Repeat extends Directive {
       fragment.appendChild(document.createComment(''))
       const itemUpdater = new ContentUpdater(node)
       itemUpdater.update([this.map(item)])
-      listUpdater.cache[key] = itemUpdater
+      cache[key] = itemUpdater
     }
     parentNode.replaceChild(
       fragment,
       previousNode.nextSibling,
     )
+    return cache
   }
 
   /**
+   * @param {any} oldCache 
    * @param {ContentUpdater} listUpdater 
    */
-  update(listUpdater) {
+  update(oldCache, listUpdater) {
     const parentNode = listUpdater.previousNode.parentNode
     /** @type {ContentUpdater} */
     let prevItemUpdater = null
@@ -89,7 +91,7 @@ class Repeat extends Directive {
         ? this.key(item)
         : index
       /** @type {ContentUpdater} */
-      const itemUpdater = listUpdater.cache[key]
+      const itemUpdater = oldCache[key]
       if (itemUpdater instanceof ContentUpdater) {
         const prevNodeOfItem = itemUpdater.previousNode.previousSibling
         const prevItemVerified = prevItemUpdater !== null
@@ -137,11 +139,12 @@ class Repeat extends Directive {
         prevItemUpdater = itemUpdater
       }
     }
-    listUpdater.cache = newCache
 
     const lastItemNextNode = prevItemUpdater.nextNode
     while (lastItemNextNode.nextSibling !== listUpdater.nextNode) {
       parentNode.removeChild(lastItemNextNode.nextSibling)
     }
+
+    return newCache
   }
 }

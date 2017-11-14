@@ -14,7 +14,7 @@ export function until(promise, placeholder) {
 class Until extends Directive {
   /**
    * @param {Promise} promise 
-   * @param {LitTag|string} placeholder 
+   * @param {LitTag} placeholder 
    */
   constructor(promise, placeholder) {
     super()
@@ -26,21 +26,23 @@ class Until extends Directive {
    * @param {ContentUpdater} contentUpdater 
    */
   init(contentUpdater) {
-
+    const updater = new ContentUpdater(
+      contentUpdater.previousNode.nextSibling
+    )
+    updater.init([this.placeholder])
+    this.promise.then((littag) => {
+      updater.update([littag])
+    })
+    return this.promise
   }
 
   /**
    * @param {ContentUpdater} contentUpdater 
    */
-  update(contentUpdater) {
-    let isResolved = false
-    function handler(content) {
-      isResolved = true
-      contentUpdater.update([content])
-    }
-    this.promise.then(handler)
-    if (!isResolved) contentUpdater.update([
-      this.placeholder
-    ])
+  update(oldPromise, contentUpdater) {
+    if (this.promise === oldPromise)
+      return oldPromise
+    else
+      return this.init(contentUpdater)
   }
 }
