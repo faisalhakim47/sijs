@@ -45,6 +45,8 @@ export class Component {
  * @param {Node} currentNode 
  */
 export function initComponent(component, currentNode) {
+  /* saving props state,
+  in updateComponent will be compared to decide component update or not */
   const props = {}
   const propNames = Object.keys(component)
   let propName
@@ -52,6 +54,7 @@ export function initComponent(component, currentNode) {
     props[propName] = component[propName]
   }
 
+  // AUTOBIND METHODS
   const methodNames = Object.getOwnPropertyNames(
     Object.getPrototypeOf(component)
   )
@@ -67,9 +70,12 @@ export function initComponent(component, currentNode) {
 
   const instance = component.render().compile()
 
+  // used by updateComponent
   component.$props = props
-  component.$instance = instance
   instance.$component = component
+
+  // used by Component.prototype.update
+  component.$instance = instance
 
   currentNode.parentNode.replaceChild(instance.element, currentNode)
 }
@@ -93,6 +99,8 @@ export function updateComponent(newComponent, currNode) {
 }
 
 /**
+ * used for beforeDestroy event.
+ * it is also useful in the future for transition hook
  * @param {Node} node
  */
 export function prepareToRemoveNode(node) {

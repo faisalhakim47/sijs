@@ -1,4 +1,4 @@
-import { MARKER } from '../constant.js'
+import { MARKER, INSTANCE } from '../constant.js'
 import { walkDomTree } from '../tools/dom.js'
 import { List } from '../tools/list.js'
 
@@ -36,7 +36,8 @@ export function requestTemplate(staticParts) {
 }
 
 /**
- * Template class is creating template and cloning template
+ * Template class is core of the library
+ * it efficiently creates template literal to usable DOM
  */
 class Template {
   /**
@@ -198,6 +199,11 @@ class Template {
   }
 }
 
+
+/**
+ * Template Instance is the core result of sijs
+ * it tightly couples Updaters and Nodes
+ */
 export class TemplateInstance {
   /**
    * @param {TemplateStringsArray} staticParts 
@@ -208,6 +214,7 @@ export class TemplateInstance {
     this.staticParts = staticParts
     this.element = element
     this.partUpdaters = partUpdaters
+    this.element[INSTANCE] = this
   }
 
   /**

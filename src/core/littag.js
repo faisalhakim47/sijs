@@ -1,7 +1,11 @@
 import { prepareToRemoveNode } from './component.js'
-import { requestTemplate, TemplateInstance, templateCache } from './template.js'
+import { requestTemplate, TemplateInstance } from './template.js'
 import { INSTANCE } from '../constant.js'
 
+/**
+ * LitTag is class that represent the Tagged Template Literal
+ * it is created by html function
+ */
 export class LitTag {
   /**
    * @param {TemplateStringsArray} staticParts 
@@ -22,24 +26,23 @@ export class LitTag {
 
   compile() {
     const instance = requestTemplate(this.staticParts).clone()
-    instance.element[INSTANCE] = instance
     instance.init(this.dymanicParts)
     return instance
   }
 
   /**
-   * @param {Node} container
+   * @param {Node} target
    */
-  mount(container) {
+  mount(target) {
     /** @type {TemplateInstance} */
-    const instance = container[INSTANCE]
+    const instance = target[INSTANCE]
     if (this.verify(instance)) {
       instance.update(this.dymanicParts)
     } else {
-      prepareToRemoveNode(container)
-      container.parentNode.replaceChild(
+      prepareToRemoveNode(target)
+      target.parentNode.replaceChild(
         this.compile().element,
-        container,
+        target,
       )
     }
   }

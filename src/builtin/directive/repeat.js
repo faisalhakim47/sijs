@@ -3,18 +3,41 @@ import { Directive } from '../../core/directive.js'
 import { LitTag } from '../../core/littag.js'
 import { ContentUpdater } from '../../core/updater/content.js'
 
+
 /**
+ * List rendering directive.
+ * 
+ * usage:
+ * 
+ * ```
+ * const items = [
+ *   { name: 'one' },
+ *   { name: 'two' },
+ *   { name: 'three' },
+ * ]
+ * 
+ * html`
+ *   <ul>
+ *     ${repeat(items, item =>
+ *         html`<li>${item.name}</li>`,
+ *       item => item.name
+ *     )}
+ *   </ul>
+ * `
+ * ```
  * @param {any[]} items
- * @param {(item: any, index: number) => LitTag} mapFn 
+ * @param {(item: any, index: number) => LitTag} map 
+ * @param {(item: any, index: number) => string} key 
  */
-export function repeat(items, mapFn) {
-  return new Repeat(items, mapFn)
+export function repeat(items, map, key) {
+  return new Repeat(items, map, key)
 }
 
 class Repeat extends Directive {
   /**
    * @param {any[]} items
    * @param {(item: any, index: number) => LitTag} map 
+   * @param {(item: any, index: number) => string} key 
    */
   constructor(items, map, key) {
     super()
@@ -68,12 +91,12 @@ class Repeat extends Directive {
       /** @type {ContentUpdater} */
       const itemUpdater = listUpdater.cache[key]
       if (itemUpdater instanceof ContentUpdater) {
-        const previousNodeOfItem = itemUpdater.previousNode.previousSibling
-        const isPrevItemVerified = prevItemUpdater !== null
-          && prevItemUpdater.nextNode === previousNodeOfItem
-        const isFirstItemVerified = prevItemUpdater === null
-          && previousNodeOfItem === listUpdater.previousNode
-        if (isPrevItemVerified || isFirstItemVerified) {
+        const prevNodeOfItem = itemUpdater.previousNode.previousSibling
+        const prevItemVerified = prevItemUpdater !== null
+          && prevItemUpdater.nextNode === prevNodeOfItem
+        const firstItemVerified = prevItemUpdater === null
+          && prevNodeOfItem === listUpdater.previousNode
+        if (prevItemVerified || firstItemVerified) {
           itemUpdater.update([this.map(item)])
         } else {
           const wrongOrderedNodes = [
