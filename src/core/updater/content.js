@@ -13,12 +13,12 @@ export class ContentUpdater extends Updater {
 
     if (node.previousSibling == null)
       node.parentNode.insertBefore(
-        document.createTextNode(''),
+        document.createComment(''),
         node,
       )
 
     if (node.nextSibling == null)
-      node.parentNode.appendChild(document.createTextNode(''))
+      node.parentNode.appendChild(document.createComment(''))
 
     this.previousNode = node.previousSibling
     this.nextNode = node.nextSibling
