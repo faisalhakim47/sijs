@@ -30,8 +30,15 @@ export class Component {
     )
   }
 
+  /**
+   * @param {Node} container 
+   */
+  mount(container) {
+    initComponent(this, container)
+  }
+
   // --- VIEW ---
-  render() { return html`` }
+  render() { return html`<div></div>` }
 
   // --- HOOKS ---
   data() {

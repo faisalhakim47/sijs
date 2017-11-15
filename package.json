@@ -10,10 +10,7 @@
   "license": "ISC",
   "devDependencies": {
     "babel-minify": "^0.2.0",
-    "babel-preset-env": "^1.6.1",
+    "buble": "^0.17.3",
     "rollup": "^0.51.2"
-  },
-  "dependencies": {
-    "babel-core": "^6.26.0"
   }
 }

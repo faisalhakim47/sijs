@@ -1,7 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const rollup = require('rollup')
-const babel = require('babel-core')
+const buble = require('buble')
 const babelMinify = require('babel-minify')
 
 build()
@@ -27,14 +27,8 @@ async function build() {
 
   console.log('umd', `${toByte(UMDCode.length)}`, `(${toByte(minifiedUMDCode.length)} minified)`, '✔')
 
-  const ES5Code = babel.transform(UMDCode, {
-    'presets': [
-      ['env', {
-        'targets': {
-          'android': '4'
-        }
-      }]
-    ]
+  const ES5Code = buble.transform(UMDCode, {
+    transforms: { dangerousTaggedTemplateString: true },
   }).code
   const minifiedES5Code = babelMinify(ES5Code).code
 
