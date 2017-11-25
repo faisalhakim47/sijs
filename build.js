@@ -4,7 +4,6 @@ const rollup = require('rollup')
 const buble = require('buble')
 const babelMinify = require('babel-minify')
 
-build()
 async function build() {
   const bundle = await rollup.rollup({
     input: './src/index.js',
@@ -48,3 +47,7 @@ function toByte(length) {
   const byteString = ((length * 1000 / 1024) / 1000).toString()
   return byteString.slice(0, byteString.indexOf('.') + 3) + ' KB'
 }
+
+build().catch((error) => {
+  console.log(error)
+})
