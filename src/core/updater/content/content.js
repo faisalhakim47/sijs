@@ -1,8 +1,8 @@
-import { Updater } from './updater.js'
-import { Component, initComponent, updateComponent } from '../component.js'
-import { Directive } from '../directive.js'
-import { LitTag } from '../../core/littag.js'
-import { INSTANCE } from '../../constant.js'
+import { Updater } from '../updater.js'
+import { Component, initComponent, updateComponent } from './component.js'
+import { Directive } from './directive.js'
+import { LitTag } from '../../littag.js'
+import { INSTANCE } from '../../../constant.js'
 
 export class ContentUpdater extends Updater {
   /**
@@ -62,7 +62,7 @@ export class ContentUpdater extends Updater {
       value.mount(currentNode)
 
     else if (value instanceof Directive)
-      this.oldValue = value.update(this.oldValue, this)
+      this.oldValue = value.update(this)
 
     else if (value instanceof Component)
       updateComponent(value, currentNode)

@@ -1,4 +1,4 @@
-import { prepareToRemoveNode } from './component.js'
+import { prepareToRemoveNode } from './updater/content/component.js'
 import { requestTemplate, TemplateInstance } from './template.js'
 import { INSTANCE } from '../constant.js'
 

@@ -1,4 +1,4 @@
-import { ContentUpdater } from '../core/updater/content.js'
+import { ContentUpdater } from './content.js'
 
 /**
  * extends this class to create content directive
@@ -17,9 +17,13 @@ export class Directive {
   /**
    * @param {ContentUpdater} contentUpdater 
    */
-  init(contentUpdater) { }
+  init(contentUpdater) {
+    this.update(contentUpdater)
+  }
+
   /**
    * @param {ContentUpdater} contentUpdater 
+   * @param {any} oldValue 
    */
-  update(contentUpdater) { }
+  update(contentUpdater, oldValue) { }
 }

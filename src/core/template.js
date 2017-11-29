@@ -9,10 +9,10 @@ import { EventExpression } from './expression/event.js';
 import { ContentExpression } from './expression/content.js';
 
 import { Updater } from './updater/updater.js';
+import { ContentUpdater } from './updater/content/content.js';
+import { ElementUpdater } from './updater/element/element.js';
 import { AttributeUpdater } from './updater/attribute.js';
-import { ElementUpdater } from './updater/element.js';
 import { EventUpdater } from './updater/event.js';
-import { ContentUpdater } from './updater/content.js';
 
 export const templateCache = new List()
 
@@ -235,13 +235,13 @@ export class TemplateInstance {
    * @param {any[]} expressions 
    */
   update(expressions) {
-    let startIndex = 0
-    let index = 0
+    let partIndex = 0
+    let updaterIndex = 0
     let updater
-    while (updater = this.partUpdaters[index++])
+    while (updater = this.partUpdaters[updaterIndex++])
       updater.update(expressions.slice(
-        startIndex,
-        startIndex += updater.numberOfPart,
+        partIndex,
+        partIndex += updater.numberOfPart,
       ))
   }
 }

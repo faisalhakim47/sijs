@@ -1,7 +1,7 @@
-import { prepareToRemoveNode } from '../../core/component.js'
-import { Directive } from '../../core/directive.js'
+import { prepareToRemoveNode } from '../../core/updater/content/component.js'
+import { Directive } from '../../core/updater/content/directive.js'
+import { ContentUpdater } from '../../core/updater/content/content.js'
 import { LitTag } from '../../core/littag.js'
-import { ContentUpdater } from '../../core/updater/content.js'
 
 
 /**
@@ -76,11 +76,11 @@ class Repeat extends Directive {
   }
 
   /**
-   * @param {any} oldCache 
    * @param {ContentUpdater} listUpdater 
    */
-  update(oldCache, listUpdater) {
+  update(listUpdater) {
     const parentNode = listUpdater.previousNode.parentNode
+    const oldCache = listUpdater.oldValue
     /** @type {ContentUpdater} */
     let prevItemUpdater = null
     const newCache = {}

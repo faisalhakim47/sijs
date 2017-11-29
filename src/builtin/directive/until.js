@@ -1,12 +1,12 @@
-import { prepareToRemoveNode } from '../../core/component.js'
-import { Directive } from '../../core/directive.js'
+import { prepareToRemoveNode } from '../../core/updater/content/component.js'
+import { Directive } from '../../core/updater/content/directive.js'
 import { LitTag } from '../../core/littag.js'
-import { ContentUpdater } from '../../core/updater/content.js'
+import { ContentUpdater } from '../../core/updater/content/content.js'
 
 /**
-   * @param {Promise} promise 
-   * @param {any} placeholder 
-   */
+ * @param {Promise} promise 
+ * @param {LitTag} placeholder 
+ */
 export function until(promise, placeholder) {
   return new Until(promise, placeholder)
 }
@@ -37,12 +37,12 @@ class Until extends Directive {
   }
 
   /**
+   * @param {Promise} oldPromise
    * @param {ContentUpdater} contentUpdater 
    */
   update(oldPromise, contentUpdater) {
-    if (this.promise === oldPromise)
-      return oldPromise
-    else
-      return this.init(contentUpdater)
+    return this.promise === oldPromise
+      ? oldPromise
+      : this.init(contentUpdater)
   }
 }

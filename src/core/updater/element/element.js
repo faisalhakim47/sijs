@@ -1,6 +1,6 @@
-import { Updater } from './updater.js'
-import { registeredController } from '../controller.js'
-import { MARKER } from '../../constant.js'
+import { Updater } from '../updater.js'
+import { registeredController } from './controller.js'
+import { MARKER } from '../../../constant.js'
 
 export class ElementUpdater extends Updater {
   /**

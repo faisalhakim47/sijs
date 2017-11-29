@@ -1,9 +1,23 @@
-import { Component } from '../../src/index.js'
+import { Component, Router } from '../../src/index.js'
 
-export class ItemListitem extends Component {
+export class ItemListItem extends Component {
+  constructor(id) {
+    this.id = parseInt(id, 10)
+  }
+
   render() {
     return this.html`
-      <p>ItemListitem</p>
+      <div id="item-list-item">
+        ${Router.link({
+          name: 'ItemListItemAbout',
+          params: { id: this.id }
+        }, 'About')}
+        ${Router.link({
+          name: 'ItemListItemPosts',
+          params: { id: this.id }
+        }, 'Posts')}
+        <p>${Router.view(this)}</p>
+      </div>
     `
   }
 }
