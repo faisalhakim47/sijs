@@ -1,7 +1,7 @@
 import { INSTANCE } from '../../../constant.js'
 import { html } from '../../../html.js'
 import { TemplateInstance } from '../../template.js';
-import { Route, Router } from '../../../builtin/directive/router.js'
+import { Route, RootRoute } from '../../../builtin/directive/router.js'
 
 const COMPONENT_METHODS = {
   constructor: true,
@@ -29,8 +29,8 @@ export class Component {
     this.$instance = this.$instance
     /** @type {Route} */
     this.$route = this.$route
-    /** @type {Router} */
-    this.$router = this.$router
+    /** @type {RootRoute} */
+    this.$rootRoute = this.$rootRoute
     initComponent(this, container)
   }
 

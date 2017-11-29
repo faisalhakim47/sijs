@@ -5,6 +5,8 @@ import { LitTag } from '../../core/littag.js'
 import { List } from '../../tools/list.js'
 import { html } from '../../html.js'
 
+// TODO: dynamicParts
+
 /**
  * @param {string} path 
  */
@@ -31,6 +33,7 @@ export class RootRoute {
 
   /**
    * @param {Route} route 
+   * @returns {Route[]}
    */
   normalizeRoute(route) {
     const routes = route.childRouter instanceof Router
@@ -40,7 +43,7 @@ export class RootRoute {
           .map((childRoute) => {
             childRoute.parentRoute = route
             childRoute.fullPath = route.path + childRoute.path
-            return normalizeRoutes(childRoute)
+            return this.normalizeRoute(childRoute)
           })
           .reduce((result, routes) => {
             return result.concat(routes)
@@ -71,6 +74,7 @@ export class RootRoute {
    */
   setRouterPath(path) {
     path = normalizePath(path)
+    /* Reset the route list to prevent memory leaks */
     this.routerViewList = new List()
     this.activeRoutes = new List()
     const length = this.routes.length
@@ -78,7 +82,9 @@ export class RootRoute {
       let route = this.routes[index]
       const matches = path.match(route.regex)
       if (matches !== null) {
-
+        /*
+         * [GOING DOWN] check if there are default child router
+         */
         /** @type {Router} */
         let childRouter
         while (childRouter = route.childRouter) {
@@ -91,17 +97,18 @@ export class RootRoute {
             }
           }
         }
-
+        /*
+         * [GOING UP] add the parent route as active route
+         */
         /** @type {Route} */
         let parentRoute
         while (parentRoute = route.parentRoute) {
-          const dpCount = route.dynamicPartCount
+          const dpCount = route.dynamicParts.length
           const params = matches.splice(matches.length - dpCount, dpCount)
-          c.routerViewList.set(parentRoute.Component, route)
-          c.activeRoutes.set(route, params)
+          this.routerViewList.set(parentRoute.Component, route)
+          this.activeRoutes.set(route, params)
           route = parentRoute
         }
-
         break
       }
     }
@@ -113,92 +120,6 @@ export class RootRoute {
   mount(container) {
     this.setRouterPath(location.pathname)
     this.rootRoute.mount(container)
-  }
-}
-
-const c = {
-  /** @type {Route} */
-  rootRoute: null,
-  routerViewList: new List(),
-  /** @type {Route[]} */
-  routes: [],
-  activeRoutes: new List(),
-}
-
-/**
- * @param {Route} route 
- * @param {Route} parentRoute 
- */
-function normalizeRoutes(route) {
-  /** @type {Route[]} */
-  const routes = route.childRouter instanceof Router
-    ? [
-      route,
-      ...route.childRouter.routes
-        .map((childRoute) => {
-          childRoute.parentRoute = route
-          childRoute.fullPath = route.path + childRoute.path
-          return normalizeRoutes(childRoute)
-        })
-        .reduce((result, routes) => {
-          return result.concat(routes)
-        }, [])
-    ]
-    : [route]
-
-  const length = routes.length
-  for (let index = 0; index < length; index++) {
-    const route = routes[index]
-    const regexStr = route.fullPath.split('/')
-      .map((pathPart, index) => {
-        if (pathPart === '*') {
-          route.dynamicParts.push(index)
-          pathPart = '([^\\/]+?)'
-        }
-        return pathPart
-      })
-      .join('\\/')
-    route.regex = new RegExp(regexStr)
-  }
-
-  return routes
-}
-
-function syncBrowserLocation() {
-  c.routerViewList = new List()
-  c.activeRoutes = new List()
-  const locationPath = normalizePath(location.pathname)
-  const length = c.routes.length
-  for (let index = 0; index < length; index++) {
-    let route = c.routes[index]
-    const matches = locationPath.match(route.regex)
-    if (matches !== null) {
-
-      /** @type {Router} */
-      let childRouter
-      while (childRouter = route.childRouter) {
-        const length = childRouter.routes.length
-        for (let index = 0; index < length; index++) {
-          const childRoute = childRouter.routes[index]
-          if (childRouter.defaultRoute === childRoute.name || childRoute.path === '') {
-            route = childRoute
-            break
-          }
-        }
-      }
-
-      /** @type {Route} */
-      let parentRoute
-      while (parentRoute = route.parentRoute) {
-        const dpCount = route.dynamicPartCount
-        const params = matches.splice(matches.length - dpCount, dpCount)
-        c.routerViewList.set(parentRoute.Component, route)
-        c.activeRoutes.set(route, params)
-        route = parentRoute
-      }
-
-      break
-    }
   }
 }
 
@@ -273,10 +194,12 @@ export class Route {
 export class RouterView extends Directive {
   constructor() {
     super()
-    /** @type {Route} */
-    this.route = c.routerViewList.get(renderingComponent.constructor)
-    this.params = c.activeRoutes.get(this.route)
+    const { $rootRoute, constructor } = renderingComponent
     this.component = renderingComponent
+    /** @type {Route} */
+    this.route = $rootRoute.routerViewList.get(constructor)
+    /** @type {string[]} */
+    this.params = $rootRoute.activeRoutes.get(this.route)
   }
 
   /**
@@ -294,12 +217,8 @@ export class RouterLink extends Directive {
    * @param {string} text 
    */
   static defaultView(text) {
-    /**
-     * @param {string} href 
-     * @param {Function} handler 
-     * @param {Boolean} isActive 
-     */
-    return (href, handler, isActive) => html`<a class=${isActive ? 'active' : ''} href=${href} onclick=${handler}>${text}</a>`
+    return (href, handler, isActive) =>
+      html`<a class=${isActive ? 'active' : ''} href=${href} onclick=${handler}>${text}</a>`
   }
 
   /**
