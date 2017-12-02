@@ -1,4 +1,3 @@
-import { prepareToRemoveNode } from '../../core/updater/content/component.js'
 import { Directive } from '../../core/updater/content/directive.js'
 import { LitTag } from '../../core/littag.js'
 import { ContentUpdater } from '../../core/updater/content/content.js'
@@ -37,12 +36,11 @@ class Until extends Directive {
   }
 
   /**
-   * @param {Promise} oldPromise
    * @param {ContentUpdater} contentUpdater 
    */
-  update(oldPromise, contentUpdater) {
-    return this.promise === oldPromise
-      ? oldPromise
-      : this.init(contentUpdater)
+  update(contentUpdater) {
+    const { oldValue } = contentUpdater
+    return this.promise === oldValue
+      ? oldValue : this.init(contentUpdater)
   }
 }

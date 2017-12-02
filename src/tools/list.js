@@ -1,17 +1,17 @@
 /**
- * @template K, V
+ * @template Key, Val
  */
 export class List {
   constructor() {
-    /** @type {K[]} */
+    /** @type {Key[]} */
     this.keys = []
-    /** @type {V[]} */
+    /** @type {Val[]} */
     this.values = []
   }
 
   /**
-   * @param {K} key 
-   * @param {V} value 
+   * @param {Key} key 
+   * @param {Val} value 
    */
   set(key, value) {
     this.keys.push(key)
@@ -19,14 +19,14 @@ export class List {
   }
 
   /**
-   * @param {K} key 
+   * @param {Key} key 
    */
   get(key) {
     return this.values[this.keys.indexOf(key)]
   }
 
   /**
-   * @param {(value: V, key: K) => Boolean} findFn 
+   * @param {(val: Val, key: Key) => Boolean} findFn 
    */
   find(findFn) {
     const { keys, values } = this
@@ -38,7 +38,7 @@ export class List {
   }
 
   /**
-   * @param {K} key 
+   * @param {Key} key 
    */
   remove(key) {
     const index = this.keys.indexOf(key)

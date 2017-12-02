@@ -5,7 +5,8 @@ import { LitTag } from '../../core/littag.js'
 import { List } from '../../tools/list.js'
 import { html } from '../../html.js'
 
-// TODO: dynamicParts
+/** @type {RootRoute} */
+let currentRootRoute = null
 
 /**
  * @param {string} path 
@@ -16,17 +17,15 @@ function normalizePath(path) {
   return path
 }
 
-
-/**
- * There is should be only one RootRoute
- */
 export class RootRoute {
   /**
    * @param {Route} route 
    */
   constructor(route) {
     this.rootRoute = route
-    this.routerViews = new List()
+    /** @type List<new () => Component, Route> */
+    this.routerViewList = new List()
+    /** @type List<Route, RegExpMatchArray> */
     this.activeRoutes = new List()
     this.routes = this.normalizeRoute(route)
   }
@@ -69,7 +68,7 @@ export class RootRoute {
     return routes
   }
 
-  /**
+   /**
    * @param {string} path 
    */
   setRouterPath(path) {
@@ -103,10 +102,8 @@ export class RootRoute {
         /** @type {Route} */
         let parentRoute
         while (parentRoute = route.parentRoute) {
-          const dpCount = route.dynamicParts.length
-          const params = matches.splice(matches.length - dpCount, dpCount)
           this.routerViewList.set(parentRoute.Component, route)
-          this.activeRoutes.set(route, params)
+          this.activeRoutes.set(route, matches)
           route = parentRoute
         }
         break
@@ -115,11 +112,13 @@ export class RootRoute {
   }
 
   /**
-   * @param {Node} container
+   * @param {Node} container 
    */
   mount(container) {
+    currentRootRoute = this
     this.setRouterPath(location.pathname)
     this.rootRoute.mount(container)
+    currentRootRoute = null
   }
 }
 
@@ -132,18 +131,15 @@ export class Router {
 
   }
 
-  /**
-   * @param {Component} component 
-   */
-  static view(component) {
-    return new RouterView(component)
+  static view() {
+    return new RouterView()
   }
 
   /**
-   * @param {string|((handler: Function, isActive: Boolean) => LitTag)} view 
+   * @param {(href: string, handler: Function, isActive: Boolean) => LitTag} view 
    */
   static link({ name: routeName, params }, view) {
-    return new RouterLink({ routeName, params }, view)
+    return new RouterLink(routeName, params, view)
   }
 
   /**
@@ -151,7 +147,6 @@ export class Router {
    */
   constructor(routes, { defaultRoute = null } = {}) {
     this.routes = routes
-    /** @type {string} */
     this.defaultRoute = defaultRoute
   }
 }
@@ -160,7 +155,7 @@ export class Route {
   /**
    * @param {string} path 
    * @param {string} name 
-   * @param {typeof Component} Component 
+   * @param {new () => Component} Component 
    * @param {Router} childRouter 
    */
   constructor(path, name, Component, childRouter) {
@@ -194,12 +189,11 @@ export class Route {
 export class RouterView extends Directive {
   constructor() {
     super()
-    const { $rootRoute, constructor } = renderingComponent
-    this.component = renderingComponent
+    this.rootRoute = currentRootRoute
     /** @type {Route} */
-    this.route = $rootRoute.routerViewList.get(constructor)
-    /** @type {string[]} */
-    this.params = $rootRoute.activeRoutes.get(this.route)
+    this.route = this.rootRoute.routerViewList.get(renderingComponent.constructor)
+    /** @type {RegExpMatchArray} */
+    this.params = this.rootRoute.activeRoutes.get(this.route)
   }
 
   /**
@@ -213,8 +207,10 @@ export class RouterView extends Directive {
 }
 
 export class RouterLink extends Directive {
+
   /**
-   * @param {string} text 
+   * @param {string} text
+   * @returns {(href: string, handler: Function, isActive: Boolean) => LitTag} 
    */
   static defaultView(text) {
     return (href, handler, isActive) =>
@@ -222,13 +218,14 @@ export class RouterLink extends Directive {
   }
 
   /**
-   * @param {(handler: Function, isActive: Boolean) => LitTag} view 
+   * @param {string} routeName 
+   * @param {string[]} params 
+   * @param {(href: string, handler: Function, isActive: Boolean) => LitTag} view 
    */
-  constructor({ routeName = null, params = [] } = {}, view) {
+  constructor(routeName, params = [], view) {
     super()
     if (typeof routeName !== 'string') throw new TypeError('routeName is not a string.')
     this.routeName = routeName
-    /** @type {string[]} */
     this.params = params
     this.view = typeof view !== 'function'
       ? RouterLink.defaultView(view)
@@ -242,12 +239,7 @@ export class RouterLink extends Directive {
   update(updater) {
     const value = this.routeName + this.params.join(';')
     if (value === updater.oldValue) return value
-    /** @type {Route} */
-    const route = c.routerViewList
-      .find((route) => (route.name === this.routeName))
-    /** @type {string[]} */
-    const params = c.activeRoutes.get(route)
-    this.view(() => Router.push(this.routeName, this.params))
+    this.view('', () => Router.push(this.routeName, this.params), false)
       .mount(updater.previousNode.nextSibling)
     return value
   }

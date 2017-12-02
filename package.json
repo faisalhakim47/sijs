@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "php -S 0.0.0.0:8080",
     "build": "node build.js"
   },
   "author": "",
@@ -12,5 +13,8 @@
     "babel-minify": "^0.2.0",
     "buble": "^0.17.3",
     "rollup": "^0.51.2"
+  },
+  "dependencies": {
+    "optimize-js": "^1.0.3"
   }
 }

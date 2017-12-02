@@ -23,7 +23,6 @@ export class Directive {
 
   /**
    * @param {ContentUpdater} contentUpdater 
-   * @param {any} oldValue 
    */
-  update(contentUpdater, oldValue) { }
+  update(contentUpdater) { }
 }

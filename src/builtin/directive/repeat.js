@@ -1,8 +1,7 @@
-import { prepareToRemoveNode } from '../../core/updater/content/component.js'
 import { Directive } from '../../core/updater/content/directive.js'
 import { ContentUpdater } from '../../core/updater/content/content.js'
 import { LitTag } from '../../core/littag.js'
-
+import { removeNode, replaceNode, insertNodeBefore, appendNode } from '../../tools/dom.js'
 
 /**
  * List rendering directive.
@@ -45,7 +44,7 @@ class Repeat extends Directive {
     this.map = map
     this.key = key
   }
-
+  
   /**
    * @param {ContentUpdater} listUpdater 
    */
@@ -58,20 +57,17 @@ class Repeat extends Directive {
     for (let index = 0; index < length; index++) {
       const item = this.items[index]
       const key = typeof this.key === 'function'
-        ? this.key(item)
+        ? this.key(item, index)
         : index
       const node = document.createComment('')
-      fragment.appendChild(document.createComment(''))
-      fragment.appendChild(node)
-      fragment.appendChild(document.createComment(''))
+      appendNode(fragment, document.createComment(''))
+      appendNode(fragment, node)
+      appendNode(fragment, document.createComment(''))
       const itemUpdater = new ContentUpdater(node)
-      itemUpdater.update([this.map(item)])
+      itemUpdater.update([this.map(item, index)])
       cache[key] = itemUpdater
     }
-    parentNode.replaceChild(
-      fragment,
-      previousNode.nextSibling,
-    )
+    replaceNode(previousNode.nextSibling, fragment)
     return cache
   }
 
@@ -88,7 +84,7 @@ class Repeat extends Directive {
     for (let index = 0; index < length; index++) {
       const item = this.items[index]
       const key = typeof this.key === 'function'
-        ? this.key(item)
+        ? this.key(item, index)
         : index
       /** @type {ContentUpdater} */
       const itemUpdater = oldCache[key]
@@ -99,7 +95,7 @@ class Repeat extends Directive {
         const firstItemVerified = prevItemUpdater === null
           && prevNodeOfItem === listUpdater.previousNode
         if (prevItemVerified || firstItemVerified) {
-          itemUpdater.update([this.map(item)])
+          itemUpdater.update([this.map(item, index)])
         } else {
           const wrongOrderedNodes = [
             itemUpdater.previousNode,
@@ -111,12 +107,9 @@ class Repeat extends Directive {
             : listUpdater.previousNode.nextSibling
           let wrongOrderedNode
           while (wrongOrderedNode = wrongOrderedNodes.shift()) {
-            parentNode.insertBefore(
-              wrongOrderedNode,
-              refChild,
-            )
+            insertNodeBefore(refChild, wrongOrderedNode)
           }
-          itemUpdater.update([this.map(item)])
+          itemUpdater.update([this.map(item, index)])
         }
         newCache[key] = itemUpdater
         prevItemUpdater = itemUpdater
@@ -124,16 +117,16 @@ class Repeat extends Directive {
       else {
         const fragment = document.createDocumentFragment()
         const node = document.createTextNode('')
-        fragment.appendChild(document.createComment(''))
-        fragment.appendChild(node)
-        fragment.appendChild(document.createComment(''))
+        appendNode(fragment, document.createComment(''))
+        appendNode(fragment, node)
+        appendNode(fragment, document.createComment(''))
         const itemUpdater = new ContentUpdater(node)
-        itemUpdater.update([this.map(item)])
-        parentNode.insertBefore(
-          fragment,
+        itemUpdater.update([this.map(item, index)])
+        insertNodeBefore(
           prevItemUpdater
-            ? prevItemUpdater.nextNode.nextSibling
-            : listUpdater.previousNode.nextSibling,
+          ? prevItemUpdater.nextNode.nextSibling
+          : listUpdater.previousNode.nextSibling,
+          fragment
         )
         newCache[key] = itemUpdater
         prevItemUpdater = itemUpdater
@@ -141,9 +134,8 @@ class Repeat extends Directive {
     }
 
     const lastItemNextNode = prevItemUpdater.nextNode
-    while (lastItemNextNode.nextSibling !== listUpdater.nextNode) {
-      parentNode.removeChild(lastItemNextNode.nextSibling)
-    }
+    while (lastItemNextNode.nextSibling !== listUpdater.nextNode)
+      removeNode(lastItemNextNode.nextSibling)
 
     return newCache
   }

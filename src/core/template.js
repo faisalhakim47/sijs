@@ -1,19 +1,20 @@
 import { MARKER, INSTANCE } from '../constant.js'
-import { walkDomTree } from '../tools/dom.js'
+import { walkDomTree, appendNode, replaceNode } from '../tools/dom.js'
 import { List } from '../tools/list.js'
 
-import { Expression } from './expression/expression.js';
-import { AttributeExpression } from './expression/attribute.js';
-import { ElementExpression } from './expression/element.js';
-import { EventExpression } from './expression/event.js';
-import { ContentExpression } from './expression/content.js';
+import { Expression } from './expression/expression.js'
+import { AttributeExpression } from './expression/attribute.js'
+import { ElementExpression } from './expression/element.js'
+import { EventExpression } from './expression/event.js'
+import { ContentExpression } from './expression/content.js'
 
-import { Updater } from './updater/updater.js';
-import { ContentUpdater } from './updater/content/content.js';
-import { ElementUpdater } from './updater/element/element.js';
-import { AttributeUpdater } from './updater/attribute.js';
-import { EventUpdater } from './updater/event.js';
+import { Updater } from './updater/updater.js'
+import { ContentUpdater } from './updater/content/content.js'
+import { ElementUpdater } from './updater/element/element.js'
+import { AttributeUpdater } from './updater/attribute.js'
+import { EventUpdater } from './updater/event.js'
 
+/** @type {List.<TemplateStringsArray, Template>} */
 export const templateCache = new List()
 
 /**
@@ -23,9 +24,7 @@ export const templateCache = new List()
  * @param {TemplateStringsArray} staticParts 
  */
 export function requestTemplate(staticParts) {
-  /**
-   * @type {Template}
-   */
+  /** @type {Template} */
   const cachedTemplate = templateCache.get(staticParts)
   if (cachedTemplate) return cachedTemplate
   else {
@@ -57,6 +56,7 @@ class Template {
      * you have to do it after the walkDomTree
      * or else walkDomTree will stop.
      */
+    /** @type {Function[]} */
     let doAfterWalkTree = []
     /**
      * normalize the TextNode
@@ -71,20 +71,21 @@ class Template {
 
       const lastStaticIndex = staticParts.length - 1
       for (let index = 0; index < lastStaticIndex; index++) {
-        fragment.appendChild(
+        appendNode(
+          fragment,
           document.createTextNode(staticParts[index])
         )
-        fragment.appendChild(
+        appendNode(
+          fragment,
           document.createComment(MARKER)
         )
       }
-      fragment.appendChild(
+      appendNode(
+        fragment,
         document.createTextNode(staticParts[lastStaticIndex])
       )
 
-      doAfterWalkTree.push(() => {
-        node.parentNode.replaceChild(fragment, node)
-      })
+      doAfterWalkTree.push(() => replaceNode(node, fragment))
     }, {
         whatToShow: 4 /* NodeFilter.SHOW_TEXT */,
         acceptNode(node) {
@@ -93,7 +94,12 @@ class Template {
             : 3 /* NodeFilter.FILTER_SKIP */
         }
       })
-    doAfterWalkTree.forEach((fn) => fn())
+
+    let index = doAfterWalkTree.length
+    /** @type {Function} */
+    let afterWalkTreeFn
+    while (afterWalkTreeFn = doAfterWalkTree[--index])
+      afterWalkTreeFn()
 
     /**
      * detecting MARKER and save its position.
@@ -148,7 +154,8 @@ class Template {
 
   clone() {
     const partUpdaters = []
-    const element = document.importNode(this.templateElm.content, true)
+    /** @type {DocumentFragment} */
+    const element = this.templateElm.content.cloneNode(true)
 
     walkDomTree(element, (node, nodeIndex, stop) => {
 

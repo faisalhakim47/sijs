@@ -2,34 +2,35 @@ import { Updater } from './updater.js'
 
 export class EventUpdater extends Updater {
   /**
-   * @param {Element} node
+   * @param {Element} element
    * @param {AttributeExpression} expression 
    */
-  constructor(node, eventName) {
+  constructor(element, eventName) {
     super()
-    this.node = node
+    this.element = element
     this.eventName = eventName
+    /** @type {EventListenerOrEventListenerObject} */
     this.oldListener = null
-    node.removeAttribute('on' + eventName)
+    element.removeAttribute('on' + eventName)
   }
 
   /**
-   * @param {((event:Event) => void)[]} newListener 
+   * @param {((event:Event) => void)[]} newListeners 
    */
-  init(newListener) {
-    newListener = newListener[0]
-    if (newListener) this.node.addEventListener(this.eventName, newListener)
+  init(newListeners) {
+    const newListener = newListeners[0]
+    if (newListener) this.element.addEventListener(this.eventName, newListener)
     this.oldListener = newListener
   }
 
   /**
-   * @param {((event:Event) => void)[]} newListener 
+   * @param {((event:Event) => void)[]} newListeners 
    */
-  update(newListener) {
-    newListener = newListener[0]
+  update(newListeners) {
+    const newListener = newListeners[0]
     if (newListener === this.oldListener) return
-    if (this.oldListener) this.node.removeEventListener(this.eventName, this.oldListener)
-    if (newListener) this.node.addEventListener(this.eventName, newListener)
+    if (this.oldListener) this.element.removeEventListener(this.eventName, this.oldListener)
+    if (newListener) this.element.addEventListener(this.eventName, newListener)
     this.oldListener = newListener
   }
 }

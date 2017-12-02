@@ -1,5 +1,4 @@
 import { Expression } from './expression.js'
-import { MARKER } from '../../constant.js'
 
 export class AttributeExpression extends Expression {
   /**

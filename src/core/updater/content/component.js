@@ -2,6 +2,8 @@ import { INSTANCE } from '../../../constant.js'
 import { html } from '../../../html.js'
 import { TemplateInstance } from '../../template.js';
 import { Route, RootRoute } from '../../../builtin/directive/router.js'
+import { replaceNode } from '../../../tools/dom.js'
+import { LitTag } from '../../littag.js'
 
 const COMPONENT_METHODS = {
   constructor: true,
@@ -43,7 +45,9 @@ export class Component {
   }
 
   // --- VIEW ---
-  render() { return this.html`<div></div>` }
+  render() {
+    return this.html`<div></div>`
+  }
 
   // --- HOOKS ---
   updated() { }
@@ -75,7 +79,7 @@ export function initComponent(component, currentNode) {
   // used by Component.prototype.update
   component.$instance = instance
 
-  currentNode.parentNode.replaceChild(instance.element, currentNode)
+  replaceNode(currentNode, instance.element)
 }
 
 /**
@@ -109,7 +113,7 @@ export function updateComponent(newComponent, currentNode) {
  * it is also useful in the future for transition hook
  * @param {Node} node
  */
-export function prepareToRemoveNode(node) {
+export function beforeDestroyComponent(node) {
   const instance = node[INSTANCE]
   if (instance instanceof TemplateInstance) {
     const component = instance.$component

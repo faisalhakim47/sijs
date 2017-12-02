@@ -1,6 +1,6 @@
-import { prepareToRemoveNode } from './updater/content/component.js'
 import { requestTemplate, TemplateInstance } from './template.js'
 import { INSTANCE } from '../constant.js'
+import { replaceNode } from '../tools/dom.js'
 
 /**
  * LitTag is class that represent the Tagged Template Literal
@@ -29,21 +29,17 @@ export class LitTag {
     instance.init(this.dymanicParts)
     return instance
   }
-
+  
   /**
-   * @param {Node} target
+   * @param {Node} container
    */
-  mount(target) {
+  mount(container) {
     /** @type {TemplateInstance} */
-    const instance = target[INSTANCE]
+    const instance = container[INSTANCE]
     if (this.verify(instance)) {
       instance.update(this.dymanicParts)
     } else {
-      prepareToRemoveNode(target)
-      target.parentNode.replaceChild(
-        this.compile().element,
-        target,
-      )
+      replaceNode(container, this.compile().element)
     }
   }
 }

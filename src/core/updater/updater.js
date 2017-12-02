@@ -12,7 +12,10 @@ export class Updater {
   /**
    * @param {any[]} values 
    */
-  init(values) { }
+  init(values) {
+    return this.update(values)
+  }
+
   /**
    * @param {any[]} values 
    */

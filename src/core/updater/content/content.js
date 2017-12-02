@@ -3,6 +3,7 @@ import { Component, initComponent, updateComponent } from './component.js'
 import { Directive } from './directive.js'
 import { LitTag } from '../../littag.js'
 import { INSTANCE } from '../../../constant.js'
+import { replaceNode, insertNodeBefore, appendNode } from '../../../tools/dom.js'
 
 export class ContentUpdater extends Updater {
   /**
@@ -12,13 +13,10 @@ export class ContentUpdater extends Updater {
     super()
 
     if (node.previousSibling == null)
-      node.parentNode.insertBefore(
-        document.createComment(''),
-        node,
-      )
+      insertNodeBefore(node, document.createComment(''))
 
     if (node.nextSibling == null)
-      node.parentNode.appendChild(document.createComment(''))
+      appendNode(node, document.createComment(''))
 
     this.previousNode = node.previousSibling
     this.nextNode = node.nextSibling
@@ -30,23 +28,20 @@ export class ContentUpdater extends Updater {
    */
   init(values) {
     const currentNode = this.previousNode.nextSibling
-    const value = values[0]
+    const content = values[0]
 
-    if (value instanceof LitTag)
-      value.mount(currentNode)
+    if (content instanceof LitTag)
+      content.mount(currentNode)
 
-    else if (value instanceof Directive)
-      this.oldValue = value.init(this)
+    else if (content instanceof Directive)
+      this.oldValue = content.init(this)
 
-    else if (value instanceof Component)
-      initComponent(value, currentNode)
+    else if (content instanceof Component)
+      initComponent(content, currentNode)
 
     else {
-      const textNode = document.createTextNode(value)
-      currentNode.parentNode.replaceChild(
-        textNode,
-        currentNode,
-      )
+      const textNode = document.createTextNode(content)
+      replaceNode(currentNode, textNode)
       this.oldValue = textNode.nodeValue
     }
   }
@@ -56,19 +51,19 @@ export class ContentUpdater extends Updater {
    */
   update(values) {
     let currentNode = this.previousNode.nextSibling
-    let value = values[0]
+    let content = values[0]
 
-    if (value instanceof LitTag)
-      value.mount(currentNode)
+    if (content instanceof LitTag)
+      content.mount(currentNode)
 
-    else if (value instanceof Directive)
-      this.oldValue = value.update(this)
+    else if (content instanceof Directive)
+      this.oldValue = content.update(this)
 
-    else if (value instanceof Component)
-      updateComponent(value, currentNode)
+    else if (content instanceof Component)
+      updateComponent(content, currentNode)
 
-    else if ((value + '') !== this.oldValue)
-      this.oldValue = currentNode.nodeValue = value
+    else if ((content + '') !== this.oldValue)
+      this.oldValue = currentNode.nodeValue = content
 
   }
 }
