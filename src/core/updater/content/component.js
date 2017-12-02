@@ -1,7 +1,7 @@
 import { INSTANCE } from '../../../constant.js'
 import { html } from '../../../html.js'
 import { TemplateInstance } from '../../template.js';
-import { Route, RootRoute } from '../../../builtin/directive/router.js'
+import { rootRoute } from '../../../builtin/directive/router/RootRoute.js'
 import { replaceNode } from '../../../tools/dom.js'
 import { LitTag } from '../../littag.js'
 
@@ -23,16 +23,16 @@ export class Component {
     return html
   }
 
+  get $router() {
+    return rootRoute
+  }
+
   /**
    * @param {Node} container 
    */
   $mount(container) {
     /** @type {TemplateInstance} */
     this.$instance = this.$instance
-    /** @type {Route} */
-    this.$route = this.$route
-    /** @type {RootRoute} */
-    this.$rootRoute = this.$rootRoute
     initComponent(this, container)
   }
 

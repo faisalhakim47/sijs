@@ -28,4 +28,4 @@ performance.measure(
   'app-end'
 )
 
-console.log('PERF :', performance.getEntriesByName('app')[0].duration)
+console.log('PERFORMANCE :', performance.getEntriesByName('app')[0].duration)

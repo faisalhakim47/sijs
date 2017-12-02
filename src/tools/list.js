@@ -26,6 +26,13 @@ export class List {
   }
 
   /**
+   * @param {Key} key 
+   */
+  has(key) {
+    return this.keys.indexOf(key) !== -1
+  }
+
+  /**
    * @param {(val: Val, key: Key) => Boolean} findFn 
    */
   find(findFn) {
