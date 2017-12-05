@@ -6,23 +6,24 @@ import { equalArray } from '../../tools/array.js'
 
 /**
  * @typedef {{
-    router: Router,
-    route: Route,
-    updater: ContentUpdater,
-  }} RouteState
- */
+ router: Router,
+ route: Route,
+ updater: ContentUpdater,
+}} RouteState
+*/
 
 /**
  * @typedef {{
-    remainPathParts: string[],
-    routes: RouteState[],
-  }} RouterState
- */
-
+ mode: 'history' | 'hash',
+ remainPathParts: string[],
+ routes: RouteState[],
+}} RouterState
+*/
 
 /** @type {RouterState} */
 let current = {
-  remainPathParts: createPathParts(location.pathname),
+  mode: null,
+  remainPathParts: [],
   routes: [],
 }
 
@@ -129,6 +130,7 @@ export class Router extends Directive {
    */
   constructor(routes) {
     super()
+    if (current.mode) Router.config()
     this.routes = routes
   }
 
@@ -205,14 +207,17 @@ export class RouterLink extends Directive {
    */
   update(updater) {
     if (this.path !== updater.oldValue) {
+      const href = this.path
       const isActive = false
       const handler = (event) => {
         event.preventDefault()
         Router.push(this.path)
       }
-      this.view(this.path, handler, isActive)
+      this.view(href, handler, isActive)
         .mount(updater.previousNode.nextSibling)
     }
     return this.path
   }
 }
+
+window.addEventListener('popstate', () => pushState(location.pathname))
