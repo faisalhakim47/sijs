@@ -24,9 +24,10 @@ import { removeNode, replaceNode, insertNodeBefore, appendNode } from '../../too
  *   </ul>
  * `
  * ```
- * @param {any[]} items
- * @param {(item: any, index: number) => LitTag} map 
- * @param {(item: any, index: number) => string} key 
+ * @template Item
+ * @param {Item[]} items
+ * @param {(item: Item, index: number) => LitTag} map 
+ * @param {(item: Item, index: number) => string} key 
  */
 export function repeat(items, map, key) {
   return new Repeat(items, map, key)
@@ -57,12 +58,12 @@ class Repeat extends Directive {
     for (let index = 0; index < length; index++) {
       const item = this.items[index]
       const key = typeof this.key === 'function'
-        ? this.key(item, index)
-        : index
+      ? this.key(item, index)
+      : index
       const node = document.createComment('')
-      appendNode(fragment, document.createComment(''))
-      appendNode(fragment, node)
-      appendNode(fragment, document.createComment(''))
+      fragment.appendChild(document.createComment(''))
+      fragment.appendChild(node)
+      fragment.appendChild(document.createComment(''))
       const itemUpdater = new ContentUpdater(node)
       itemUpdater.update([this.map(item, index)])
       cache[key] = itemUpdater

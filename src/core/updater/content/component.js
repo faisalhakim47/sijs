@@ -1,7 +1,6 @@
 import { INSTANCE } from '../../../constant.js'
 import { html } from '../../../html.js'
 import { TemplateInstance } from '../../template.js';
-import { rootRoute } from '../../../builtin/directive/router/RootRoute.js'
 import { replaceNode } from '../../../tools/dom.js'
 import { LitTag } from '../../littag.js'
 
@@ -14,17 +13,21 @@ const COMPONENT_METHODS = {
   beforeDestroy: true,
 }
 
+const COMPONENT_PROPERTIES = {
+  $instance: true,
+}
+
 /** @type {Component} */
-export let renderingComponent = null
+let renderingComponent = null
 
 export class Component {
+  static get rendering() {
+    return renderingComponent
+  }
+
   // --- PROPERTY ---
   get html() {
     return html
-  }
-
-  get $router() {
-    return rootRoute
   }
 
   /**
@@ -33,6 +36,7 @@ export class Component {
   $mount(container) {
     /** @type {TemplateInstance} */
     this.$instance = this.$instance
+    /** @type {TemplateInstance} */
     initComponent(this, container)
   }
 
@@ -93,19 +97,19 @@ export function updateComponent(newComponent, currentNode) {
     return initComponent(newComponent, currentNode)
   }
 
-  /** @type {Component} */
-  const component = instance.$component
-  const propNames = Object.keys(component)
-  let isUpdate = false
+  const oldComponent = instance.$component
+  const propNames = Object.keys(oldComponent)
   let propName = ''
   while (propName = propNames.shift()) {
     const newPropValue = newComponent[propName]
-    component[propName] = newPropValue
-    if (!isUpdate) isUpdate = component[propName] !== newPropValue
-      || (typeof newPropValue === 'object' && !!newPropValue)
+    if (oldComponent[propName] !== newPropValue
+      || (typeof newPropValue === 'object' && newPropValue != undefined)) {
+      instance.$component = newComponent
+      newComponent.$instance = instance
+      newComponent.$update()
+      break
+    }
   }
-
-  if (isUpdate) component.$update()
 }
 
 /**

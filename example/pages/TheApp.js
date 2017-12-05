@@ -1,4 +1,14 @@
-import { Component, Router } from '../../src/index.js'
+import { Component, Router, Route } from '../../src/index.js'
+
+import { Dashboard } from './Dashboard.js'
+import { ItemList } from './ItemList.js'
+import { ItemListItem } from './ItemListItem.js'
+
+const RouterView = new Router([
+  new Route('/', Dashboard, { exact: true }),
+  new Route('/items', ItemList, { exact: true }),
+  new Route('/items/*', ItemListItem),
+])
 
 export class App extends Component {
   render() {
@@ -6,11 +16,11 @@ export class App extends Component {
       <div id="App">
         <nav>
           <ul>
-            <li>${Router.link({ name: 'Dashboard' }, 'Dashboard')}</li>
-            <li>${Router.link({ name: 'ItemList' }, 'Items')}</li>
+            <li>${Router.link('/', 'Dashboard')}</li>
+            <li>${Router.link('/items', 'Items')}</li>
           </ul>
         </nav>
-        ${Router.view(this)}
+        ${RouterView}
       </div>
     `
   }

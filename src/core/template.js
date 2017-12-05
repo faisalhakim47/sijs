@@ -14,6 +14,8 @@ import { ElementUpdater } from './updater/element/element.js'
 import { AttributeUpdater } from './updater/attribute.js'
 import { EventUpdater } from './updater/event.js'
 
+import { Component } from './updater/content/component.js'
+
 /** @type {List.<TemplateStringsArray, Template>} */
 export const templateCache = new List()
 
@@ -71,17 +73,14 @@ class Template {
 
       const lastStaticIndex = staticParts.length - 1
       for (let index = 0; index < lastStaticIndex; index++) {
-        appendNode(
-          fragment,
+        fragment.appendChild(
           document.createTextNode(staticParts[index])
         )
-        appendNode(
-          fragment,
+        fragment.appendChild(
           document.createComment(MARKER)
         )
       }
-      appendNode(
-        fragment,
+      fragment.appendChild(
         document.createTextNode(staticParts[lastStaticIndex])
       )
 
@@ -221,6 +220,8 @@ export class TemplateInstance {
     this.staticParts = staticParts
     this.element = element
     this.partUpdaters = partUpdaters
+    /** @type {Component} */
+    this.$component = null
     this.element[INSTANCE] = this
   }
 
