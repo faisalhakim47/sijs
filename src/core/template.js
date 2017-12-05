@@ -36,6 +36,58 @@ export function requestTemplate(staticParts) {
   }
 }
 
+const HTMLTagRx = /<([^\s>]+)/
+
+const restrictedParentTags = {
+  li(html) {
+    const ul = document.createElement('ul')
+    ul.innerHTML = html
+    return ul.children[0]
+  },
+  tr(html) {
+    const table = document.createElement('table')
+    const thead = document.createElement('thead')
+    table.appendChild(thead)
+    thead.innerHTML = staticParts.join(MARKER)
+    return thead.children[0]
+  },
+  th(html) {
+    const table = document.createElement('table')
+    const thead = document.createElement('thead')
+    const tr = document.createElement('tr')
+    table.appendChild(thead)
+    thead.appendChild(tr)
+    tr.innerHTML = staticParts.join(MARKER)
+    return tr.children[0]
+  },
+  td(html) {
+    return this.th(html)
+  },
+}
+
+/**
+ * @param {TemplateStringsArray} staticParts 
+ * @returns {Element} 
+ */
+function parseTemplateString(staticParts) {
+  if (window.HTMLTemplateElement) {
+    const template = document.createElement('template')
+    template.innerHTML = staticParts.join(MARKER)
+    return template.content.children[0]
+  }
+  else {
+    const tag = staticParts[0].match(HTMLTagRx)[1]
+    if (typeof restrictedParentTags[tag] === 'function') {
+      return restrictedParentTags[tag](staticParts.join(MARKER))
+    }
+    else {
+      const div = document.createElement('div')
+      div.innerHTML = staticParts.join(MARKER)
+      return div.children[0]
+    }
+  }
+}
+
 /**
  * Template class is core of the library
  * it efficiently creates template literal to usable DOM
@@ -49,8 +101,9 @@ class Template {
      * @type {Expression[]}
      */
     const templateParts = []
-    const templateElm = document.createElement('template')
-    templateElm.innerHTML = staticParts.join(MARKER)
+
+    const template = document.createDocumentFragment()
+    template.appendChild(parseTemplateString(staticParts))
 
     /**
      * About the doAfterWalkTree,
@@ -67,7 +120,7 @@ class Template {
      * so we change the MARKER part with
      * comment that hold the MARKER
      */
-    walkDomTree(templateElm.content, (node) => {
+    walkDomTree(template, (node) => {
       const fragment = document.createDocumentFragment()
       const staticParts = node.nodeValue.split(MARKER)
 
@@ -105,7 +158,7 @@ class Template {
      * So at the cloning proccess it already know
      * which part to look at.
      */
-    walkDomTree(templateElm.content, (node, nodeIndex) => {
+    walkDomTree(template, (node, nodeIndex) => {
       if (node.nodeType === 8 /* Node.COMMENT_NODE */)
         return templateParts.push(new ContentExpression(
           nodeIndex,
@@ -147,14 +200,14 @@ class Template {
       })
 
     this.staticParts = staticParts
-    this.templateElm = templateElm
+    this.template = template
     this.templateParts = templateParts
   }
 
   clone() {
     const partUpdaters = []
     /** @type {DocumentFragment} */
-    const element = this.templateElm.content.cloneNode(true)
+    const element = this.template.cloneNode(true)
 
     walkDomTree(element, (node, nodeIndex, stop) => {
 
@@ -199,7 +252,7 @@ class Template {
 
     return new TemplateInstance(
       this.staticParts,
-      element.children.item(0),
+      element.children[0],
       partUpdaters,
     )
   }
@@ -232,11 +285,12 @@ export class TemplateInstance {
     let startIndex = 0
     let index = 0
     let updater
-    while (updater = this.partUpdaters[index++])
+    while (updater = this.partUpdaters[index++]) {
       updater.init(expressions.slice(
         startIndex,
         startIndex += updater.numberOfPart,
       ))
+    }
   }
 
   /**

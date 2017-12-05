@@ -23,7 +23,7 @@ import { equalArray } from '../../tools/array.js'
 /** @type {RouterState} */
 let current = {
   mode: null,
-  remainPathParts: [],
+  remainPathParts: createPathParts(location.pathname),
   routes: [],
 }
 
@@ -111,7 +111,7 @@ export class Router extends Directive {
   /**
    * @param {string} path 
    */
-  static push(path) {
+  static push(path) {    
     pushState(path).then(() => {
       history.pushState({}, path, path)
     })

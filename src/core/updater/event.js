@@ -11,13 +11,13 @@ export class EventUpdater extends Updater {
     this.eventName = eventName
     /** @type {EventListenerOrEventListenerObject} */
     this.oldListener = null
-    element.removeAttribute('on' + eventName)
   }
 
   /**
    * @param {((event:Event) => void)[]} newListeners 
    */
   init(newListeners) {
+    this.element.removeAttribute('on' + this.eventName)
     const newListener = newListeners[0]
     if (newListener) this.element.addEventListener(this.eventName, newListener)
     this.oldListener = newListener

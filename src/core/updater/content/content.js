@@ -11,13 +11,7 @@ export class ContentUpdater extends Updater {
    */
   constructor(node) {
     super()
-
-    if (node.previousSibling == null)
-      insertNodeBefore(node, document.createComment(''))
-
-    if (node.nextSibling == null)
-      appendNode(node, document.createComment(''))
-
+    this.initNode = node
     this.previousNode = node.previousSibling
     this.nextNode = node.nextSibling
     this.oldValue = null
@@ -27,6 +21,18 @@ export class ContentUpdater extends Updater {
    * @param {any[]} values 
    */
   init(values) {
+    if (this.initNode.previousSibling == null) {
+      insertNodeBefore(node, document.createComment(''))
+      this.previousNode = node.previousSibling
+    }
+
+    if (this.initNode.nextSibling == null) {
+      appendNode(node, document.createComment(''))
+      this.nextNode = node.nextSibling
+    }
+
+    this.initNode = null
+
     const currentNode = this.previousNode.nextSibling
     const content = values[0]
 

@@ -9,10 +9,10 @@ export class ElementUpdater extends Updater {
   constructor(node) {
     super()
     this.node = node
-    node.removeAttribute(MARKER)
   }
 
   init(options) {
+    this.node.removeAttribute(MARKER)
     const length = registeredController.length
     for (let index = 0; index < length; index++)
       registeredController[index].init(this.node, options)
