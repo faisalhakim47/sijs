@@ -28,8 +28,6 @@ async function build() {
   })
   const optimized = minify(bundled.code)
 
-  console.log('map', optimized)
-
   console.log('module', `${toByte(bundled.code.length)}`, `(${toByte(optimized.code.length)} minified)`, '✔')
 
   const UMD = await bundle.generate({
