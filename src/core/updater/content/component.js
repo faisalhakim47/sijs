@@ -4,19 +4,6 @@ import { TemplateInstance } from '../../template.js';
 import { replaceNode } from '../../../tools/dom.js'
 import { LitTag } from '../../littag.js'
 
-const COMPONENT_METHODS = {
-  constructor: true,
-  $update: true,
-  $mount: true,
-  render: true,
-  updated: true,
-  beforeDestroy: true,
-}
-
-const COMPONENT_PROPERTIES = {
-  $instance: true,
-}
-
 /** @type {Component} */
 let renderingComponent = null
 
@@ -36,6 +23,8 @@ export class Component {
   $mount(container) {
     /** @type {TemplateInstance} */
     this.$instance = this.$instance
+    /** @type {Component} */
+    this.$parentComponent = this.$parentComponent
     /** @type {TemplateInstance} */
     initComponent(this, container)
   }
@@ -63,26 +52,11 @@ export class Component {
  * @param {Node} currentNode 
  */
 export function initComponent(component, currentNode) {
-  const methodNames = Object.getOwnPropertyNames(
-    Object.getPrototypeOf(component)
-  )
-  let methodName
-  while (methodName = methodNames.shift()) {
-    if (COMPONENT_METHODS[methodName]) continue
-    const method = component[methodName]
-    if (typeof method !== 'function') continue
-    component[methodName] = method.bind(component)
-  }
-
+  component.$parentComponent = renderingComponent
   renderingComponent = component
   const instance = component.render().compile()
   renderingComponent = null
-
-  // used by updateComponent
-  instance.$component = component
-  // used by Component.prototype.update
-  component.$instance = instance
-
+  connectInstanceComponent(instance, component)
   replaceNode(currentNode, instance.element)
 }
 
@@ -96,20 +70,9 @@ export function updateComponent(newComponent, currentNode) {
   if (!instance || !instance.$component || !(newComponent instanceof instance.$component.constructor)) {
     return initComponent(newComponent, currentNode)
   }
-
-  const oldComponent = instance.$component
-  const propNames = Object.keys(oldComponent)
-  let propName = ''
-  while (propName = propNames.shift()) {
-    const newPropValue = newComponent[propName]
-    if (oldComponent[propName] !== newPropValue
-      || (typeof newPropValue === 'object' && newPropValue != undefined)) {
-      instance.$component = newComponent
-      newComponent.$instance = instance
-      newComponent.$update()
-      break
-    }
-  }
+  connectInstanceComponent(instance, newComponent)
+  newComponent.$parentComponent = renderingComponent
+  newComponent.$update()
 }
 
 /**
@@ -125,4 +88,15 @@ export function beforeDestroyComponent(node) {
       component.beforeDestroy()
     }
   }
+}
+
+/**
+ * @param {TemplateInstance} instance 
+ * @param {Component} newComponent 
+ */
+function connectInstanceComponent(instance, newComponent) {
+  const oldComponent = instance.$component
+  if (oldComponent === newComponent) return
+  instance.$component = newComponent
+  newComponent.$instance = instance
 }

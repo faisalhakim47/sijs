@@ -10,27 +10,24 @@ export class EventUpdater extends Updater {
     this.element = element
     this.eventName = eventName
     /** @type {EventListenerOrEventListenerObject} */
-    this.oldListener = null
+    this.currentListener = null
   }
 
   /**
    * @param {((event:Event) => void)[]} newListeners 
    */
   init(newListeners) {
+    this.currentListener = newListeners[0]
     this.element.removeAttribute('on' + this.eventName)
-    const newListener = newListeners[0]
-    if (newListener) this.element.addEventListener(this.eventName, newListener)
-    this.oldListener = newListener
+    this.element.addEventListener(this.eventName, (event) => {
+      this.currentListener(event)
+    })
   }
 
   /**
    * @param {((event:Event) => void)[]} newListeners 
    */
   update(newListeners) {
-    const newListener = newListeners[0]
-    if (newListener === this.oldListener) return
-    if (this.oldListener) this.element.removeEventListener(this.eventName, this.oldListener)
-    if (newListener) this.element.addEventListener(this.eventName, newListener)
-    this.oldListener = newListener
+    this.currentListener = newListeners[0]
   }
 }

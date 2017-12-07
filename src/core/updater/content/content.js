@@ -11,24 +11,32 @@ export class ContentUpdater extends Updater {
    */
   constructor(node) {
     super()
+    /** @type {Node} */
     this.initNode = node
     this.previousNode = node.previousSibling
     this.nextNode = node.nextSibling
     this.oldValue = null
   }
 
+  clearContent() {
+    if (!this.previousNode || !this.nextNode) return
+    let contentNode
+    while ((contentNode = this.previousNode.nextSibling) !== this.nextNode)
+      removeNode(currentNode)
+  }
+
   /**
    * @param {any[]} values 
    */
   init(values) {
-    if (this.initNode.previousSibling == null) {
-      insertNodeBefore(node, document.createComment(''))
-      this.previousNode = node.previousSibling
+    if (this.initNode && !this.initNode.previousSibling) {
+      insertNodeBefore(this.initNode, document.createComment(''))
+      this.previousNode = this.initNode.previousSibling
     }
 
-    if (this.initNode.nextSibling == null) {
-      appendNode(node, document.createComment(''))
-      this.nextNode = node.nextSibling
+    if (this.initNode && !this.initNode.previousSibling) {
+      appendNode(this.initNode, document.createComment(''))
+      this.nextNode = this.initNode.nextSibling
     }
 
     this.initNode = null

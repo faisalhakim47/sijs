@@ -22,25 +22,28 @@ class Until extends Directive {
   }
 
   /**
-   * @param {ContentUpdater} contentUpdater 
+   * @param {ContentUpdater} updater 
    */
-  init(contentUpdater) {
-    const updater = new ContentUpdater(
-      contentUpdater.previousNode.nextSibling
-    )
+  init(updater) {
     updater.init([this.placeholder])
-    this.promise.then((littag) => {
-      updater.update([littag])
+    this.promise.then((litTag) => {
+      if (this.promise.si_cancel) return
+      updater.update([litTag])
     })
     return this.promise
   }
 
   /**
-   * @param {ContentUpdater} contentUpdater 
+   * @param {ContentUpdater} updater 
    */
-  update(contentUpdater) {
-    const { oldValue } = contentUpdater
-    return this.promise === oldValue
-      ? oldValue : this.init(contentUpdater)
+  update(updater) {
+    if (this.promise === updater.oldValue)
+      return this.promise
+    else {
+      if (updater.oldValue instanceof Promise) {
+        updater.oldValue.si_cancel = true
+      }
+      return this.init(updater)
+    }
   }
 }

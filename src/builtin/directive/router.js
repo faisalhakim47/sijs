@@ -6,18 +6,18 @@ import { equalArray } from '../../tools/array.js'
 
 /**
  * @typedef {{
- router: Router,
- route: Route,
- updater: ContentUpdater,
-}} RouteState
+    router: Router,
+    route: Route,
+    updater: ContentUpdater,
+  }} RouteState
 */
 
 /**
  * @typedef {{
- mode: 'history' | 'hash',
- remainPathParts: string[],
- routes: RouteState[],
-}} RouterState
+    mode: 'history' | 'hash',
+    remainPathParts: string[],
+    routes: RouteState[],
+  }} RouterState
 */
 
 /** @type {RouterState} */
@@ -111,7 +111,7 @@ export class Router extends Directive {
   /**
    * @param {string} path 
    */
-  static push(path) {    
+  static push(path) {
     pushState(path).then(() => {
       history.pushState({}, path, path)
     })
@@ -119,7 +119,7 @@ export class Router extends Directive {
 
   /**
    * @param {string} text
-   * @returns {(href: string, handler: Function, isActive: Boolean) => LitTag} 
+   * @param {(href: string, handler: Function, isActive: boolean) => LitTag} view
    */
   static link(path, view) {
     return new RouterLink(path, view)
@@ -137,7 +137,7 @@ export class Router extends Directive {
   /**
    * @param {ContentUpdater} updater 
    */
-  update(updater) {
+  findMatch(updater) {
     const match = findMatchRoute(
       this.routes,
       current.remainPathParts,
@@ -151,13 +151,31 @@ export class Router extends Directive {
       updater: updater,
     })
 
-    const allParams = current.routes
+    const params = current.routes
       .reduce((params, { route }) => {
         return params.concat(route.params)
       }, [])
 
+    return { match, params }
+  }
+
+  /**
+   * @param {ContentUpdater} updater 
+   */
+  init(updater) {
+    const { match, params } = this.findMatch(updater)
+    updater.init([
+      new match.route.Component(...params)
+    ])
+  }
+
+  /**
+   * @param {ContentUpdater} updater 
+   */
+  update(updater) {
+    const { match, params } = this.findMatch(updater)
     updater.update([
-      new match.route.Component(...allParams)
+      new match.route.Component(...params)
     ])
   }
 }
