@@ -4,6 +4,8 @@ import { TemplateInstance } from '../../template.js';
 import { replaceNode } from '../../../tools/dom.js'
 import { LitTag } from '../../littag.js'
 
+// TODO: PARENT-CHILD COMMUNICATION
+
 /** @type {Component} */
 let renderingComponent = null
 
@@ -25,16 +27,17 @@ export class Component {
     this.$instance = this.$instance
     /** @type {Component} */
     this.$parentComponent = this.$parentComponent
+    /** @type {Component[]} */
+    this.$childComponents = []
     /** @type {TemplateInstance} */
     initComponent(this, container)
+    return this
   }
 
   $update() {
-    renderingComponent = this
     this.$instance.update(
       this.render().dymanicParts
     )
-    renderingComponent = null
   }
 
   // --- VIEW ---
@@ -53,7 +56,10 @@ export class Component {
  */
 export function initComponent(component, currentNode) {
   component.$parentComponent = renderingComponent
+  if (renderingComponent instanceof Component)
+    renderingComponent.$childComponents.push(component)
   renderingComponent = component
+  renderingComponent.$childComponents = []
   const instance = component.render().compile()
   renderingComponent = null
   connectInstanceComponent(instance, component)
