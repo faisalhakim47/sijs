@@ -33,18 +33,12 @@ export function repeat(items, map, key) {
   return new Repeat(items, map, key)
 }
 
-class Repeat extends Directive {
-  /**
-   * @param {any[]} items
-   * @param {(item: any, index: number) => LitTag} map 
-   * @param {(item: any, index: number) => string} key 
-   */
-  constructor(items, map, key) {
-    super()
-    this.items = items
-    this.map = map
-    this.key = key
-  }
+export class Repeat<Item> extends Directive {
+  constructor(
+    private items: Item[],
+    private map: (item: Item, index: number) => LitTag,
+    private key: (item: Item, index: number) => string
+  ) { super() }
   
   /**
    * @param {ContentUpdater} listUpdater 
@@ -78,8 +72,7 @@ class Repeat extends Directive {
   update(listUpdater) {
     const parentNode = listUpdater.previousNode.parentNode
     const oldCache = listUpdater.oldValue
-    /** @type {ContentUpdater} */
-    let prevItemUpdater = null
+    let prevItemUpdater: ContentUpdater = null
     const newCache = {}
     const length = this.items.length
     for (let index = 0; index < length; index++) {
@@ -87,8 +80,7 @@ class Repeat extends Directive {
       const key = typeof this.key === 'function'
         ? this.key(item, index)
         : index
-      /** @type {ContentUpdater} */
-      const itemUpdater = oldCache[key]
+      const itemUpdater: ContentUpdater = oldCache[key]
       if (itemUpdater instanceof ContentUpdater) {
         const prevNodeOfItem = itemUpdater.previousNode.previousSibling
         const prevItemVerified = prevItemUpdater !== null

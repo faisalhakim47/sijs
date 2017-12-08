@@ -1,23 +1,16 @@
 import { Directive } from '../../core/updater/content/directive.js'
 import { ContentUpdater } from '../../core/updater/content/content.js'
 
-/** @typedef {(value) => void} Subscriber */
+export type Subscriber = (value) => void
 
-/**
- * @param {ValueStream} value$
- */
-export function observe(value$) {
-  return new Observe(value$)
+export function observe<Val>(value$: ValueStream<Val>) {
+  return new Observe<Val>(value$)
 }
 
-class Observe extends Directive {
-  /**
-   * @param {ValueStream} value$ 
-   */
-  constructor(value$) {
-    super()
-    this.value$ = value$
-  }
+export class Observe<Val> extends Directive {
+  constructor(
+    private value$: ValueStream<Val>
+  ) { super() }
 
   /**
    * @param {ContentUpdater} updater
@@ -33,23 +26,14 @@ class Observe extends Directive {
   }
 }
 
-/**
- * @template Val
- */
-export class ValueStream {
-  /**
-   * @param {Val} value 
-   */
-  constructor(value) {
-    this.value = value
-    /** @type {Subscriber[]} */
-    this.subscribers = []
-  }
+export class ValueStream<Val> {
+  subscribers: Subscriber[] = []
+  
+  constructor(
+    private value?: Val
+  ) { }
 
-  /**
-   * @param {Subscriber} subscriber 
-   */
-  subscribe(subscriber) {
+  subscribe(subscriber: Subscriber) {
     this.subscribers.push(subscriber)
     subscriber(this.value)
     return () => this.subscribers.splice(

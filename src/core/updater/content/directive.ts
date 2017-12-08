@@ -14,15 +14,9 @@ import { ContentUpdater } from './content.js'
  * there are built-in directives namely repeat and until 
  */
 export class Directive {
-  /**
-   * @param {ContentUpdater} contentUpdater 
-   */
-  init(contentUpdater) {
+  init(contentUpdater: ContentUpdater) {
     this.update(contentUpdater)
   }
 
-  /**
-   * @param {ContentUpdater} contentUpdater 
-   */
-  update(contentUpdater) { }
+  update(contentUpdater: ContentUpdater) { }
 }

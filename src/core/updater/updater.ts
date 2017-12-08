@@ -5,19 +5,11 @@
  * with DOM that they manage 
  */
 export class Updater {
-  constructor() {
-    this.numberOfPart = 1
-  }
+  numberOfPart = 1
 
-  /**
-   * @param {any[]} values 
-   */
-  init(values) {
+  init(values: any[]) {
     return this.update(values)
   }
 
-  /**
-   * @param {any[]} values 
-   */
-  update(values) { }
+  update(values: any[]) { }
 }

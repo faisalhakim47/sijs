@@ -7,19 +7,12 @@ import { replaceNode } from '../tools/dom.js'
  * it is created by html function
  */
 export class LitTag {
-  /**
-   * @param {TemplateStringsArray} staticParts 
-   * @param {any[]} dymanicParts 
-   */
-  constructor(staticParts, dymanicParts) {
-    this.staticParts = staticParts
-    this.dymanicParts = dymanicParts
-  }
+  constructor(
+    private staticParts: TemplateStringsArray,
+    public dymanicParts: any[]
+  ) { }
 
-  /**
-   * @param {TemplateInstance} instance 
-   */
-  verify(instance) {
+  verify(instance: TemplateInstance) {
     return instance instanceof TemplateInstance
       && instance.staticParts === this.staticParts
   }
@@ -30,12 +23,8 @@ export class LitTag {
     return instance
   }
   
-  /**
-   * @param {Node} container
-   */
-  mount(container) {
-    /** @type {TemplateInstance} */
-    const instance = container[INSTANCE]
+  mount(container: Node) {
+    const instance: TemplateInstance = container[INSTANCE]
     if (this.verify(instance)) {
       instance.update(this.dymanicParts)
     } else {

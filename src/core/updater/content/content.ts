@@ -3,15 +3,16 @@ import { Component, initComponent, updateComponent } from './component.js'
 import { Directive } from './directive.js'
 import { LitTag } from '../../littag.js'
 import { INSTANCE } from '../../../constant.js'
-import { replaceNode, insertNodeBefore, appendNode } from '../../../tools/dom.js'
+import { replaceNode, insertNodeBefore, appendNode, removeNode } from '../../../tools/dom.js'
 
 export class ContentUpdater extends Updater {
-  /**
-   * @param {Node} node
-   */
-  constructor(node) {
+  private initNode: Node
+  public previousNode: Node
+  public nextNode: Node
+  public oldValue: any
+
+  constructor(node: Node) {
     super()
-    /** @type {Node} */
     this.initNode = node
     this.previousNode = node.previousSibling
     this.nextNode = node.nextSibling
@@ -20,15 +21,12 @@ export class ContentUpdater extends Updater {
 
   clearContent() {
     if (!this.previousNode || !this.nextNode) return
-    let contentNode
+    let contentNode: Node
     while ((contentNode = this.previousNode.nextSibling) !== this.nextNode)
-      removeNode(currentNode)
+      removeNode(contentNode)
   }
 
-  /**
-   * @param {any[]} values 
-   */
-  init(values) {
+  init(values: any[]) {
     if (this.initNode && !this.initNode.previousSibling) {
       insertNodeBefore(this.initNode, document.createComment(''))
       this.previousNode = this.initNode.previousSibling
@@ -60,10 +58,7 @@ export class ContentUpdater extends Updater {
     }
   }
 
-  /**
-   * @param {any[]} values 
-   */
-  update(values) {
+  update(values: any[]) {
     let currentNode = this.previousNode.nextSibling
     let content = values[0]
 

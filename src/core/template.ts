@@ -16,17 +16,14 @@ import { EventUpdater } from './updater/event.js'
 
 import { Component } from './updater/content/component.js'
 
-/** @type {List.<TemplateStringsArray, Template>} */
-export const templateCache = new List()
+export const templateCache = new List<TemplateStringsArray, Template>()
 
 /**
  * Template cache controller
  * it detect whether template is cached
  * then return it
- * @param {TemplateStringsArray} staticParts 
  */
-export function requestTemplate(staticParts) {
-  /** @type {Template} */
+export function requestTemplate(staticParts: TemplateStringsArray) {
   const cachedTemplate = templateCache.get(staticParts)
   if (cachedTemplate) return cachedTemplate
   else {
@@ -39,38 +36,34 @@ export function requestTemplate(staticParts) {
 const HTMLTagRx = /<([^\s>]+)/
 
 const restrictedParentTags = {
-  li(html) {
+  li(html: string) {
     const ul = document.createElement('ul')
     ul.innerHTML = html
     return ul.children[0]
   },
-  tr(html) {
+  tr(html: string) {
     const table = document.createElement('table')
     const thead = document.createElement('thead')
     table.appendChild(thead)
-    thead.innerHTML = staticParts.join(MARKER)
+    thead.innerHTML = html
     return thead.children[0]
   },
-  th(html) {
+  th(html: string) {
     const table = document.createElement('table')
     const thead = document.createElement('thead')
     const tr = document.createElement('tr')
     table.appendChild(thead)
     thead.appendChild(tr)
-    tr.innerHTML = staticParts.join(MARKER)
+    tr.innerHTML = html
     return tr.children[0]
   },
-  td(html) {
-    return this.th(html)
+  td(html: string) {
+    return restrictedParentTags.th(html)
   },
 }
 
-/**
- * @param {TemplateStringsArray} staticParts 
- * @returns {Element} 
- */
-function parseTemplateString(staticParts) {
-  if (window.HTMLTemplateElement) {
+function parseTemplateString(staticParts: TemplateStringsArray): Element {
+  if ('HTMLTemplateElement' in window) {
     const template = document.createElement('template')
     template.innerHTML = staticParts.join(MARKER)
     return template.content.children[0]
@@ -92,15 +85,12 @@ function parseTemplateString(staticParts) {
  * Template class is core of the library
  * it efficiently creates template literal to usable DOM
  */
-class Template {
-  /**
-   * @param {TemplateStringsArray} staticParts 
-   */
-  constructor(staticParts) {
-    /**
-     * @type {Expression[]}
-     */
-    const templateParts = []
+export class Template {
+  template: DocumentFragment
+  templateParts: Expression[]
+
+  constructor(private staticParts: TemplateStringsArray) {
+    const templateParts: Expression[] = []
 
     const template = document.createDocumentFragment()
     template.appendChild(parseTemplateString(staticParts))
@@ -111,8 +101,8 @@ class Template {
      * you have to do it after the walkDomTree
      * or else walkDomTree will stop.
      */
-    /** @type {Function[]} */
-    let doAfterWalkTree = []
+    const doAfterWalkTree: Function[] = []
+
     /**
      * normalize the TextNode
      * because as default, after we join all staticParts with MARKER,
@@ -148,8 +138,7 @@ class Template {
       })
 
     let index = doAfterWalkTree.length
-    /** @type {Function} */
-    let afterWalkTreeFn
+    let afterWalkTreeFn: Function
     while (afterWalkTreeFn = doAfterWalkTree[--index])
       afterWalkTreeFn()
 
@@ -199,15 +188,13 @@ class Template {
         }
       })
 
-    this.staticParts = staticParts
     this.template = template
     this.templateParts = templateParts
   }
 
   clone() {
     const partUpdaters = []
-    /** @type {DocumentFragment} */
-    const element = this.template.cloneNode(true)
+    const element: Node = this.template.cloneNode(true)
 
     walkDomTree(element, (node, nodeIndex, stop) => {
 
@@ -228,11 +215,11 @@ class Template {
           ))
 
         else if (expression instanceof ElementExpression)
-          partUpdaters.push(new ElementUpdater(node))
+          partUpdaters.push(new ElementUpdater(node as Element))
 
         else if (expression instanceof EventExpression)
           partUpdaters.push(new EventUpdater(
-            node,
+            node as Element,
             expression.eventName,
           ))
       }
@@ -252,7 +239,7 @@ class Template {
 
     return new TemplateInstance(
       this.staticParts,
-      element.children[0],
+      (element as Element).children[0],
       partUpdaters,
     )
   }
@@ -264,24 +251,18 @@ class Template {
  * it tightly couples Updaters and Nodes
  */
 export class TemplateInstance {
-  /**
-   * @param {TemplateStringsArray} staticParts 
-   * @param {Node} element 
-   * @param {Updater[]} partUpdaters 
-   */
-  constructor(staticParts, element, partUpdaters) {
-    this.staticParts = staticParts
-    this.element = element
-    this.partUpdaters = partUpdaters
-    /** @type {Component} */
+  $component: Component = null
+
+  constructor(
+    public staticParts: TemplateStringsArray,
+    public element: Element,
+    private partUpdaters: Updater[]
+  ) {
     this.$component = null
     this.element[INSTANCE] = this
   }
 
-  /**
-   * @param {any[]} expressions 
-   */
-  init(expressions) {
+  init(expressions: any[]) {
     let startIndex = 0
     let index = 0
     let updater
@@ -293,10 +274,7 @@ export class TemplateInstance {
     }
   }
 
-  /**
-   * @param {any[]} expressions 
-   */
-  update(expressions) {
+  update(expressions: any[]) {
     let partIndex = 0
     let updaterIndex = 0
     let updater

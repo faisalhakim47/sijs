@@ -1,21 +1,20 @@
 import { Updater } from './updater.js'
+import { equalArray } from '../../tools/array.js'
 
 export class AttributeUpdater extends Updater {
-  /**
-   * @param {Attr} attribute 
-   * @param {string[]} expression
-   */
-  constructor(attribute, staticParts) {
+  node: Element = null
+  oldValue: string[] = []
+
+  constructor(
+    private attribute: Attr,
+    private staticParts: string[]
+  ) {
     super()
     this.node = attribute.parentElement
-    this.attribute = attribute
-    this.staticParts = staticParts
-    /** @type {string[]} */
-    this.oldValue = ''
     this.numberOfPart = staticParts.length - 1
   }
 
-  generateValue(values) {
+  generateValue(values: string[]) {
     let value = ''
     const staticParts = this.staticParts
     const lastStaticIndex = staticParts.length - 1
@@ -26,33 +25,29 @@ export class AttributeUpdater extends Updater {
     return value
   }
 
-  /**
-   * @param {string[]} values
-   */
-  init(values) {
+  init(values: string[]) {
     if (values.length === 1 && typeof values[0] === 'boolean') {
       if (values[0])
         this.node.removeAttributeNode(this.attribute)
       else
         this.node.setAttributeNode(this.attribute)
     } else {
-      this.oldValue = this.attribute.nodeValue = this.generateValue(values)
+      this.attribute.nodeValue = this.generateValue(values)
+      this.oldValue = values
     }
   }
 
-  /**
-   * @param {string[]} values
-   */
-  update(values) {
+  update(values: string[]) {
     if (values.length === 1 && typeof values[0] === 'boolean') {
       if (values[0])
         this.node.removeAttributeNode(this.attribute)
       else
         this.node.setAttributeNode(this.attribute)
     } else {
-      const value = this.generateValue(values)
-      if (value !== this.oldValue)
-        this.oldValue = this.attribute.nodeValue = value
+      if (!equalArray(values, this.oldValue)) {
+        this.attribute.nodeValue = this.generateValue(values)
+        this.oldValue = values
+      }
     }
   }
 }

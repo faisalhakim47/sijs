@@ -3,42 +3,31 @@ import { Directive } from '../../core/updater/content/directive.js'
 import { LitTag } from '../../core/littag.js'
 import { html } from '../../html.js'
 import { equalArray } from '../../tools/array.js'
+import { Component } from '../../core/updater/content/component';
 
-/**
- * @typedef {{
-    router: Router,
-    route: Route,
-    updater: ContentUpdater,
-  }} RouteState
-*/
+type RouteState = {
+  router: Router,
+  route: Route,
+  updater: ContentUpdater,
+}
 
-/**
- * @typedef {{
-    mode: 'history' | 'hash',
-    remainPathParts: string[],
-    routes: RouteState[],
-  }} RouterState
-*/
+type RouterState = {
+  mode: 'history' | 'hash',
+  remainPathParts: string[],
+  routes: RouteState[],
+}
 
-/** @type {RouterState} */
-let current = {
+let current: RouterState = {
   mode: null,
   remainPathParts: createPathParts(location.pathname),
   routes: [],
 }
 
-/**
- * @param {string} path 
- */
-function createPathParts(path) {
+function createPathParts(path: string) {
   return path.split('/').filter((pathPart) => pathPart)
 }
 
-/**
- * @param {Route} route 
- * @param {string[]} pathParts 
- */
-function matchRoute(route, pathParts) {
+function matchRoute(route: Route, pathParts: string[]) {
   const length = route.pathParts.length
   const params = []
   let isFound = true
@@ -83,8 +72,8 @@ function findMatchRoute(routes, pathParts) {
 }
 
 function pushState(path) {
-  /** @type {RouterState} */
-  const next = {
+  const next: RouterState = {
+    mode: current.mode,
     remainPathParts: createPathParts(path),
     routes: [],
   }
@@ -108,36 +97,24 @@ function pushState(path) {
 }
 
 export class Router extends Directive {
-  /**
-   * @param {string} path 
-   */
-  static push(path) {
+  static push(path: string) {
     pushState(path).then(() => {
       history.pushState({}, path, path)
     })
   }
 
-  /**
-   * @param {string} text
-   * @param {(href: string, handler: Function, isActive: boolean) => LitTag} view
-   */
-  static link(path, view) {
+  static link(
+    path: string,
+    view: (href: string, handler: Function, isActive: boolean) => LitTag
+  ) {
     return new RouterLink(path, view)
   }
 
-  /**
-   * @param {Route[]} routes 
-   */
-  constructor(routes) {
-    super()
-    if (current.mode) Router.config()
-    this.routes = routes
-  }
+  constructor(
+    private routes: Route[]
+  ) { super() }
 
-  /**
-   * @param {ContentUpdater} updater 
-   */
-  findMatch(updater) {
+  findMatch(updater: ContentUpdater) {
     const match = findMatchRoute(
       this.routes,
       current.remainPathParts,
@@ -159,20 +136,14 @@ export class Router extends Directive {
     return { match, params }
   }
 
-  /**
-   * @param {ContentUpdater} updater 
-   */
-  init(updater) {
+  init(updater: ContentUpdater) {
     const { match, params } = this.findMatch(updater)
     updater.init([
       new match.route.Component(...params)
     ])
   }
 
-  /**
-   * @param {ContentUpdater} updater 
-   */
-  update(updater) {
+  update(updater: ContentUpdater) {
     const { match, params } = this.findMatch(updater)
     updater.update([
       new match.route.Component(...params)
@@ -181,40 +152,30 @@ export class Router extends Directive {
 }
 
 export class Route {
-  /**
-   * @param {string} path 
-   * @param {new () => Component} Component 
-   * @param {object} options 
-   * @param {boolean} options.exact 
-   */
-  constructor(path, Component, { exact = false } = {}) {
-    this.path = path
-    this.pathParts = createPathParts(path)
-    this.Component = Component
-    /** @type {string} */
-    this.params = []
-    /** @type {boolean} */
+  exact: boolean = false
+  pathParts: string[] = createPathParts(this.path)
+  params: string[] = []
+
+  constructor(
+    private path: string,
+    private Component: new () => Component,
+    { exact = false } = {}
+  ) {
     this.exact = exact
   }
 }
 
 export class RouterLink extends Directive {
-  /**
-   * @param {string} text
-   * @returns {(href: string, handler: Function, isActive: Boolean) => LitTag} 
-   */
-  static defaultView(text) {
-    return (href, handler, isActive) =>
+  static defaultView(text: string) {
+    return (href: string, handler: Function, isActive: boolean) =>
       html`<a class=${isActive ? 'active' : ''} href=${href} onclick=${handler}>${text}</a>`
   }
 
-  /**
-   * @param {string} path 
-   * @param {(href: string, handler: Function, isActive: Boolean) => LitTag} view 
-   */
-  constructor(path, view) {
+  constructor(
+    private path: string,
+    private view: (href: string, handler: Function, isActive: boolean) => LitTag
+  ) {
     super()
-    this.path = path
     this.view = typeof view !== 'function'
       ? RouterLink.defaultView(view)
       : view

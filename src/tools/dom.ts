@@ -1,12 +1,12 @@
 import { beforeDestroyComponent } from '../core/updater/content/component.js'
 
-/**
- * @param {Node} root 
- * @param {(node: Node, nodeIndex: number, stop?: Function) => void} walkerFn 
- */
-export function walkDomTree(root, walkerFn, {
+export function walkDomTree(
+  root: Node,
+  walkerFn: (node: Node | Element, nodeIndex: number, stop?: Function) => void,
+  {
     whatToShow = 4294967295 /* NodeFilter.SHOW_ALL */,
-    acceptNode = () => 1 /* NodeFilter.FILTER_ACCEPT */ } = {}) {
+    acceptNode = (node: Node) => 1 /* NodeFilter.FILTER_ACCEPT */
+  } = {}) {
   const walker = document.createTreeWalker(
     root,
     whatToShow,
@@ -22,35 +22,20 @@ export function walkDomTree(root, walkerFn, {
   }
 }
 
-/**
- * @param {Node} parentNode 
- * @param {Node} node 
- */
-export function appendNode(parentNode, node) {
+export function appendNode(parentNode: Node, node: Node) {
   return parentNode.appendChild(node)
 }
 
-/**
- * @param {Node} refNode 
- * @param {Node} node 
- */
-export function insertNodeBefore(refNode, node) {
+export function insertNodeBefore(refNode: Node, node: Node) {
   return refNode.parentNode.insertBefore(node, refNode)
 }
 
-/**
- * @param {Node} node 
- */
-export function removeNode(node) {
+export function removeNode(node: Node) {
   beforeDestroyComponent(node)
   return node.parentNode.removeChild(node)
 }
 
-/**
- * @param {Node} oldNode 
- * @param {Node} newNode 
- */
-export function replaceNode(oldNode, newNode) {
+export function replaceNode(oldNode: Node, newNode: Node) {
   beforeDestroyComponent(oldNode)
   return oldNode.parentNode.replaceChild(newNode, oldNode)
 }

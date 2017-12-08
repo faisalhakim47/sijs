@@ -4,10 +4,7 @@
  * the dynamic parts of DOM Nodes 
  */
 export class Expression {
-  /**
-   * @param {number} nodeIndex 
-   */
-  constructor(nodeIndex) {
-    this.nodeIndex = nodeIndex
-  }
+  constructor(
+    public nodeIndex: number
+  ) { }
 }

@@ -3,24 +3,21 @@ import { registeredController } from './controller.js'
 import { MARKER } from '../../../constant.js'
 
 export class ElementUpdater extends Updater {
-  /**
-   * @param {Element} node
-   */
-  constructor(node) {
+  constructor(private element: Element) {
     super()
-    this.node = node
+    this.element = element
   }
 
   init(options) {
-    this.node.removeAttribute(MARKER)
+    this.element.removeAttribute(MARKER)
     const length = registeredController.length
     for (let index = 0; index < length; index++)
-      registeredController[index].init(this.node, options)
+      registeredController[index].init(this.element, options)
   }
 
   update(options) {
     const length = registeredController.length
     for (let index = 0; index < length; index++)
-      registeredController[index].update(this.node, options)
+      registeredController[index].update(this.element, options)
   }
 }

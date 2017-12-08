@@ -1,8 +1,4 @@
-/**
- * @param {Array} array1 
- * @param {Array} array2 
- */
-export function equalArray(array1, array2) {
+export function equalArray(array1: any[], array2: any[]) {
   const length = array1.length
   if (length !== array2.length) return false
   for (let index = 0; index < length; index++)

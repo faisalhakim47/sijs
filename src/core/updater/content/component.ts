@@ -10,6 +10,10 @@ import { LitTag } from '../../littag.js'
 let renderingComponent = null
 
 export class Component {
+  $instance: TemplateInstance
+  $parentComponent: Component
+  $childComponents: Component[]
+
   static get rendering() {
     return renderingComponent
   }
@@ -19,17 +23,7 @@ export class Component {
     return html
   }
 
-  /**
-   * @param {Node} container 
-   */
-  $mount(container) {
-    /** @type {TemplateInstance} */
-    this.$instance = this.$instance
-    /** @type {Component} */
-    this.$parentComponent = this.$parentComponent
-    /** @type {Component[]} */
-    this.$childComponents = []
-    /** @type {TemplateInstance} */
+  $mount(container: Node) {
     initComponent(this, container)
     return this
   }
@@ -50,11 +44,7 @@ export class Component {
   beforeDestroy() { }
 }
 
-/**
- * @param {Component} component 
- * @param {Node} currentNode 
- */
-export function initComponent(component, currentNode) {
+export function initComponent(component: Component, currentNode: Node) {
   component.$parentComponent = renderingComponent
   if (renderingComponent instanceof Component)
     renderingComponent.$childComponents.push(component)
@@ -66,11 +56,7 @@ export function initComponent(component, currentNode) {
   replaceNode(currentNode, instance.element)
 }
 
-/**
- * @param {Component} newComponent 
- * @param {Node} currentNode 
- */
-export function updateComponent(newComponent, currentNode) {
+export function updateComponent(newComponent: Component, currentNode: Node) {
   /** @type {TemplateInstance} */
   const instance = currentNode[INSTANCE]
   if (!instance || !instance.$component || !(newComponent instanceof instance.$component.constructor)) {
@@ -84,9 +70,8 @@ export function updateComponent(newComponent, currentNode) {
 /**
  * used for beforeDestroy event.
  * it is also useful in the future for transition hook
- * @param {Node} node
  */
-export function beforeDestroyComponent(node) {
+export function beforeDestroyComponent(node: Node) {
   const instance = node[INSTANCE]
   if (instance instanceof TemplateInstance) {
     const component = instance.$component
