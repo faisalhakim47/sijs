@@ -24,13 +24,12 @@ import { removeNode, replaceNode, insertNodeBefore, appendNode } from '../../too
  *   </ul>
  * `
  * ```
- * @template Item
- * @param {Item[]} items
- * @param {(item: Item, index: number) => LitTag} map 
- * @param {(item: Item, index: number) => string} key 
  */
-export function repeat(items, map, key) {
-  return new Repeat(items, map, key)
+export function repeat<Item>(
+  items: Item[],
+  map: ((item: Item, index: number) => LitTag),
+  key: (item: Item, index: number) => string) {
+  return new Repeat<Item>(items, map, key)
 }
 
 export class Repeat<Item> extends Directive {

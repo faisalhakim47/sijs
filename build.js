@@ -1,6 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const rollup = require('rollup')
+const rollupNodeResolve = require('rollup-plugin-node-resolve')
 const buble = require('buble')
 const babelMinify = require('babel-minify')
 
@@ -18,8 +19,11 @@ function optimize(code) {
 
 async function build() {
   const bundle = await rollup.rollup({
-    input: './src/index.js',
-    treeshake: true
+    input: './esnext/index.js',
+    treeshake: true,
+    plugins: [
+      rollupNodeResolve()
+    ],
   })
 
   const bundled = await bundle.generate({

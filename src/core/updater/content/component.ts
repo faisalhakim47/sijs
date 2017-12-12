@@ -11,8 +11,6 @@ let renderingComponent = null
 
 export class Component {
   $instance: TemplateInstance
-  $parentComponent: Component
-  $childComponents: Component[]
 
   static get rendering() {
     return renderingComponent
@@ -45,11 +43,7 @@ export class Component {
 }
 
 export function initComponent(component: Component, currentNode: Node) {
-  component.$parentComponent = renderingComponent
-  if (renderingComponent instanceof Component)
-    renderingComponent.$childComponents.push(component)
   renderingComponent = component
-  renderingComponent.$childComponents = []
   const instance = component.render().compile()
   renderingComponent = null
   connectInstanceComponent(instance, component)
@@ -63,7 +57,6 @@ export function updateComponent(newComponent: Component, currentNode: Node) {
     return initComponent(newComponent, currentNode)
   }
   connectInstanceComponent(instance, newComponent)
-  newComponent.$parentComponent = renderingComponent
   newComponent.$update()
 }
 
