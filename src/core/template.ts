@@ -2,12 +2,6 @@ import { MARKER, INSTANCE } from '../constant.js'
 import { walkDomTree, appendNode, replaceNode } from '../tools/dom.js'
 import { List } from '../tools/list.js'
 
-import { Expression } from './expression/expression.js'
-import { AttributeExpression } from './expression/attribute.js'
-import { ElementExpression } from './expression/element.js'
-import { EventExpression } from './expression/event.js'
-import { ContentExpression } from './expression/content.js'
-
 import { Updater } from './updater/updater.js'
 import { ContentUpdater } from './updater/content/content.js'
 import { ElementUpdater } from './updater/element/element.js'
@@ -32,8 +26,6 @@ export function requestTemplate(staticParts: TemplateStringsArray) {
     return newTemplate
   }
 }
-
-const HTMLTagRx = /<([^\s>]+)/
 
 const restrictedParentTags = {
   li(html: string) {
@@ -62,6 +54,8 @@ const restrictedParentTags = {
   },
 }
 
+const HTMLTagRx = /<([^\s>]+)/
+
 function parseTemplateString(staticParts: TemplateStringsArray): Element {
   if ('HTMLTemplateElement' in window) {
     const template = document.createElement('template')
@@ -81,16 +75,27 @@ function parseTemplateString(staticParts: TemplateStringsArray): Element {
   }
 }
 
+export interface TemplatePart {
+  nodeIndex: number
+  isElement?: boolean
+  isAttribute?: boolean
+  isEvent?: boolean
+  isContent?: boolean
+  attributeName?: string
+  eventName?: string
+  staticParts?: string[]
+}
+
 /**
  * Template class is core of the library
  * it efficiently creates template literal to usable DOM
  */
 export class Template {
   template: DocumentFragment
-  templateParts: Expression[]
+  templateParts: TemplatePart[]
 
   constructor(private staticParts: TemplateStringsArray) {
-    const templateParts: Expression[] = []
+    const templateParts: TemplatePart[] = []
 
     const template = document.createDocumentFragment()
     template.appendChild(parseTemplateString(staticParts))
@@ -137,10 +142,9 @@ export class Template {
         }
       })
 
-    let index = doAfterWalkTree.length
-    let afterWalkTreeFn: Function
-    while (afterWalkTreeFn = doAfterWalkTree[--index])
-      afterWalkTreeFn()
+    const length = doAfterWalkTree.length
+    for (let index = 0; index < length; index++)
+      doAfterWalkTree[index]()
 
     /**
      * detecting MARKER and save its position.
@@ -149,31 +153,35 @@ export class Template {
      */
     walkDomTree(template, (node, nodeIndex) => {
       if (node.nodeType === 8 /* Node.COMMENT_NODE */)
-        return templateParts.push(new ContentExpression(
+        return templateParts.push({
           nodeIndex,
-        ))
+          isContent: true,
+        })
 
       const length = node.attributes.length
       for (let index = 0; index < length; index++) {
         const attribute = node.attributes.item(index)
 
         if (attribute.name === MARKER)
-          templateParts.push(new ElementExpression(
+          templateParts.push({
             nodeIndex,
-          ))
+            isElement: true,
+          })
 
         else if (attribute.name.slice(0, 2) === 'on')
-          templateParts.push(new EventExpression(
+          templateParts.push({
             nodeIndex,
-            attribute.name.slice(2),
-          ))
+            isEvent: true,
+            eventName: attribute.name.slice(2),
+          })
 
         else if (attribute.nodeValue.indexOf(MARKER) !== -1)
-          templateParts.push(new AttributeExpression(
+          templateParts.push({
             nodeIndex,
-            attribute.name,
-            attribute.nodeValue.split(MARKER),
-          ))
+            isAttribute: true,
+            attributeName: attribute.name,
+            staticParts: attribute.nodeValue.split(MARKER),
+          })
       }
     }, {
         whatToShow: 1 /* NodeFilter.SHOW_ELEMENT */ | 128 /* NodeFilter.SHOW_COMMENT */,
@@ -205,19 +213,19 @@ export class Template {
 
         if (expression.nodeIndex !== nodeIndex) continue
 
-        if (expression instanceof ContentExpression)
+        if (expression.isContent)
           partUpdaters.push(new ContentUpdater(node))
 
-        else if (expression instanceof AttributeExpression)
+        else if (expression.isAttribute)
           partUpdaters.push(new AttributeUpdater(
             node.attributes.getNamedItem(expression.attributeName),
             expression.staticParts,
           ))
 
-        else if (expression instanceof ElementExpression)
+        else if (expression.isElement)
           partUpdaters.push(new ElementUpdater(node as Element))
 
-        else if (expression instanceof EventExpression)
+        else if (expression.isEvent)
           partUpdaters.push(new EventUpdater(
             node as Element,
             expression.eventName,
@@ -251,14 +259,11 @@ export class Template {
  * it tightly couples Updaters and Nodes
  */
 export class TemplateInstance {
-  $component: Component = null
-
   constructor(
     public staticParts: TemplateStringsArray,
     public element: Element,
     private partUpdaters: Updater[]
   ) {
-    this.$component = null
     this.element[INSTANCE] = this
   }
 

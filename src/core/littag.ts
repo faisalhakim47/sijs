@@ -22,7 +22,7 @@ export class LitTag {
     instance.init(this.dymanicParts)
     return instance
   }
-  
+
   mount(container: Node) {
     const instance: TemplateInstance = container[INSTANCE]
     if (this.verify(instance)) {
