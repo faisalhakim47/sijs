@@ -4,7 +4,7 @@
     "rootDir": "src",
     "outDir": "esnext",
     "target": "esnext",
-    "module": "esnext",
+    "module": "es2015",
     "moduleResolution": "classic"
   }
 }

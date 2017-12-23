@@ -1,4 +1,4 @@
-import { ContentUpdater } from './content.js'
+import { ContentUpdater } from '../updater/content.js'
 
 /**
  * extends this class to create content directive

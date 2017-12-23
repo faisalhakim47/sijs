@@ -1,5 +1,3 @@
-import { beforeDestroyComponent } from '../core/updater/content/component.js'
-
 export function walkDomTree(
   root: Node,
   walkerFn: (node: Node | Element, nodeIndex: number, stop?: Function) => void,
@@ -31,11 +29,17 @@ export function insertNodeBefore(refNode: Node, node: Node) {
 }
 
 export function removeNode(node: Node) {
-  beforeDestroyComponent(node)
   return node.parentNode.removeChild(node)
 }
 
+export function removeNodeBetween(beforeNode: Node, afterNode: Node) {
+  const parentNode = beforeNode.parentNode
+  let node: Node
+  while ((node = beforeNode.nextSibling) !== afterNode) {
+    parentNode.removeChild(node)
+  }
+}
+
 export function replaceNode(oldNode: Node, newNode: Node) {
-  beforeDestroyComponent(oldNode)
   return oldNode.parentNode.replaceChild(newNode, oldNode)
 }

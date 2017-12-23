@@ -15,7 +15,7 @@ export class List<Key, Val> {
     return this.keys.indexOf(key) !== -1
   }
 
-  find(findFn: (val: Val, key: Key) => Boolean) {
+  find(findFn: (val: Val, key: Key) => boolean) {
     const { keys, values } = this
     const length = keys.length
     for (let index = 0; index < length; index++) {

@@ -1,14 +1,13 @@
-import { MARKER, INSTANCE } from '../constant.js'
+import { MARKER, INSTANCE, AsyncDynamicPart, DynamicPart } from '../constant.js'
 import { walkDomTree, appendNode, replaceNode } from '../tools/dom.js'
 import { List } from '../tools/list.js'
+import { Observable, Subscription } from '../tools/observable.js'
 
 import { Updater } from './updater/updater.js'
-import { ContentUpdater } from './updater/content/content.js'
-import { ElementUpdater } from './updater/element/element.js'
+import { ContentUpdater } from './updater/content.js'
+import { ElementUpdater } from './updater/element.js'
 import { AttributeUpdater } from './updater/attribute.js'
 import { EventUpdater } from './updater/event.js'
-
-import { Component } from './updater/content/component.js'
 
 export const templateCache = new List<TemplateStringsArray, Template>()
 
@@ -253,12 +252,13 @@ export class Template {
   }
 }
 
-
 /**
  * Template Instance is the core result of sijs
  * it tightly couples Updaters and Nodes
  */
 export class TemplateInstance {
+  private updaterSubcribtions: Subscription[] = []
+
   constructor(
     public staticParts: TemplateStringsArray,
     public element: Element,
@@ -267,26 +267,58 @@ export class TemplateInstance {
     this.element[INSTANCE] = this
   }
 
-  init(expressions: any[]) {
-    let startIndex = 0
-    let index = 0
-    let updater
-    while (updater = this.partUpdaters[index++]) {
-      updater.init(expressions.slice(
-        startIndex,
-        startIndex += updater.numberOfPart,
-      ))
+  init(expressions: AsyncDynamicPart[]) {
+    let partIndex: number = 0
+    let updaterIndex: number = 0
+    let updater: Updater
+    while (updater = this.partUpdaters[updaterIndex++]) {
+      const expression$s: Observable<DynamicPart>[] = expressions.slice(
+        partIndex,
+        partIndex += updater.numberOfPart,
+      ).map((expression) => {
+        return expression instanceof Observable
+          ? expression
+          : Observable.of(expression)
+      })
+      const expressions$ = Observable.all(...expression$s)
+      expressions$.first().subscribe({
+        next(values) {
+          updater.init(values)
+        }
+      })
+      if (this.updaterSubcribtions[updaterIndex] instanceof Subscription) {
+        this.updaterSubcribtions[updaterIndex].unsubscribe()
+      }
+      this.updaterSubcribtions[updaterIndex] = expressions$.skip(1).subscribe({
+        next(values) {
+          updater.update(values)
+        }
+      })
     }
   }
 
-  update(expressions: any[]) {
-    let partIndex = 0
-    let updaterIndex = 0
-    let updater
-    while (updater = this.partUpdaters[updaterIndex++])
-      updater.update(expressions.slice(
+  update(expressions: AsyncDynamicPart[]) {
+    let partIndex: number = 0
+    let updaterIndex: number = 0
+    let updater: Updater
+    while (updater = this.partUpdaters[updaterIndex++]) {
+      const expression$s: Observable<DynamicPart>[] = expressions.slice(
         partIndex,
         partIndex += updater.numberOfPart,
-      ))
+      ).map((expression) => {
+        return expression instanceof Observable
+          ? expression
+          : Observable.of(expression)
+      })
+      const expressions$ = Observable.all(...expression$s)
+      if (this.updaterSubcribtions[updaterIndex] instanceof Subscription) {
+        this.updaterSubcribtions[updaterIndex].unsubscribe()
+      }
+      this.updaterSubcribtions[updaterIndex] = expressions$.subscribe({
+        next(values) {
+          updater.update(values)
+        }
+      })
+    }
   }
 }

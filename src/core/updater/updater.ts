@@ -1,3 +1,4 @@
+import { DynamicPart } from '../../constant.js'
 /**
  * this is base class for every Updater
  * the purpose of Updater is to do the dirty work with DOM
@@ -7,9 +8,9 @@
 export class Updater {
   numberOfPart = 1
 
-  init(values: any[]) {
+  init(values: DynamicPart[]) {
     return this.update(values)
   }
 
-  update(values: any[]) { }
+  update(values: DynamicPart[]) { }
 }

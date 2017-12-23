@@ -1,32 +1,24 @@
-import { Updater } from '../updater.js'
-import { Component, initComponent, updateComponent } from './component.js'
-import { Directive } from './directive.js'
-import { LitTag } from '../../littag.js'
-import { INSTANCE } from '../../../constant.js'
-import { replaceNode, insertNodeBefore, appendNode, removeNode } from '../../../tools/dom.js'
+import { Updater } from './updater.js'
+import { Directive } from '../expression/directive.js'
+import { LitTag } from '../expression/littag.js'
+import { INSTANCE, DynamicPart } from '../../constant.js'
+import { replaceNode, insertNodeBefore, appendNode, removeNode } from '../../tools/dom.js'
 
 export class ContentUpdater extends Updater {
   private initNode: Node
   public previousNode: Node
   public nextNode: Node
-  public oldValue: any
+  public value: any
 
   constructor(node: Node) {
     super()
     this.initNode = node
     this.previousNode = node.previousSibling
     this.nextNode = node.nextSibling
-    this.oldValue = null
+    this.value = null
   }
 
-  clearContent() {
-    if (!this.previousNode || !this.nextNode) return
-    let contentNode: Node
-    while ((contentNode = this.previousNode.nextSibling) !== this.nextNode)
-      removeNode(contentNode)
-  }
-
-  init(values: any[]) {
+  init(values: DynamicPart[]) {
     if (this.initNode && !this.initNode.previousSibling) {
       insertNodeBefore(this.initNode, document.createComment(''))
       this.previousNode = this.initNode.previousSibling
@@ -46,19 +38,16 @@ export class ContentUpdater extends Updater {
       content.mount(currentNode)
 
     else if (content instanceof Directive)
-      this.oldValue = content.init(this)
-
-    else if (content instanceof Component)
-      initComponent(content, currentNode)
+      this.value = content.init(this)
 
     else {
-      const textNode = document.createTextNode(content)
+      const textNode = document.createTextNode(content as string)
       replaceNode(currentNode, textNode)
-      this.oldValue = textNode.nodeValue
+      this.value = textNode.nodeValue
     }
   }
 
-  update(values: any[]) {
+  update(values: DynamicPart[]) {
     let currentNode = this.previousNode.nextSibling
     let content = values[0]
 
@@ -66,13 +55,9 @@ export class ContentUpdater extends Updater {
       content.mount(currentNode)
 
     else if (content instanceof Directive)
-      this.oldValue = content.update(this)
+      this.value = content.update(this)
 
-    else if (content instanceof Component)
-      updateComponent(content, currentNode)
-
-    else if ((content + '') !== this.oldValue)
-      this.oldValue = currentNode.nodeValue = content
-
+    else if ((content + '') !== this.value)
+      this.value = currentNode.nodeValue = content as string
   }
 }

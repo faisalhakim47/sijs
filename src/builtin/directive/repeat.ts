@@ -1,6 +1,6 @@
-import { Directive } from '../../core/updater/content/directive.js'
-import { ContentUpdater } from '../../core/updater/content/content.js'
-import { LitTag } from '../../core/littag.js'
+import { Directive } from '../../core/expression/directive.js'
+import { LitTag } from '../../core/expression/littag.js'
+import { ContentUpdater } from '../../core/updater/content.js'
 import { removeNode, replaceNode, insertNodeBefore, appendNode } from '../../tools/dom.js'
 
 /**
@@ -38,11 +38,8 @@ export class Repeat<Item> extends Directive {
     private map: (item: Item, index: number) => LitTag,
     private key: (item: Item, index: number) => string
   ) { super() }
-  
-  /**
-   * @param {ContentUpdater} listUpdater 
-   */
-  init(listUpdater) {
+
+  init(listUpdater: ContentUpdater) {
     const cache = {}
     const { previousNode, nextNode } = listUpdater
     const parentNode = previousNode.parentNode
@@ -51,8 +48,8 @@ export class Repeat<Item> extends Directive {
     for (let index = 0; index < length; index++) {
       const item = this.items[index]
       const key = typeof this.key === 'function'
-      ? this.key(item, index)
-      : index
+        ? this.key(item, index)
+        : index
       const node = document.createComment('')
       fragment.appendChild(document.createComment(''))
       fragment.appendChild(node)
@@ -65,12 +62,9 @@ export class Repeat<Item> extends Directive {
     return cache
   }
 
-  /**
-   * @param {ContentUpdater} listUpdater 
-   */
-  update(listUpdater) {
+  update(listUpdater: ContentUpdater) {
     const parentNode = listUpdater.previousNode.parentNode
-    const oldCache = listUpdater.oldValue
+    const oldCache = listUpdater.value
     let prevItemUpdater: ContentUpdater = null
     const newCache = {}
     const length = this.items.length
@@ -116,8 +110,8 @@ export class Repeat<Item> extends Directive {
         itemUpdater.update([this.map(item, index)])
         insertNodeBefore(
           prevItemUpdater
-          ? prevItemUpdater.nextNode.nextSibling
-          : listUpdater.previousNode.nextSibling,
+            ? prevItemUpdater.nextNode.nextSibling
+            : listUpdater.previousNode.nextSibling,
           fragment
         )
         newCache[key] = itemUpdater

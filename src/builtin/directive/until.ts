@@ -1,14 +1,15 @@
-import { Directive } from '../../core/updater/content/directive.js'
-import { LitTag } from '../../core/littag.js'
-import { ContentUpdater } from '../../core/updater/content/content.js'
+import { Directive } from '../../core/expression/directive.js'
+import { LitTag } from '../../core/expression/littag.js'
+import { ContentUpdater } from '../../core/updater/content.js'
+import { DynamicPart } from '../../constant.js'
 
-export function until<T>(promise: Promise<T>, placeholder: LitTag) {
+export function until(promise: Promise<DynamicPart>, placeholder: LitTag) {
   return new Until(promise, placeholder)
 }
 
-export class Until<T> extends Directive {
+export class Until extends Directive {
   constructor(
-    private promise: Promise<T>,
+    private promise: Promise<DynamicPart>,
     private placeholder: LitTag
   ) { super() }
 
@@ -21,10 +22,9 @@ export class Until<T> extends Directive {
   }
 
   update(updater: ContentUpdater) {
-    if (this.promise === updater.oldValue)
+    if (this.promise === updater.value)
       return this.promise
-    else {
+    else
       return this.init(updater)
-    }
   }
 }

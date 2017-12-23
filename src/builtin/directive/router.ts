@@ -1,9 +1,8 @@
-import { ContentUpdater } from '../../core/updater/content/content.js'
-import { Directive } from '../../core/updater/content/directive.js'
-import { LitTag } from '../../core/littag.js'
+import { ContentUpdater } from '../../core/updater/content.js'
+import { Directive } from '../../core/expression/directive.js'
+import { LitTag } from '../../core/expression/littag.js'
 import { html } from '../../html.js'
 import { equalArray } from '../../tools/array.js'
-import { Component } from '../../core/updater/content/component';
 
 type RouteState = {
   router: Router,
@@ -29,7 +28,7 @@ function createPathParts(path: string) {
 
 function matchRoute(route: Route, pathParts: string[]) {
   const length = route.pathParts.length
-  const params = []
+  const params: string[] = []
   let isFound = true
 
   isFound = route.exact
@@ -53,11 +52,7 @@ function matchRoute(route: Route, pathParts: string[]) {
   return params
 }
 
-/**
- * @param {Route[]} routes 
- * @param {string[]} pathParts 
- */
-function findMatchRoute(routes, pathParts) {
+function findMatchRoute(routes: Route[], pathParts: string[]) {
   const length = routes.length
   for (let index = 0; index < length; index++) {
     const route = routes[index]
@@ -71,7 +66,7 @@ function findMatchRoute(routes, pathParts) {
   }
 }
 
-function pushState(path) {
+function pushState(path: string) {
   const next: RouterState = {
     mode: current.mode,
     remainPathParts: createPathParts(path),
@@ -128,7 +123,7 @@ export class Router extends Directive {
       updater: updater,
     })
 
-    const params = current.routes
+    const params: string[] = current.routes
       .reduce((params, { route }) => {
         return params.concat(route.params)
       }, [])
@@ -139,14 +134,14 @@ export class Router extends Directive {
   init(updater: ContentUpdater) {
     const { match, params } = this.findMatch(updater)
     updater.init([
-      new match.route.Component(...params)
+      match.route.Component(...params)
     ])
   }
 
   update(updater: ContentUpdater) {
     const { match, params } = this.findMatch(updater)
     updater.update([
-      new match.route.Component(...params)
+      match.route.Component(...params)
     ])
   }
 }
@@ -158,7 +153,7 @@ export class Route {
 
   constructor(
     private path: string,
-    private Component: new () => Component,
+    public Component: (...args) => LitTag,
     { exact = false } = {}
   ) {
     this.exact = exact
@@ -181,11 +176,8 @@ export class RouterLink extends Directive {
       : view
   }
 
-  /**
-   * @param {ContentUpdater} updater 
-   */
-  update(updater) {
-    if (this.path !== updater.oldValue) {
+  update(updater: ContentUpdater) {
+    if (this.path !== updater.value) {
       const href = this.path
       const isActive = false
       const handler = (event) => {

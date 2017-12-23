@@ -6,3 +6,7 @@ export function equalArray(array1: any[], array2: any[]) {
       return false
   return true
 }
+
+export function createArray(length): any[] {
+  return Array.apply(null, { length: length })
+}

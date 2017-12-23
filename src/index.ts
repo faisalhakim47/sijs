@@ -1,8 +1,27 @@
-export { html } from './html.js'
-export { Component } from './core/updater/content/component.js'
-export { Directive } from './core/updater/content/directive.js'
-export { repeat } from './builtin/directive/repeat.js'
-export { until } from './builtin/directive/until.js'
-export { Router, Route } from './builtin/directive/router.js'
-export { ValueStream, observe } from './builtin/directive/observe.js'
-export { Observable } from './tools/observable.js'
+import { html } from './html.js'
+import { Directive } from './core/expression/directive.js'
+import { LitTag } from './core/expression/littag.js'
+import { repeat, Repeat } from './builtin/directive/repeat.js'
+import { until, Until } from './builtin/directive/until.js'
+import { Router, Route } from './builtin/directive/router.js'
+import { Observable } from './tools/observable.js'
+
+export default {
+  html,
+  Directive,
+  repeat,
+  until,
+  Router,
+  Route,
+  Observable,
+}
+
+export {
+  html,
+  Directive,
+  repeat,
+  until,
+  Router,
+  Route,
+  Observable,
+}

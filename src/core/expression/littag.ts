@@ -1,6 +1,6 @@
-import { requestTemplate, TemplateInstance } from './template.js'
-import { INSTANCE } from '../constant.js'
-import { replaceNode } from '../tools/dom.js'
+import { requestTemplate, TemplateInstance } from '../template.js'
+import { INSTANCE, AsyncDynamicPart } from '../../constant.js'
+import { replaceNode } from '../../tools/dom.js'
 
 /**
  * LitTag is class that represent the Tagged Template Literal
@@ -9,7 +9,7 @@ import { replaceNode } from '../tools/dom.js'
 export class LitTag {
   constructor(
     private staticParts: TemplateStringsArray,
-    public dymanicParts: any[]
+    public dymanicParts: AsyncDynamicPart[]
   ) { }
 
   verify(instance: TemplateInstance) {

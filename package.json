@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "php -S 0.0.0.0:8080",
-    "build": "node build.js"
+    "build": "tsc && node build.js"
   },
   "author": "",
   "license": "ISC",

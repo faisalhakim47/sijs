@@ -37,6 +37,7 @@ async function build() {
   const UMD = await bundle.generate({
     name: 'si',
     format: 'umd',
+    exports: 'named',
     sourcemap: true,
   })
   const UMDOptimized = optimize(UMD.code)
