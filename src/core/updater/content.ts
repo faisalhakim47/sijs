@@ -39,12 +39,6 @@ export class ContentUpdater extends Updater {
     else if (content instanceof Directive)
       this.value = content.init(this)
 
-    else if (content && content['html']) {
-      const div = document.createElement('div')
-      div.outerHTML = content['html']
-      replaceNode(currentNode, div)
-    }
-
     else {
       const textNode = document.createTextNode(('' + content))
       replaceNode(currentNode, textNode)
@@ -60,12 +54,6 @@ export class ContentUpdater extends Updater {
 
     else if (content instanceof Directive)
       this.value = content.update(this)
-
-    else if (content && content['html']) {
-      const div = document.createElement('div')
-      div.outerHTML = content['html']
-      replaceNode(currentNode, div)
-    }
 
     else if (('' + content) !== this.value) {
       this.value = '' + content

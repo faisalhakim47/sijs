@@ -21,7 +21,7 @@ export class DataStream<Val> {
   }
 
   private subscribers: Subscriber<Val>[] = []
-  private initValues: Val[]
+  private initValues: Val[] = []
 
   emit(val: Val) {
     const length = this.subscribers.length
@@ -53,7 +53,7 @@ export class DataStream<Val> {
 
   private pipe<ResVal = Val>(pipeFn: (val: Val, $: DataStream<ResVal>, subscription: Subscription) => void) {
     const $ = new DataStream<ResVal>()
-    const unsubscribe = this.subscribe((val) => pipeFn(val, $, unsubscribe))
+    var unsubscribe = this.subscribe((val) => pipeFn(val, $, unsubscribe))
     return $
   }
 

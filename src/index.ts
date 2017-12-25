@@ -1,4 +1,3 @@
-import { LiteralPart } from './constant.js'
 import { html } from './html.js'
 import { Directive } from './core/expression/directive.js'
 import { LitTag } from './core/expression/littag.js'
@@ -10,19 +9,19 @@ import { DataStream } from './tools/datastream.js'
 export default {
   html,
   Directive,
-  repeat,
-  until,
-  Router,
-  Route,
+  LitTag,
+  repeat, Repeat,
+  until, Until,
+  Router, Route,
   DataStream,
 }
 
 export {
   html,
   Directive,
-  repeat,
-  until,
-  Router,
-  Route,
+  LitTag,
+  repeat, Repeat,
+  until, Until,
+  Router, Route,
   DataStream,
 }

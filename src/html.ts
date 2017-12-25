@@ -1,6 +1,6 @@
 import { LitTag } from './core/expression/littag.js'
-import { DynamicPart } from './constant.js'
+import { AsyncDynamicPart } from './constant.js'
 
-export function html(staticParts: TemplateStringsArray, ...dynamicParts: DynamicPart[]) {
+export function html(staticParts: TemplateStringsArray, ...dynamicParts: AsyncDynamicPart[]) {
   return new LitTag(staticParts, dynamicParts)
 }

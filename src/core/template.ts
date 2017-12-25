@@ -8,7 +8,7 @@ import { ContentUpdater } from './updater/content.js'
 import { ElementUpdater } from './updater/element.js'
 import { AttributeUpdater } from './updater/attribute.js'
 import { EventUpdater } from './updater/event.js'
-import { createArray } from '../tools/array';
+import { createArray } from '../tools/array.js';
 
 export const templateCache = new List<TemplateStringsArray, Template>()
 
@@ -268,9 +268,9 @@ export class TemplateInstance {
   }
 
   init(expressions: AsyncDynamicPart[]) {
-    let index: number = 0
-    let updater: Updater
-    while (updater = this.partUpdaters[index++]) {
+    const length = expressions.length
+    for (let index = 0; index < length; index++) {
+      const updater = this.partUpdaters[index]
       const expression = expressions[index]
       if (expression instanceof DataStream) {
         expression.first().subscribe((value) => {
@@ -285,9 +285,9 @@ export class TemplateInstance {
   }
 
   update(expressions: AsyncDynamicPart[]) {
-    let index: number = 0
-    let updater: Updater
-    while (updater = this.partUpdaters[index++]) {
+    const length = expressions.length
+    for (let index = 0; index < length; index++) {
+      const updater = this.partUpdaters[index]
       const expression = expressions[index]
       if (expression instanceof DataStream) {
         this.updaterSubcribtions[index]()
