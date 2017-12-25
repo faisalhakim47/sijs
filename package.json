@@ -10,19 +10,12 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/zen-observable": "^0.5.3",
     "babel-minify": "^0.2.0",
     "buble": "^0.17.3",
     "es-observable-tests": "^0.3.0",
-    "rollup": "^0.51.2",
-    "rollup-plugin-node-resolve": "^3.0.0",
-    "zen-observable": "^0.6.0"
-  },
-  "dependencies": {
-    "most": "^1.7.2",
+    "gzip-size": "^4.1.0",
     "optimize-js": "^1.0.3",
-    "rxjs": "^5.5.5",
-    "rxjs-es": "^5.0.0-beta.12",
-    "xstream": "^11.0.0"
+    "rollup": "^0.51.2",
+    "rollup-plugin-node-resolve": "^3.0.0"
   }
 }

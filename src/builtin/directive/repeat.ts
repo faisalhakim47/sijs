@@ -55,7 +55,7 @@ export class Repeat<Item> extends Directive {
       fragment.appendChild(node)
       fragment.appendChild(document.createComment(''))
       const itemUpdater = new ContentUpdater(node)
-      itemUpdater.update([this.map(item, index)])
+      itemUpdater.update(this.map(item, index))
       cache[key] = itemUpdater
     }
     replaceNode(previousNode.nextSibling, fragment)
@@ -81,7 +81,7 @@ export class Repeat<Item> extends Directive {
         const firstItemVerified = prevItemUpdater === null
           && prevNodeOfItem === listUpdater.previousNode
         if (prevItemVerified || firstItemVerified) {
-          itemUpdater.update([this.map(item, index)])
+          itemUpdater.update(this.map(item, index))
         } else {
           const wrongOrderedNodes = [
             itemUpdater.previousNode,
@@ -95,7 +95,7 @@ export class Repeat<Item> extends Directive {
           while (wrongOrderedNode = wrongOrderedNodes.shift()) {
             insertNodeBefore(refChild, wrongOrderedNode)
           }
-          itemUpdater.update([this.map(item, index)])
+          itemUpdater.update(this.map(item, index))
         }
         newCache[key] = itemUpdater
         prevItemUpdater = itemUpdater
@@ -107,7 +107,7 @@ export class Repeat<Item> extends Directive {
         appendNode(fragment, node)
         appendNode(fragment, document.createComment(''))
         const itemUpdater = new ContentUpdater(node)
-        itemUpdater.update([this.map(item, index)])
+        itemUpdater.update(this.map(item, index))
         insertNodeBefore(
           prevItemUpdater
             ? prevItemUpdater.nextNode.nextSibling

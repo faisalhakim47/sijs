@@ -14,9 +14,9 @@ export class Until extends Directive {
   ) { super() }
 
   init(updater: ContentUpdater) {
-    updater.init([this.placeholder])
+    updater.init(this.placeholder)
     this.promise.then((litTag) => {
-      updater.update([litTag])
+      updater.update(litTag)
     })
     return this.promise
   }

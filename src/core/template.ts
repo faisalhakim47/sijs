@@ -1,13 +1,14 @@
 import { MARKER, INSTANCE, AsyncDynamicPart, DynamicPart } from '../constant.js'
 import { walkDomTree, appendNode, replaceNode } from '../tools/dom.js'
 import { List } from '../tools/list.js'
-import { Observable, Subscription } from '../tools/observable.js'
+import { DataStream, Subscription } from '../tools/datastream.js'
 
 import { Updater } from './updater/updater.js'
 import { ContentUpdater } from './updater/content.js'
 import { ElementUpdater } from './updater/element.js'
 import { AttributeUpdater } from './updater/attribute.js'
 import { EventUpdater } from './updater/event.js'
+import { createArray } from '../tools/array';
 
 export const templateCache = new List<TemplateStringsArray, Template>()
 
@@ -82,7 +83,6 @@ export interface TemplatePart {
   isContent?: boolean
   attributeName?: string
   eventName?: string
-  staticParts?: string[]
 }
 
 /**
@@ -174,12 +174,11 @@ export class Template {
             eventName: attribute.name.slice(2),
           })
 
-        else if (attribute.nodeValue.indexOf(MARKER) !== -1)
+        else if (attribute.nodeValue === MARKER)
           templateParts.push({
             nodeIndex,
             isAttribute: true,
             attributeName: attribute.name,
-            staticParts: attribute.nodeValue.split(MARKER),
           })
       }
     }, {
@@ -218,7 +217,6 @@ export class Template {
         else if (expression.isAttribute)
           partUpdaters.push(new AttributeUpdater(
             node.attributes.getNamedItem(expression.attributeName),
-            expression.staticParts,
           ))
 
         else if (expression.isElement)
@@ -257,7 +255,7 @@ export class Template {
  * it tightly couples Updaters and Nodes
  */
 export class TemplateInstance {
-  private updaterSubcribtions: Subscription[] = []
+  private updaterSubcribtions: Subscription[]
 
   constructor(
     public staticParts: TemplateStringsArray,
@@ -265,60 +263,39 @@ export class TemplateInstance {
     private partUpdaters: Updater[]
   ) {
     this.element[INSTANCE] = this
+    this.updaterSubcribtions = createArray(partUpdaters.length)
+      .map(() => () => { })
   }
 
   init(expressions: AsyncDynamicPart[]) {
-    let partIndex: number = 0
-    let updaterIndex: number = 0
+    let index: number = 0
     let updater: Updater
-    while (updater = this.partUpdaters[updaterIndex++]) {
-      const expression$s: Observable<DynamicPart>[] = expressions.slice(
-        partIndex,
-        partIndex += updater.numberOfPart,
-      ).map((expression) => {
-        return expression instanceof Observable
-          ? expression
-          : Observable.of(expression)
-      })
-      const expressions$ = Observable.all(...expression$s)
-      expressions$.first().subscribe({
-        next(values) {
-          updater.init(values)
-        }
-      })
-      if (this.updaterSubcribtions[updaterIndex] instanceof Subscription) {
-        this.updaterSubcribtions[updaterIndex].unsubscribe()
+    while (updater = this.partUpdaters[index++]) {
+      const expression = expressions[index]
+      if (expression instanceof DataStream) {
+        expression.first().subscribe((value) => {
+          updater.init(value)
+        })
+        this.updaterSubcribtions[index] = expression.skip(1).subscribe((value) => {
+          updater.update(value)
+        })
       }
-      this.updaterSubcribtions[updaterIndex] = expressions$.skip(1).subscribe({
-        next(values) {
-          updater.update(values)
-        }
-      })
+      else updater.init(expression)
     }
   }
 
   update(expressions: AsyncDynamicPart[]) {
-    let partIndex: number = 0
-    let updaterIndex: number = 0
+    let index: number = 0
     let updater: Updater
-    while (updater = this.partUpdaters[updaterIndex++]) {
-      const expression$s: Observable<DynamicPart>[] = expressions.slice(
-        partIndex,
-        partIndex += updater.numberOfPart,
-      ).map((expression) => {
-        return expression instanceof Observable
-          ? expression
-          : Observable.of(expression)
-      })
-      const expressions$ = Observable.all(...expression$s)
-      if (this.updaterSubcribtions[updaterIndex] instanceof Subscription) {
-        this.updaterSubcribtions[updaterIndex].unsubscribe()
+    while (updater = this.partUpdaters[index++]) {
+      const expression = expressions[index]
+      if (expression instanceof DataStream) {
+        this.updaterSubcribtions[index]()
+        this.updaterSubcribtions[index] = expression.subscribe((value) => {
+          updater.update(value)
+        })
       }
-      this.updaterSubcribtions[updaterIndex] = expressions$.subscribe({
-        next(values) {
-          updater.update(values)
-        }
-      })
+      else updater.update(expression)
     }
   }
 }

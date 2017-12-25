@@ -6,11 +6,8 @@ import { DynamicPart } from '../../constant.js'
  * with DOM that they manage 
  */
 export class Updater {
-  numberOfPart = 1
-
-  init(values: DynamicPart[]) {
-    return this.update(values)
+  init(value: DynamicPart) {
+    return this.update(value)
   }
-
-  update(values: DynamicPart[]) { }
+  update(value: DynamicPart) { }
 }

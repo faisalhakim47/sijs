@@ -88,7 +88,8 @@ function pushState(path: string) {
       break
     }
   }
-  return Promise.resolve()
+
+  return window['Promise'].resolve()
 }
 
 export class Router extends Directive {
@@ -133,16 +134,16 @@ export class Router extends Directive {
 
   init(updater: ContentUpdater) {
     const { match, params } = this.findMatch(updater)
-    updater.init([
+    updater.init(
       match.route.Component(...params)
-    ])
+    )
   }
 
   update(updater: ContentUpdater) {
     const { match, params } = this.findMatch(updater)
-    updater.update([
+    updater.update(
       match.route.Component(...params)
-    ])
+    )
   }
 }
 

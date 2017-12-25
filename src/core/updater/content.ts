@@ -18,7 +18,7 @@ export class ContentUpdater extends Updater {
     this.value = null
   }
 
-  init(values: DynamicPart[]) {
+  init(content: DynamicPart) {
     if (this.initNode && !this.initNode.previousSibling) {
       insertNodeBefore(this.initNode, document.createComment(''))
       this.previousNode = this.initNode.previousSibling
@@ -32,7 +32,6 @@ export class ContentUpdater extends Updater {
     this.initNode = null
 
     const currentNode = this.previousNode.nextSibling
-    const content = values[0]
 
     if (content instanceof LitTag)
       content.mount(currentNode)
@@ -40,16 +39,21 @@ export class ContentUpdater extends Updater {
     else if (content instanceof Directive)
       this.value = content.init(this)
 
+    else if (content && content['html']) {
+      const div = document.createElement('div')
+      div.outerHTML = content['html']
+      replaceNode(currentNode, div)
+    }
+
     else {
-      const textNode = document.createTextNode(content as string)
+      const textNode = document.createTextNode(('' + content))
       replaceNode(currentNode, textNode)
       this.value = textNode.nodeValue
     }
   }
 
-  update(values: DynamicPart[]) {
+  update(content: DynamicPart) {
     let currentNode = this.previousNode.nextSibling
-    let content = values[0]
 
     if (content instanceof LitTag)
       content.mount(currentNode)
@@ -57,7 +61,15 @@ export class ContentUpdater extends Updater {
     else if (content instanceof Directive)
       this.value = content.update(this)
 
-    else if ((content + '') !== this.value)
-      this.value = currentNode.nodeValue = content as string
+    else if (content && content['html']) {
+      const div = document.createElement('div')
+      div.outerHTML = content['html']
+      replaceNode(currentNode, div)
+    }
+
+    else if (('' + content) !== this.value) {
+      this.value = '' + content
+      currentNode.nodeValue = this.value
+    }
   }
 }

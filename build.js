@@ -4,6 +4,7 @@ const rollup = require('rollup')
 const rollupNodeResolve = require('rollup-plugin-node-resolve')
 const buble = require('buble')
 const babelMinify = require('babel-minify')
+const gzipSize = require('gzip-size')
 
 const polyfillCode = fs.readFileSync(
   path.join(__dirname, './src/polyfill.js'), { encoding: 'utf8' }
@@ -32,7 +33,7 @@ async function build() {
   })
   const optimized = minify(bundled.code)
 
-  console.log('module', `${toByte(bundled.code.length)}`, `(${toByte(optimized.code.length)} minified)`, '✔')
+  info('module', bundled.code, optimized.code)
 
   const UMD = await bundle.generate({
     name: 'si',
@@ -42,19 +43,19 @@ async function build() {
   })
   const UMDOptimized = optimize(UMD.code)
 
-  console.log('umd', `${toByte(UMD.code.length)}`, `(${toByte(UMDOptimized.code.length)} minified)`, '✔')
+  info('umd', UMD.code, UMDOptimized.code)
 
   const ES5 = buble.transform(UMD.code, {
     transforms: { dangerousTaggedTemplateString: true },
   })
   const ES5Optimized = optimize(ES5.code)
 
-  console.log('es5', `${toByte(ES5.code.length)}`, `(${toByte(ES5Optimized.code.length)} minified)`, '✔')
+  info('es5', ES5.code, ES5Optimized.code)
 
   const polyfilledCode = polyfillCode + ES5.code
   const minifiedPolyfilledCode = polyfillCode + ES5Optimized.code
 
-  console.log('es5.polyfilled', `${toByte(polyfilledCode.length)}`, `(${toByte(minifiedPolyfilledCode.length)} minified)`, '✔')
+  info('es5.polyfilled', polyfilledCode, minifiedPolyfilledCode)
 
   fs.writeFileSync(path.join(__dirname, './dist/si.js'), bundled.code, { encoding: 'utf8' })
   fs.writeFileSync(path.join(__dirname, './dist/si.min.js'), optimized.code, { encoding: 'utf8' })
@@ -62,7 +63,7 @@ async function build() {
   fs.writeFileSync(path.join(__dirname, './dist/si.umd.min.js'), UMDOptimized.code, { encoding: 'utf8' })
   fs.writeFileSync(path.join(__dirname, './dist/si.es5.js'), ES5.code, { encoding: 'utf8' })
   fs.writeFileSync(path.join(__dirname, './dist/si.es5.min.js'), ES5Optimized.code, { encoding: 'utf8' })
-  fs.writeFileSync(path.join(__dirname, './dist/si.es5.polyfilled.js'), polyfillCode, { encoding: 'utf8' })
+  fs.writeFileSync(path.join(__dirname, './dist/si.es5.polyfilled.js'), polyfilledCode, { encoding: 'utf8' })
   fs.writeFileSync(path.join(__dirname, './dist/si.es5.polyfilled.min.js'), minifiedPolyfilledCode, { encoding: 'utf8' })
 
   console.log('done', '✔')
@@ -71,6 +72,10 @@ async function build() {
 function toByte(length) {
   const byteString = ((length * 1000 / 1024) / 1000).toString()
   return byteString.slice(0, byteString.indexOf('.') + 3) + ' KB'
+}
+
+function info(name, code, optimized) {
+  console.log(name, `${toByte(code.length)}`, `(${toByte(optimized.length)} minified, ${toByte(gzipSize.sync(optimized))} gzip)`, '✔')
 }
 
 build().catch((error) => {
