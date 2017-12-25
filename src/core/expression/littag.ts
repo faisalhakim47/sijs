@@ -2,6 +2,10 @@ import { requestTemplate, TemplateInstance } from '../template.js'
 import { INSTANCE, AsyncDynamicPart } from '../../constant.js'
 import { replaceNode } from '../../tools/dom.js'
 
+export function html(staticParts: TemplateStringsArray, ...dynamicParts: AsyncDynamicPart[]) {
+  return new LitTag(staticParts, dynamicParts)
+}
+
 /**
  * LitTag is class that represent the Tagged Template Literal
  * it is created by html function

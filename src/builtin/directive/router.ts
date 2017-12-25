@@ -1,7 +1,6 @@
 import { ContentUpdater } from '../../core/updater/content.js'
 import { Directive } from '../../core/expression/directive.js'
-import { LitTag } from '../../core/expression/littag.js'
-import { html } from '../../html.js'
+import { html, LitTag } from '../../core/expression/littag.js'
 import { equalArray } from '../../tools/array.js'
 
 type RouteState = {
