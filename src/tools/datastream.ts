@@ -36,10 +36,10 @@ export class DataStream<Val> {
       value = value(this.latestValue)
     }
     const length = this.subscribers.length
+    // if (this.isDebuging) console.log('emit', this.latestValue)
     for (let index = 0; index < length; index++) {
-      this.subscribers[0](value)
+      this.subscribers[index](value)
     }
-    // if (this.isDebuging) console.log('emit', value)
     this.latestValue = value
   }
 
@@ -117,7 +117,8 @@ export class DataStream<Val> {
     const data$ = new DataStream<ResVal>()
     let unsubscribed = false
     let unsubscribe = () => { unsubscribed = true }
-    unsubscribe = this.subscribe((value) => pipeFn(value, data$, unsubscribe))
+    const subscription = this.subscribe((value) => pipeFn(value, data$, unsubscribe))
+    unsubscribe = () => setTimeout(() => subscription())
     if (unsubscribed) unsubscribe()
     return data$
   }
