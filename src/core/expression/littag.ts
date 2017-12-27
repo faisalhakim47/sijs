@@ -1,6 +1,7 @@
 import { requestTemplate, TemplateInstance } from '../template.js'
-import { INSTANCE, AsyncDynamicPart } from '../../constant.js'
-import { replaceNode } from '../../tools/dom.js'
+import { ContentUpdater, ContentExpr } from '../updater/content.js'
+import { INSTANCE, AsyncDynamicPart, DynamicPart } from '../../constant.js'
+import { replaceNode, insertNodeBefore } from '../../tools/dom.js'
 
 export function html(staticParts: TemplateStringsArray, ...dynamicParts: AsyncDynamicPart[]) {
   return new LitTag(staticParts, dynamicParts)
@@ -36,3 +37,17 @@ export class LitTag {
     }
   }
 }
+
+class LitTagExpr extends ContentExpr {
+  match(content: DynamicPart) {
+    return content instanceof LitTag
+  }
+  update({ previousNode, nextNode }: ContentUpdater, content: LitTag) {
+    if (previousNode.nextSibling === nextNode) {
+      insertNodeBefore(nextNode, document.createComment(''))
+    }
+    content.mount(previousNode.nextSibling)
+  }
+}
+
+ContentUpdater.registerContentExpr(new LitTagExpr())

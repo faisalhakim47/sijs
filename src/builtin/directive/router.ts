@@ -187,7 +187,7 @@ export class RouterLink extends Directive {
       this.view(href, handler, isActive)
         .mount(updater.previousNode.nextSibling)
     }
-    return this.path
+    updater.value = this.path
   }
 }
 

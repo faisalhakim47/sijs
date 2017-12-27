@@ -255,7 +255,7 @@ export class Template {
  * it tightly couples Updaters and Nodes
  */
 export class TemplateInstance {
-  private updaterSubcribtions: Subscription[]
+  private subcribtions: Subscription[]
 
   constructor(
     public staticParts: TemplateStringsArray,
@@ -263,7 +263,7 @@ export class TemplateInstance {
     private partUpdaters: Updater[]
   ) {
     this.element[INSTANCE] = this
-    this.updaterSubcribtions = createArray(partUpdaters.length)
+    this.subcribtions = createArray(partUpdaters.length)
       .map(() => () => { })
   }
 
@@ -276,7 +276,7 @@ export class TemplateInstance {
         expression.first().subscribe((value) => {
           updater.init(value)
         })
-        this.updaterSubcribtions[index] = expression.skip(1).subscribe((value) => {
+        this.subcribtions[index] = expression.skip(1).subscribe((value) => {
           updater.update(value)
         })
       }
@@ -290,8 +290,8 @@ export class TemplateInstance {
       const updater = this.partUpdaters[index]
       const expression = expressions[index]
       if (expression instanceof DataStream) {
-        this.updaterSubcribtions[index]()
-        this.updaterSubcribtions[index] = expression.subscribe((value) => {
+        this.subcribtions[index]()
+        this.subcribtions[index] = expression.subscribe((value) => {
           updater.update(value)
         })
       }

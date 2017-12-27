@@ -2,6 +2,7 @@ import { Directive } from '../../core/expression/directive.js'
 import { LitTag } from '../../core/expression/littag.js'
 import { ContentUpdater } from '../../core/updater/content.js'
 import { removeNode, replaceNode, insertNodeBefore, appendNode } from '../../tools/dom.js'
+import { randomChar } from '../../tools/string.js'
 
 /**
  * List rendering directive.
@@ -27,8 +28,9 @@ import { removeNode, replaceNode, insertNodeBefore, appendNode } from '../../too
  */
 export function repeat<Item>(
   items: Item[],
-  map: ((item: Item, index: number) => LitTag),
-  key: (item: Item, index: number) => string) {
+  map: (item: Item, index: number) => LitTag,
+  key: (item: Item, index: number) => string = (_, index) => randomChar(4) + index
+) {
   return new Repeat<Item>(items, map, key)
 }
 
@@ -59,7 +61,7 @@ export class Repeat<Item> extends Directive {
       cache[key] = itemUpdater
     }
     replaceNode(previousNode.nextSibling, fragment)
-    return cache
+    listUpdater.value = cache
   }
 
   update(listUpdater: ContentUpdater) {
@@ -123,6 +125,6 @@ export class Repeat<Item> extends Directive {
     while (lastItemNextNode.nextSibling !== listUpdater.nextNode)
       removeNode(lastItemNextNode.nextSibling)
 
-    return newCache
+    listUpdater.value = newCache
   }
 }

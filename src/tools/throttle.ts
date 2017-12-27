@@ -1,11 +1,13 @@
-export function throttle(fn: Function, duration: number = 100) {
+export function throttle<T>(fn: T, duration = 100): T {
   let isThrotted = false
   let pendingFunc = null
-  function throttledFunc(...args) {
+  let lastValue = null
+  function throttledFn(...args) {
     if (isThrotted) {
       pendingFunc = () => {
-        return throttledFunc.apply(this, args)
+        return throttledFn.apply(this, args)
       }
+      return lastValue
     }
     isThrotted = true
     setTimeout(() => {
@@ -13,32 +15,37 @@ export function throttle(fn: Function, duration: number = 100) {
       if (typeof pendingFunc === 'function') {
         pendingFunc()
       }
-      pendingFunc = null
+      pendingFunc = false
     }, duration)
-    fn.apply(this, args)
+    return lastValue = (fn as any).apply(this, args)
   }
-  return throttledFunc
+  return throttledFn as any
 }
 
-export function frameThrottle(fn: Function) {
+export function frameThrottle<T>(fn: T, duration = 100): T {
   let isThrotted = false
   let pendingFunc = null
-  
+  let lastValue = null
   function throttledFn(...args) {
-    if (isThrotted)
-      pendingFunc = () => throttledFn.apply(this, args)
-
+    if (isThrotted) {
+      pendingFunc = () => {
+        return throttledFn.apply(this, args)
+      }
+      return lastValue
+    }
     isThrotted = true
-
     requestAnimationFrame(() => {
       isThrotted = false
-      if (typeof pendingFunc === 'function')
+      if (typeof pendingFunc === 'function') {
         pendingFunc()
-      pendingFunc = null
+      }
+      pendingFunc = false
     })
-
-    fn.apply(this, args)
+    return lastValue = (fn as any).apply(this, args)
   }
-
-  return throttledFn
+  return throttledFn as any
 }
+
+
+window['throttle'] = throttle
+window['frameThrottle'] = frameThrottle

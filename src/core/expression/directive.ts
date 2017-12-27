@@ -1,4 +1,5 @@
-import { ContentUpdater } from '../updater/content.js'
+import { ContentUpdater, ContentExpr } from '../updater/content.js'
+import { DynamicPart } from '../../constant.js'
 
 /**
  * extends this class to create content directive
@@ -20,3 +21,17 @@ export class Directive {
 
   update(contentUpdater: ContentUpdater) { }
 }
+
+class DirectiveExpr extends ContentExpr {
+  match(content: DynamicPart) {
+    return content instanceof Directive
+  }
+  init(updater: ContentUpdater, content: Directive) {
+    content.init(updater)
+  }
+  update(updater: ContentUpdater, content: Directive) {
+    content.update(updater)
+  }
+}
+
+ContentUpdater.registerContentExpr(new DirectiveExpr())

@@ -18,13 +18,12 @@ export class Until extends Directive {
     this.promise.then((litTag) => {
       updater.update(litTag)
     })
-    return this.promise
+    updater.value = this.promise
   }
 
   update(updater: ContentUpdater) {
-    if (this.promise === updater.value)
-      return this.promise
-    else
-      return this.init(updater)
+    updater.value = this.promise === updater.value
+      ? this.promise
+      : this.init(updater)
   }
 }

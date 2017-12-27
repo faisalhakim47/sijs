@@ -1,42 +1,52 @@
 import { createArray } from './array.js'
 import { frameThrottle, throttle } from './throttle.js'
 
-export type Subscriber<Val> = (val: Val) => void
+export type Subscriber<Val> = (value: Val) => void
 export type Subscription = () => void
 
+const EMPTY_VALUE = {} as any
+
 export class DataStream<Val> {
-  static all<Val>($s: DataStream<Val>[]) {
-    const s$ = new DataStream<Val[]>()
+  static all<Val>(data$s: DataStream<Val>[]) {
+    const datas$ = new DataStream<Val[]>()
     const EMPTY_OBJECT = {} as Val
-    const values: Val[] = createArray($s.length)
+    const values: Val[] = createArray(data$s.length)
       .map(() => EMPTY_OBJECT)
     let isResolved = false
-    $s.map(($, index) => $.subscribe((val) => {
-      values[index] = val
+    data$s.map((data$, index) => data$.subscribe((value) => {
+      values[index] = value
       if (isResolved || (isResolved = values.indexOf(EMPTY_OBJECT) === -1)) {
-        s$.emit(values)
+        datas$.emit(values)
       }
     }))
-    return s$
+    return datas$
   }
 
   private subscribers: Subscriber<Val>[] = []
-  private initValues: Val[] = []
+  private latestValue: Val = EMPTY_VALUE
+  // private isDebuging = false
 
-  emit(val: Val) {
+  // trace() {
+  //   this.isDebuging = true
+  //   return this
+  // }
+
+  emit(value: Val | ((value: Val) => Val)) {
+    if (typeof value === 'function') {
+      value = value(this.latestValue)
+    }
     const length = this.subscribers.length
     for (let index = 0; index < length; index++) {
-      this.subscribers[0](val)
+      this.subscribers[0](value)
     }
-    this.initValues.push(val)
+    // if (this.isDebuging) console.log('emit', value)
+    this.latestValue = value
   }
 
   subscribe(subscriber: Subscriber<Val>): Subscription {
     this.subscribers.push(subscriber)
-    const length = this.initValues.length
-    for (let index = 0; index < length; index++) {
-      subscriber(this.initValues[index])
-    }
+    if (this.latestValue !== EMPTY_VALUE) subscriber(this.latestValue)
+    // if (this.isDebuging) console.log('subscribe', this.latestValue)
     return () => this.unsubscribe(subscriber)
   }
 
@@ -46,39 +56,38 @@ export class DataStream<Val> {
     )
   }
 
-  initValue(...vals: Val[]) {
-    this.initValues.push(...vals)
+  initValue(value: Val) {
+    this.latestValue = value
+    // if (this.isDebuging) console.log('init', value)
     return this
   }
 
-  private pipe<ResVal = Val>(pipeFn: (val: Val, $: DataStream<ResVal>, subscription: Subscription) => void) {
-    const $ = new DataStream<ResVal>()
-    var unsubscribe = this.subscribe((val) => pipeFn(val, $, unsubscribe))
-    return $
+  pipe(data$: DataStream<Val>) {
+    return this.subscribe((value) => data$.emit(value))
   }
 
   map<ResVal>(mapFn: (val: Val) => ResVal) {
-    return this.pipe<ResVal>((val, $) => {
-      $.emit(mapFn(val))
+    return this.pipeMap<ResVal>((value, data$) => {
+      data$.emit(mapFn(value))
     })
   }
 
-  filter(filterFn: (val: Val) => boolean) {
-    return this.pipe((val, $) => {
-      if (filterFn(val)) $.emit(val)
+  filter(filterFn: (value: Val) => boolean) {
+    return this.pipeMap((value, data$) => {
+      if (filterFn(value)) data$.emit(value)
     })
   }
 
   take(length: number) {
-    return this.pipe((val, $, unsubscribe) => {
-      if (--length >= 0) $.emit(val)
+    return this.pipeMap((value, data$, unsubscribe) => {
+      if (--length >= 0) data$.emit(value)
       else unsubscribe()
     })
   }
 
   skip(length: number) {
-    return this.pipe((val, $) => {
-      if (--length < 0) $.emit(val)
+    return this.pipeMap((value, data$) => {
+      if (--length < 0) data$.emit(value)
     })
   }
 
@@ -86,21 +95,30 @@ export class DataStream<Val> {
     return this.take(1)
   }
 
-  reduce<ResVal>(reduceFn: (res: ResVal, val: Val) => ResVal, seed: ResVal) {
-    return this.pipe<ResVal>((val, $) => {
-      $.emit(seed = reduceFn(seed, val))
+  reduce<ResVal>(reduceFn: (result: ResVal, value: Val) => ResVal, seed: ResVal) {
+    return this.pipeMap<ResVal>((value, data$) => {
+      data$.emit(seed = reduceFn(seed, value))
     })
   }
 
   throttle() {
-    return this.pipe(throttle((val, $) => {
-      $.emit(val)
+    return this.pipeMap(throttle((value, data$) => {
+      data$.emit(value)
     }))
   }
 
   frameThrottle() {
-    return this.pipe(frameThrottle((val, $) => {
-      $.emit(val)
+    return this.pipeMap(frameThrottle((value, data$) => {
+      data$.emit(value)
     }))
+  }
+
+  private pipeMap<ResVal = Val>(pipeFn: (value: Val, data$: DataStream<ResVal>, subscription: Subscription) => void) {
+    const data$ = new DataStream<ResVal>()
+    let unsubscribed = false
+    let unsubscribe = () => { unsubscribed = true }
+    unsubscribe = this.subscribe((value) => pipeFn(value, data$, unsubscribe))
+    if (unsubscribed) unsubscribe()
+    return data$
   }
 }
