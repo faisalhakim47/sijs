@@ -10,14 +10,14 @@ export class ElementUpdater extends Updater {
 
   init(options) {
     this.element.removeAttribute(MARKER)
-    const length = registeredController.length
-    for (let index = 0; index < length; index++)
-      registeredController[index].init(this.element, options)
+    registeredController.forEach((controller) => {
+      controller.init(this.element, options)
+    })
   }
 
   update(options) {
-    const length = registeredController.length
-    for (let index = 0; index < length; index++)
-      registeredController[index].update(this.element, options)
+    registeredController.forEach((controller) => {
+      controller.update(this.element, options)
+    })
   }
 }

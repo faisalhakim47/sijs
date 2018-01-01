@@ -46,9 +46,7 @@ export class Repeat<Item> extends Directive {
     const { previousNode, nextNode } = listUpdater
     const parentNode = previousNode.parentNode
     const fragment = document.createDocumentFragment()
-    const length = this.items.length
-    for (let index = 0; index < length; index++) {
-      const item = this.items[index]
+    this.items.forEach((item, index) => {
       const key = typeof this.key === 'function'
         ? this.key(item, index)
         : index
@@ -59,7 +57,7 @@ export class Repeat<Item> extends Directive {
       const itemUpdater = new ContentUpdater(node)
       itemUpdater.update(this.map(item, index))
       cache[key] = itemUpdater
-    }
+    })
     replaceNode(previousNode.nextSibling, fragment)
     listUpdater.value = cache
   }
@@ -69,9 +67,8 @@ export class Repeat<Item> extends Directive {
     const oldCache = listUpdater.value
     let prevItemUpdater: ContentUpdater = null
     const newCache = {}
-    const length = this.items.length
-    for (let index = 0; index < length; index++) {
-      const item = this.items[index]
+
+    this.items.forEach((item, index) => {
       const key = typeof this.key === 'function'
         ? this.key(item, index)
         : index
@@ -119,7 +116,7 @@ export class Repeat<Item> extends Directive {
         newCache[key] = itemUpdater
         prevItemUpdater = itemUpdater
       }
-    }
+    })
 
     const lastItemNextNode = prevItemUpdater.nextNode
     while (lastItemNextNode.nextSibling !== listUpdater.nextNode)

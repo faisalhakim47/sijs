@@ -6,14 +6,13 @@ class ArrayExpr extends ContentExpr {
   match(content: DynamicPart) {
     return Array.isArray(content)
   }
-  update(updater: ContentUpdater, content: BasicDynamicPart[]) {
+  update(updater: ContentUpdater, contents: BasicDynamicPart[]) {
     updater.clearContent()
-    const length = content.length
-    for (let index = 0; index < length; index++) {
+    contents.forEach((content) => {
       const node = document.createComment('')
       insertNodeBefore(updater.nextNode, node)
-      new ContentUpdater(node).init(content[index])
-    }
+      new ContentUpdater(node).init(content)
+    })
   }
 }
 

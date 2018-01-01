@@ -17,11 +17,6 @@ export class LitTag {
     public dymanicParts: AsyncDynamicPart[]
   ) { }
 
-  verify(instance: TemplateInstance) {
-    return instance instanceof TemplateInstance
-      && instance.staticParts === this.staticParts
-  }
-
   compile() {
     const instance = requestTemplate(this.staticParts).clone()
     instance.init(this.dymanicParts)
@@ -30,8 +25,13 @@ export class LitTag {
 
   mount(container: Node) {
     const instance: TemplateInstance = container[INSTANCE]
-    if (this.verify(instance)) {
-      instance.update(this.dymanicParts)
+    if (instance instanceof TemplateInstance) {
+      if (instance.staticParts === this.staticParts) {
+        instance.update(this.dymanicParts)
+      } else {
+        instance.clearSubcribtions()
+        replaceNode(container, this.compile().element)
+      }
     } else {
       replaceNode(container, this.compile().element)
     }

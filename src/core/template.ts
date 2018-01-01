@@ -1,7 +1,7 @@
 import { MARKER, INSTANCE, AsyncDynamicPart, DynamicPart } from '../constant.js'
 import { walkDomTree, appendNode, replaceNode } from '../tools/dom.js'
 import { List } from '../tools/list.js'
-import { DataStream, Subscription } from '../tools/datastream.js'
+import { Pipe, Subscribtion, collectSubscribtions } from '../tools/subject.js'
 
 import { Updater } from './updater/updater.js'
 import { ContentUpdater } from './updater/content.js'
@@ -141,9 +141,7 @@ export class Template {
         }
       })
 
-    const length = doAfterWalkTree.length
-    for (let index = 0; index < length; index++)
-      doAfterWalkTree[index]()
+    doAfterWalkTree.forEach((doAfter) => doAfter())
 
     /**
      * detecting MARKER and save its position.
@@ -204,12 +202,9 @@ export class Template {
 
     walkDomTree(element, (node, nodeIndex, stop) => {
 
-      const length = this.templateParts.length
+      this.templateParts.forEach((expression) => {
 
-      for (let index = 0; index < length; index++) {
-        const expression = this.templateParts[index]
-
-        if (expression.nodeIndex !== nodeIndex) continue
+        if (expression.nodeIndex !== nodeIndex) return
 
         if (expression.isContent)
           partUpdaters.push(new ContentUpdater(node))
@@ -227,7 +222,8 @@ export class Template {
             node as Element,
             expression.eventName,
           ))
-      }
+
+      })
 
     }, {
         whatToShow: 1 /* NodeFilter.SHOW_ELEMENT */ | 128 /* NodeFilter.SHOW_COMMENT */,
@@ -255,7 +251,7 @@ export class Template {
  * it tightly couples Updaters and Nodes
  */
 export class TemplateInstance {
-  private subcribtions: Subscription[]
+  private subcribtionss: Subscribtion[][] = []
 
   constructor(
     public staticParts: TemplateStringsArray,
@@ -263,39 +259,54 @@ export class TemplateInstance {
     private partUpdaters: Updater[]
   ) {
     this.element[INSTANCE] = this
-    this.subcribtions = createArray(partUpdaters.length)
-      .map(() => () => { })
+  }
+
+  clearSubcribtions() {
+    this.subcribtionss.forEach((subcribtions) => {
+      subcribtions.forEach((unsubcribe) => {
+        unsubcribe()
+      })
+    })
+    this.subcribtionss = []
   }
 
   init(expressions: AsyncDynamicPart[]) {
-    const length = expressions.length
+    const length = this.partUpdaters.length
     for (let index = 0; index < length; index++) {
       const updater = this.partUpdaters[index]
       const expression = expressions[index]
-      if (expression instanceof DataStream) {
-        expression.first().subscribe((value) => {
-          updater.init(value)
-        })
-        this.subcribtions[index] = expression.skip(1).subscribe((value) => {
-          updater.update(value)
-        })
-      }
-      else updater.init(expression)
+      this.subcribtionss.push(collectSubscribtions(() => {
+        // console.log('BEGIN', this.element)
+        if (expression instanceof Pipe) {
+          let first = true
+          expression.subscribe((value) => {
+            // console.log('VALUE', value)
+            if (first) {
+              updater.init(value)
+              first = false
+            }
+            else updater.update(value)
+          })
+        }
+        else updater.init(expression)
+        // console.log('END', this.element)
+      }))
     }
   }
 
   update(expressions: AsyncDynamicPart[]) {
-    const length = expressions.length
+    const length = this.partUpdaters.length
     for (let index = 0; index < length; index++) {
       const updater = this.partUpdaters[index]
       const expression = expressions[index]
-      if (expression instanceof DataStream) {
-        this.subcribtions[index]()
-        this.subcribtions[index] = expression.subscribe((value) => {
-          updater.update(value)
-        })
-      }
-      else updater.update(expression)
+      this.subcribtionss.push(collectSubscribtions(() => {
+        if (expression instanceof Pipe) {
+          expression.subscribe((value) => {
+            updater.update(value)
+          })
+        }
+        else updater.update(expression)
+      }))
     }
   }
 }
