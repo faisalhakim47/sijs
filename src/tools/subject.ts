@@ -76,15 +76,13 @@ export class Pipe<Val> {
 
   throttle(duration = 100) {
     return new Pipe<Val>((publish) => {
-      const throttled = throttle(publish, duration)
-      return this.subscribe(throttled)
+      return this.subscribe(throttle(publish, duration))
     })
   }
 
   frameThrottle() {
     return new Pipe<Val>((publish) => {
-      const throttled = frameThrottle(publish)
-      return this.subscribe(throttled)
+      return this.subscribe(frameThrottle(publish))
     })
   }
 
@@ -114,18 +112,6 @@ export class Pipe<Val> {
   }
 }
 
-const subCollections: Subscribtion[][] = []
-
-export function collectSubscribtions(subscribings: Function) {
-  const subCollection: Subscribtion[] = []
-  subCollections.push(subCollection)
-  subscribings()
-  subCollections.splice(
-    subCollections.indexOf(subCollection), 1
-  )
-  return subCollection
-}
-
 const EMPTY_VALUE = {} as any
 
 export class Subject<Val> extends Pipe<Val> {
@@ -149,10 +135,6 @@ export class Subject<Val> extends Pipe<Val> {
       const index = this.subscribers.indexOf(subscriber)
       if (index !== -1) this.subscribers.splice(index, 1)
     }
-
-    subCollections.forEach((subCollection) => {
-      subCollection.push(subscribtion)
-    })
 
     return subscribtion
   }

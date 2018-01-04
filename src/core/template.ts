@@ -1,7 +1,7 @@
 import { MARKER, INSTANCE, AsyncDynamicPart, DynamicPart } from '../constant.js'
 import { walkDomTree, appendNode, replaceNode } from '../tools/dom.js'
 import { List } from '../tools/list.js'
-import { Pipe, Subscribtion, collectSubscribtions } from '../tools/subject.js'
+import { Pipe, Subscribtion } from '../tools/subject.js'
 
 import { Updater } from './updater/updater.js'
 import { ContentUpdater } from './updater/content.js'
@@ -259,6 +259,18 @@ export class Template {
   }
 }
 
+const subCollections: Subscribtion[][] = []
+
+function collectSubscribtions(subscribings: Function) {
+  const subCollection: Subscribtion[] = []
+  subCollections.push(subCollection)
+  subscribings()
+  subCollections.splice(
+    subCollections.indexOf(subCollection), 1
+  )
+  return subCollection
+}
+
 /**
  * Template Instance is the core result of sijs
  * it tightly couples Updaters and Nodes
@@ -289,20 +301,22 @@ export class TemplateInstance {
       const updater = this.partUpdaters[index]
       const expression = expressions[index]
       this.subcribtionss.push(collectSubscribtions(() => {
-        // console.log('BEGIN', this.element)
         if (expression instanceof Pipe) {
           let first = true
-          expression.subscribe((value) => {
-            // console.log('VALUE', value)
+
+          const subscribtion = expression.subscribe((value) => {
             if (first) {
               updater.init(value)
               first = false
             }
             else updater.update(value)
           })
+
+          subCollections.forEach((subCollection) => {
+            subCollection.push(subscribtion)
+          })
         }
         else updater.init(expression)
-        // console.log('END', this.element)
       }))
     }
   }
