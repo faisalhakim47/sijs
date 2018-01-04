@@ -10,6 +10,19 @@ export type Subscribtion = () => void
 export type Publisher<Val> = (publish: Observer<Val>) => Subscribtion
 
 export class Pipe<Val> {
+  static fromPromise<Val>(promise: Promise<Val>) {
+    return new Pipe<Val>((publish) => {
+      let active = true
+      promise.then((result) => {
+        if (active) publish(result)
+      })
+      promise.catch((error) => {
+        if (active) publish(error)
+      })
+      return () => { active = false }
+    })
+  }
+
   static fromEvent<K extends keyof ElementEventMap>(element: Element, eventName: K) {
     return new Pipe<ElementEventMap[K]>((publish) => {
       element.addEventListener(eventName, publish)
@@ -75,6 +88,15 @@ export class Pipe<Val> {
     })
   }
 
+  distinct() {
+    return new Pipe<Val>((publish) => {
+      let lastValue: Val = ({} as any)
+      return this.subscribe((value) => {
+        if (value !== lastValue) publish(lastValue = value)
+      })
+    })
+  }
+
   combine(..._pipes: Pipe<Val>[]) {
     const pipes = [this, ..._pipes]
     return new Pipe<Val[]>((publish) => {
@@ -92,45 +114,40 @@ export class Pipe<Val> {
   }
 }
 
-window['subscriberCount'] = 0
-
 const subCollections: Subscribtion[][] = []
 
-export function collectSubscribtions(fn: Function) {
+export function collectSubscribtions(subscribings: Function) {
   const subCollection: Subscribtion[] = []
   subCollections.push(subCollection)
-  fn()
+  subscribings()
   subCollections.splice(
     subCollections.indexOf(subCollection), 1
   )
   return subCollection
 }
 
-const subjects: Subject<any>[] = []
+const EMPTY_VALUE = {} as any
 
 export class Subject<Val> extends Pipe<Val> {
   private subscribers: Subscriber<Val>[] = []
   private lastValue: Val
 
-  constructor(initValue: Val) {
+  constructor(initValue: Val = EMPTY_VALUE) {
     super(null)
     this.lastValue = initValue
-    subjects.push(this)
   }
 
   subscribe(subscriber: Subscriber<Val>): Subscribtion {
     const index = this.subscribers.indexOf(subscriber)
+
     if (index === -1) {
       this.subscribers.push(subscriber)
-      subscriber(this.lastValue)
+      if (this.lastValue !== EMPTY_VALUE) subscriber(this.lastValue)
     }
-
-    window['subscriberCount']++
 
     const subscribtion: Subscribtion = () => {
       const index = this.subscribers.indexOf(subscriber)
       if (index !== -1) this.subscribers.splice(index, 1)
-      window['subscriberCount']--
     }
 
     subCollections.forEach((subCollection) => {
@@ -140,7 +157,7 @@ export class Subject<Val> extends Pipe<Val> {
     return subscribtion
   }
 
-  emit(value: ((value: Val) => Val) | Val) {
+  emit(value?: ((value: Val) => Val) | Val) {
     if (typeof value === 'function') {
       value = value(this.lastValue)
     }
@@ -150,5 +167,3 @@ export class Subject<Val> extends Pipe<Val> {
     this.lastValue = value
   }
 }
-
-window['subjects'] = subjects

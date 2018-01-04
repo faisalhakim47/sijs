@@ -8,7 +8,6 @@ import { ContentUpdater } from './updater/content.js'
 import { ElementUpdater } from './updater/element.js'
 import { AttributeUpdater } from './updater/attribute.js'
 import { EventUpdater } from './updater/event.js'
-import { createArray } from '../tools/array.js';
 
 export const templateCache = new List<TemplateStringsArray, Template>()
 
@@ -105,7 +104,7 @@ export class Template {
      * you have to do it after the walkDomTree
      * or else walkDomTree will stop.
      */
-    const doAfterWalkTree: Function[] = []
+    let doAfterWalkTree: Function[] = []
 
     /**
      * normalize the TextNode
@@ -143,6 +142,8 @@ export class Template {
 
     doAfterWalkTree.forEach((doAfter) => doAfter())
 
+    doAfterWalkTree = []
+
     /**
      * detecting MARKER and save its position.
      * So at the cloning proccess it already know
@@ -159,25 +160,35 @@ export class Template {
       for (let index = 0; index < length; index++) {
         const attribute = node.attributes.item(index)
 
-        if (attribute.name === MARKER)
+        if (attribute.name === MARKER) {
           templateParts.push({
             nodeIndex,
             isElement: true,
           })
+          doAfterWalkTree.push(() => {
+            (node as Element).removeAttributeNode(attribute)
+          })
+        }
 
-        else if (attribute.name.slice(0, 2) === 'on')
+        else if (attribute.name.slice(0, 2) === 'on') {
           templateParts.push({
             nodeIndex,
             isEvent: true,
             eventName: attribute.name.slice(2),
           })
+          doAfterWalkTree.push(() => {
+            (node as Element).removeAttributeNode(attribute)
+          })
+        }
 
-        else if (attribute.nodeValue === MARKER)
+        else if (attribute.nodeValue === MARKER) {
           templateParts.push({
             nodeIndex,
             isAttribute: true,
             attributeName: attribute.name,
           })
+          doAfterWalkTree.push(() => attribute.nodeValue = '')
+        }
       }
     }, {
         whatToShow: 1 /* NodeFilter.SHOW_ELEMENT */ | 128 /* NodeFilter.SHOW_COMMENT */,
@@ -191,6 +202,8 @@ export class Template {
             : 3 /* NodeFilter.FILTER_SKIP */
         }
       })
+
+    doAfterWalkTree.forEach((doAfter) => doAfter())
 
     this.template = template
     this.templateParts = templateParts

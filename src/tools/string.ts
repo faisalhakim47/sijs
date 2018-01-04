@@ -1,4 +1,4 @@
-const charlist = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$'
+const charlist = '_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_'
 const charlength = charlist.length
 
 export function randomChar(length = 1) {

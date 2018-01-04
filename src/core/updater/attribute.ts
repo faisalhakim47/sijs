@@ -1,5 +1,4 @@
 import { Updater } from './updater.js'
-import { equalArray } from '../../tools/array.js'
 
 export class AttributeUpdater extends Updater {
   node: Element = null

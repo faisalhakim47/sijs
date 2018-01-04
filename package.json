@@ -2,7 +2,7 @@
   "name": "sijs",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./esnext/index.js",
   "scripts": {
     "build": "tsc && node build.js"
   },
