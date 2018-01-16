@@ -49,7 +49,7 @@ export class ContentUpdater extends Updater {
     }
 
     if (!this.initNode.nextSibling) {
-      appendNode(this.initNode, document.createComment(''))
+      appendNode(this.initNode.parentNode, document.createComment(''))
       this.nextNode = this.initNode.nextSibling
     }
     
